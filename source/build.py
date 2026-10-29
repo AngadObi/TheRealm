@@ -2,7 +2,7 @@ import os
 d=os.path.dirname(os.path.abspath(__file__))
 r=lambda p:open(os.path.join(d,p),encoding='utf-8').read()
 css=r('style.css')
-js=r('js/icons.js')+'\n'+r('js/lines.js')+'\n'+r('js/library.js')+'\n'+r('js/parse.js')+'\n'+r('js/app.js')+'\n'+r('js/ext.js')
+js=r('js/icons.js')+'\n'+r('js/lines.js')+'\n'+r('js/library.js')+'\n'+r('js/parse.js')+'\n'+r('js/app.js')+'\n'+r('js/camp.js')+'\n'+r('js/ext.js')
 frag=f'''<title>The Realm</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap">
 <style>

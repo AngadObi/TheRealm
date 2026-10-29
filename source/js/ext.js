@@ -48,7 +48,7 @@ function dragonList(){
 function questStats(q){
   const ts=S.tasks.filter(t=>t.q===q.id);
   const done=ts.filter(t=>t.done).length;
-  const next=ts.filter(t=>!t.done).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.time||'99')<(b.time||'99')?-1:1)[0];
+  const next=ts.filter(t=>!t.done).sort((a,b)=>(a.date||'9999')<(b.date||'9999')?-1:(a.date||'9999')>(b.date||'9999')?1:(a.time||'99')<(b.time||'99')?-1:1)[0];
   const top=ts.map(tierOf).filter(Boolean).sort((a,b)=>['dragon','elder','wyrm','ancient'].indexOf(b)-['dragon','elder','wyrm','ancient'].indexOf(a))[0];
   return {n:ts.length,done,next,top};
 }
@@ -57,7 +57,7 @@ function questCard(q){
   return `<button type="button" class="qcard g ${q.done?'fin':''}" data-act="openQuest" data-id="${q.id}">
     <div class="qh"><span class="qtile">${ico(q.icon,24,'var(--brass-l)',1.5)}</span><span class="qt">${esc(q.title)}</span>${st.top?`<span class="tag" style="margin:0">${TAGS[st.top]}</span>`:''}<span class="qd">${q.done?'DONE':shortDue(q.due)}</span></div>
     <div class="qbar"><i style="width:${pc}%"></i></div>
-    <div class="qf"><span>${st.done} OF ${st.n} TASKS</span>${st.next?`<em>Next: ${esc(st.next.title)}</em>`:`<em>${st.n?'Nothing left. Suspicious.':'No tasks yet. Add one.'}</em>`}</div></button>`;
+    <div class="qf"><span>${st.done} OF ${st.n} CARDS</span>${st.next?`<em>Next: ${esc(st.next.title)}</em>`:`<em>${st.n?'Nothing left. Suspicious.':'No tasks yet. Add one.'}</em>`}</div></button>`;
 }
 function mainHTML(){
   if(!S.quests.length)return '<div class="empty">No campaigns yet.<br>Tap the red button to start one.</div>';
@@ -123,8 +123,8 @@ function questSheetHTML(){
   }
   return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${edit?'Edit quest':'New quest'}">
     <div class="arow"><input id="qTitle" class="inp" type="text" value="${esc(q.title)}" placeholder="Name the campaign" autocomplete="off" aria-label="Quest name"><button type="button" class="go" data-act="qSave" aria-label="Save quest">${ico(edit?'check':'plus',22,'currentColor',2.6)}</button></div>
-    <div class="chips sm">${pill('due',esc(dl))}${pill('icon',ico(q.icon,16,'var(--brass-l)',1.6)+'Emblem')}</div>${opts}${tasks}
-    ${edit?`<button type="button" class="lnk" data-act="qDel">${q.confirmDel?'Tap again to drop this quest':'Drop this quest'}</button>`:''}</div>`;
+    <div class="chips sm">${pill('due',esc(dl))}${pill('icon',ico(q.icon,16,'var(--brass-l)',1.6)+'Emblem')}</div>${opts}${edit?`<div class="btns" style="margin-top:10px"><button type="button" class="btn ghost" data-act="qDone">${q.done?'Reopen':'Complete'}</button></div>`:''}
+    ${edit?`<button type="button" class="lnk" data-act="qDel">${q.confirmDel?'Tap again to drop this campaign and its undated cards':'Drop this quest'}</button>`:''}</div>`;
 }
 function ideaSheetHTML(){
   const i=U.is,edit=!!i.id;
@@ -143,13 +143,14 @@ function rollSheetHTML(){
 }
 function extSheets(){
   if(U.sheet==='quest'&&U.qs)return questSheetHTML();
+  if(U.sheet==='cols'&&U.camp)return colsSheetHTML();
   if(U.sheet==='idea'&&U.is)return ideaSheetHTML();
   if(U.sheet==='roll'&&U.roll)return rollSheetHTML();
   return '';
 }
 
 /* ---------- actions ---------- */
-function goto(v){U.menu=false;U.council=null;U.sheet=null;U.view=v;U.placing=null;U.scrollRoad=v==='road';U.bubble=null;VL={key:'',line:null};render();}
+function goto(v){U.camp=null;U.menu=false;U.council=null;U.sheet=null;U.view=v;U.placing=null;U.scrollRoad=v==='road';U.bubble=null;VL={key:'',line:null};render();}
 const HALLCAT={scriptorium:'money',hearth:'home',yard:'health',tavern:'social'};
 function ideaToTask(idea){
   const cid=S.cats.some(c=>c.id===HALLCAT[idea.hall])?HALLCAT[idea.hall]:S.cats[0].id;
@@ -179,7 +180,7 @@ function openCouncil(kind){
   }
   renderOverlay();
 }
-function candidates(){return S.tasks.filter(t=>!t.done).sort((a,b)=>(b.moves||0)-(a.moves||0)||(a.date<b.date?-1:1)).slice(0,20);}
+function candidates(){return S.tasks.filter(t=>!t.done&&t.date).sort((a,b)=>(b.moves||0)-(a.moves||0)||(a.date<b.date?-1:1)).slice(0,20);}
 function extAct(act,v,id,el){
   switch(act){
     case 'goto':goto(v);break;
@@ -194,20 +195,20 @@ function extAct(act,v,id,el){
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;
     /* quests */
     case 'addQuest':U.qs={id:null,title:'',icon:'flag',due:'',open:null,confirmDel:false};U.sheet='quest';renderOverlay();setTimeout(()=>{const x=$('#qTitle');x&&x.focus();},60);break;
-    case 'openQuest':{const q=questOf(id);if(!q)break;U.qs={id:q.id,title:q.title,icon:q.icon,due:q.due||'',open:null,confirmDel:false,done:q.done};U.sheet='quest';renderOverlay();break;}
+    case 'openQuest':{const q=questOf(id);if(!q)break;U.camp={id:q.id,tab:'board'};renderOverlay();break;}
     case 'qOpen':{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.open=U.qs.open===v?null:v;renderOverlay();break;}
     case 'qNoDate':U.qs.due='';U.qs.open=null;renderOverlay();break;
     case 'qIcon':U.qs.icon=v;U.qs.open=null;renderOverlay();break;
     case 'qSave':{
       const q=U.qs;q.title=(($('#qTitle')||{}).value||'').trim();if(!q.title)break;
       if(q.id){const o=questOf(q.id);if(o){o.title=q.title;o.icon=q.icon;o.due=q.due;}}
-      else S.quests.push({id:uid(),title:q.title,icon:q.icon,due:q.due,created:Date.now()});
+      else{const nq={id:uid(),title:q.title,icon:q.icon,due:q.due,created:Date.now(),cols:DEFCOLS()};S.quests.push(nq);U.camp={id:nq.id,tab:'board'};}
       save();U.sheet=null;U.qs=null;say('added');render();break;}
     case 'qTick':{tick(id);U.qs&&U.qs.id&&(U.sheet='quest');renderOverlay();break;}
     case 'qEditTask':U.sheet=null;openAdd(id);break;
     case 'qAddTask':{const qid=U.qs.id;U.sheet=null;openAdd(null);U.add.q=qid;refreshMeta();break;}
     case 'qDone':{const o=questOf(U.qs.id);if(o){o.done=!o.done;save();if(o.done){const l=say('questDone');toast(l);}U.sheet=null;render();}break;}
-    case 'qDel':if(U.qs.confirmDel){const qid=U.qs.id;S.tasks.forEach(t=>{if(t.q===qid)t.q='';});S.quests=S.quests.filter(x=>x.id!==qid);save();U.sheet=null;render();}else{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.confirmDel=true;renderOverlay();}break;
+    case 'qDel':if(U.qs.confirmDel){const qid=U.qs.id;S.tasks=S.tasks.filter(t=>!(t.q===qid&&!t.date));S.tasks.forEach(t=>{if(t.q===qid){t.q='';delete t.col;delete t.ord;}});S.quests=S.quests.filter(x=>x.id!==qid);save();U.sheet=null;U.camp=null;render();}else{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.confirmDel=true;renderOverlay();}break;
     /* ideas */
     case 'addIdea':U.is={id:null,text:'',hall:v||S.halls[0].id,confirmDel:false};U.sheet='idea';renderOverlay();setTimeout(()=>{const x=$('#iTitle');x&&x.focus();},60);break;
     case 'openIdea':{if(Date.now()<suppressI)break;const i=S.ideas.find(x=>x.id===id);if(!i)break;U.is={id:i.id,text:i.title,hall:i.hall,confirmDel:false};U.sheet='idea';renderOverlay();break;}
@@ -381,7 +382,7 @@ function topicsOf(t){
 function libCtx(kind,vars){
   vars=vars||{};
   const td=today(),now=new Date(),hr=now.getHours()+now.getMinutes()/60,tt=S.tasks.filter(t=>t.date===td),open=tt.filter(t=>!t.done);
-  const over=S.tasks.filter(t=>!t.done&&t.date<td);
+  const over=S.tasks.filter(t=>!t.done&&t.date&&t.date<td);
   let tk=vars.id?S.tasks.find(t=>t.id===vars.id):null;
   if(!tk&&vars.task)tk=S.tasks.find(t=>t.title===vars.task);
   if(!tk&&kind==='dragon'&&U.council&&U.council.dragonId)tk=S.tasks.find(t=>t.id===U.council.dragonId);
@@ -396,10 +397,10 @@ function libCtx(kind,vars){
     opens:(U.opens||1),tmr:S.tasks.filter(t=>!t.done&&t.date===tm).length,
     tmrEarly:S.tasks.some(t=>!t.done&&t.date===tm&&t.time&&t.time<'08:00'),
     ft:timed.length?Math.min(...timed.map(t=>+t.time.slice(0,2))):null,
-    oldest:Math.max(0,...S.tasks.filter(t=>!t.done&&t.date<td).map(t=>diffDays(td,t.date)),...open.map(t=>t.moves||0)),
+    oldest:Math.max(0,...S.tasks.filter(t=>!t.done&&t.date&&t.date<td).map(t=>diffDays(td,t.date)),...open.map(t=>t.moves||0)),
     drg:dr||null,dragonDone:!!S.tasks.find(t=>t.id===plan().dragonId&&t.done),ideas:(S.ideas||[]).length,
     noMed:!S.tasks.some(t=>!t.done&&MEDRX.test(t.title)&&diffDays(t.date,td)<=60),
-    cleared:S.tasks.some(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===td&&t.date<td),
+    cleared:S.tasks.some(t=>t.done&&t.doneAt&&ymd(new Date(t.doneAt))===td&&t.date&&t.date<td),
     sa:sessAdd,sp:sessPost,dupTime:new Set(tms).size<tms.length,
     noLunch:!open.some(t=>/lunch|break/i.test(t.title)),catsUsed:new Set(open.map(t=>t.cat)).size,
     sameDay:Math.max(0,...Object.values(by)),durSum:timed.reduce((s,t)=>s+(t.dur||0),0),
@@ -447,7 +448,7 @@ function pickLine(key,vars){
 
 /* ---------- phone back gesture: close the top layer, or go back to Today, before leaving the app ---------- */
 var navCur=0,navBusy=false,navTarget=0;
-function navWant(){return (U.view!=='list'?1:0)+((U.sheet||U.council||U.menu)?1:0);}
+function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+((U.sheet||U.council||U.menu)?1:0);}
 function navSync(){
   if(navBusy)return;
   const d=navWant();
@@ -461,6 +462,7 @@ addEventListener('popstate',()=>{
   navCur=(history.state&&history.state.d)||0;
   if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}
   else if(U.sheet||U.council||U.menu){U.sheet=null;U.council=null;U.menu=false;renderOverlay();}
+  else if(U.camp){U.camp=null;renderOverlay();renderMain();}
   else if(U.view!=='list'){goto('list');}
   navSync();
 });

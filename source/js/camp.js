@@ -1,0 +1,166 @@
+/* ---------- campaigns: board, notes, columns, drag and drop ---------- */
+const DEFCOLS=()=>[{id:'ideas',name:'Ideas'},{id:'todo',name:'To do'},{id:'doing',name:'Doing'},{id:'blocked',name:'Blocked'},{id:'done',name:'Done',done:true}];
+function colsOf(q){if(!q.cols||!q.cols.length)q.cols=DEFCOLS();return q.cols;}
+function startCol(q){const cs=colsOf(q);return (cs.find(c=>c.id==='todo')||cs.find(c=>!c.done)||cs[0]).id;}
+function doneCol(q){const cs=colsOf(q);return (cs.find(c=>c.done)||cs[cs.length-1]).id;}
+function colOfTask(t,q){const cs=colsOf(q);if(t.col&&cs.some(c=>c.id===t.col))return t.col;return t.done?doneCol(q):startCol(q);}
+function cardsOf(q,id){
+  const ts=S.tasks.filter(t=>t.q===q.id&&colOfTask(t,q)===id);
+  const miss=ts.filter(t=>typeof t.ord!=='number').sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  let m=Math.max(-10,...ts.filter(t=>typeof t.ord==='number').map(t=>t.ord));
+  miss.forEach(t=>{m+=10;t.ord=m;});
+  return ts.sort((a,b)=>a.ord-b.ord);
+}
+function endOrd(q,col,except){
+  const ts=cardsOf(q,col).filter(t=>t!==except);
+  return ts.length?ts[ts.length-1].ord+10:0;
+}
+function syncCol(t){
+  if(!t.q)return;const q=questOf(t.q);if(!q)return;
+  const cur=colsOf(q).find(c=>c.id===t.col);
+  if(t.done){if(!cur||!cur.done){t.col=doneCol(q);t.ord=endOrd(q,t.col,t);}}
+  else if(!cur||cur.done){t.col=startCol(q);t.ord=endOrd(q,t.col,t);}
+}
+function assignCol(t,colId){
+  if(!t.q){delete t.col;delete t.ord;return;}
+  const q=questOf(t.q);if(!q)return;const cs=colsOf(q);
+  const id=cs.some(c=>c.id===colId)?colId:(cs.some(c=>c.id===t.col)?t.col:(t.done?doneCol(q):startCol(q)));
+  if(t.col!==id){t.col=id;t.ord=endOrd(q,id,t);}
+  const c=cs.find(x=>x.id===id);
+  if(c.done&&!t.done){t.done=true;t.doneAt=Date.now();(t.steps||[]).forEach(s=>s.done=true);}
+  else if(!c.done&&t.done){t.done=false;t.doneAt=null;}
+}
+
+function cardHTML(t){
+  const meta=[];
+  if(t.date)meta.push(shortDue(t.date).toLowerCase()+(t.time?' '+t.time:''));
+  if(t.steps&&t.steps.length)meta.push(t.steps.filter(s=>s.done).length+'/'+t.steps.length);
+  if(t.note)meta.push('note');
+  const tier=tierOf(t);
+  return `<div class="kc ${t.done?'done':''}" data-id="${t.id}"><button type="button" class="cb" data-act="kTick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${!!t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button><div class="kt" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${meta.length||tier?`<em>${tier?TAGS[tier]+(meta.length?' · ':''):''}${esc(meta.join(' · '))}</em>`:''}</div></div>`;
+}
+function campHTML(){
+  const C=U.camp,q=questOf(C.id);if(!q){U.camp=null;return '';}
+  const cs=colsOf(q);
+  let due='';
+  if(q.due){const n=diffDays(q.due,today());due=`${shortDue(q.due)} · ${n<0?-n+(n===-1?' day':' days')+' overdue':n===0?'today':n===1?'tomorrow':'in '+n+' days'}`;}
+  else due='NO DEADLINE';
+  const tabs=`<div class="chips sm" style="margin:0 0 12px"><button type="button" class="chip ${C.tab!=='notes'?'on':''}" data-act="campTab" data-v="board">Board</button><button type="button" class="chip ${C.tab==='notes'?'on':''}" data-act="campTab" data-v="notes">Notes</button>${C.tab!=='notes'?`<button type="button" class="chip" data-act="colsOpen">Columns</button>`:''}</div>`;
+  let body;
+  if(C.tab==='notes'){
+    body=q.note&&!C.noteEdit?`<div class="note" data-act="campNoteEdit">${linkify(q.note)}</div>`:`<textarea id="campNoteTx" class="note ta" rows="10" placeholder="Context, contacts, links, whatever this campaign needs" aria-label="Campaign notes">${esc(q.note||'')}</textarea>`;
+  }else{
+    body=`<div class="kboard">${cs.map(c=>{const cards=cardsOf(q,c.id);return `<div class="kcol ${c.done?'dn':''}" data-col="${c.id}"><div class="kh"><b>${esc(c.name)}</b><span>${cards.length}</span></div><div class="kcards">${cards.map(cardHTML).join('')}</div><input class="kin" data-col="${c.id}" placeholder="+ Add a card" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" aria-label="Add a card to ${esc(c.name)}"></div>`;}).join('')}</div>`;
+  }
+  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt"><b>${esc(q.title)}</b><i>${q.done?'DONE':due.toUpperCase()}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${tabs}${body}</div>`;
+}
+function colsSheetHTML(){
+  const q=questOf(U.camp.id);if(!q)return '';const cs=colsOf(q);
+  return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Columns"><h2>Columns</h2>
+  ${cs.map((c,i)=>`<div class="st"><input class="stin cin" data-i="${i}" value="${esc(c.name)}" aria-label="Column name" autocomplete="off"><button type="button" class="stx" data-act="colUp" data-i="${i}" aria-label="Move left" ${i?'':'disabled style="opacity:.15"'}>↑</button><button type="button" class="stx" data-act="colDn" data-i="${i}" aria-label="Move right" ${i<cs.length-1?'':'disabled style="opacity:.15"'}>↓</button>${c.done?'<span class="stx" style="visibility:hidden">×</span>':`<button type="button" class="stx" data-act="colDel" data-i="${i}" aria-label="Remove column">×</button>`}</div>`).join('')}
+  <div class="st add"><span class="stp">+</span><input id="colNew" class="stin" placeholder="New column" autocomplete="off" aria-label="New column"></div>
+  <p class="note" style="margin:10px 0 0;border:0;background:none;padding:0">The last ticked-off column counts as done. Removing a column moves its cards to the first column.</p></div>`;
+}
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act,i=+el.dataset.i;
+  if(Date.now()<suppress)return;
+  const q=U.camp?questOf(U.camp.id):null;
+  switch(a){
+    case 'campBack':U.camp=null;renderOverlay();renderMain();break;
+    case 'campTab':U.camp.tab=el.dataset.v;U.camp.noteEdit=false;renderOverlay();break;
+    case 'campNoteEdit':U.camp.noteEdit=true;renderOverlay();{const x=$('#campNoteTx');x&&x.focus();}break;
+    case 'kTick':tick(el.dataset.id);break;
+    case 'qEdit':{if(!q)break;U.qs={id:q.id,title:q.title,icon:q.icon,due:q.due||'',open:null,confirmDel:false,done:q.done};U.sheet='quest';renderOverlay();break;}
+    case 'colsOpen':U.sheet='cols';renderOverlay();break;
+    case 'colUp':if(q&&i>0){const c=colsOf(q);[c[i-1],c[i]]=[c[i],c[i-1]];save();renderOverlay();}break;
+    case 'colDn':if(q){const c=colsOf(q);if(i<c.length-1){[c[i+1],c[i]]=[c[i],c[i+1]];save();renderOverlay();}}break;
+    case 'colDel':if(q){const c=colsOf(q),gone=c[i];if(!gone||gone.done||c.length<2)break;c.splice(i,1);const to=(c.find(x=>!x.done)||c[0]).id;S.tasks.forEach(t=>{if(t.q===q.id&&t.col===gone.id){t.col=to;t.ord=endOrd(q,to,t);}});save();renderOverlay();}break;
+  }
+});
+function addCol(){
+  const q=questOf(U.camp.id),x=$('#colNew');if(!q||!x)return;const n=x.value.trim();if(!n)return;
+  const c=colsOf(q),di=c.findIndex(k=>k.done);c.splice(di<0?c.length:di,0,{id:'c'+uid(),name:n});save();renderOverlay();setTimeout(()=>{const y=$('#colNew');y&&y.focus();},30);
+}
+function kAdd(col,txt){
+  const q=questOf(U.camp.id);txt=(txt||'').trim();if(!q||!txt)return;
+  const t={id:uid(),title:txt,cat:S.last||S.cats[0].id,date:'',time:'',dur:30,done:false,moves:0,createdAt:Date.now(),rep:'',q:q.id,col,ord:endOrd(q,col)};
+  S.tasks.push(t);assignCol(t,col);save();logEv('added',t,{raw:txt,catManual:false,suggested:'',batch:false,viaBoard:true});
+  renderOverlay();renderMain();setTimeout(()=>{const x=document.querySelector('.kin[data-col="'+col+'"]');if(x){x.focus();x.scrollIntoView({block:'nearest',inline:'nearest'});}},30);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  if(e.target.classList&&e.target.classList.contains('kin')){e.preventDefault();kAdd(e.target.dataset.col,e.target.value);}
+  else if(e.target.id==='colNew'){e.preventDefault();addCol();}
+  else if(e.target.classList&&e.target.classList.contains('cin')){e.preventDefault();e.target.blur();}
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='campNoteTx'&&U.camp){const q=questOf(U.camp.id);if(q){q.note=t.value;save();}}
+  else if(t.classList&&t.classList.contains('cin')&&U.camp){const q=questOf(U.camp.id);const c=q&&colsOf(q)[+t.dataset.i];if(c){c.name=t.value;save();}}
+});
+document.addEventListener('focusout',e=>{
+  if(e.target.id==='campNoteTx'&&U.camp){const q=questOf(U.camp.id);if(q){q.note=(q.note||'').trim();if(!q.note)delete q.note;save();}U.camp.noteEdit=false;setTimeout(()=>{if(U.camp&&U.camp.tab==='notes'&&!U.sheet)renderOverlay();},0);}
+  else if(e.target.classList&&e.target.classList.contains('cin')){const q=U.camp&&questOf(U.camp.id);if(q){colsOf(q).forEach(c=>{if(!c.name.trim())c.name='Column';});save();}}
+});
+
+/* drag and drop: long-press on touch, immediate drag with a mouse */
+let kd=null;
+function kLift(){
+  if(!kd||kd.on)return;kd.on=true;
+  const r=kd.el.getBoundingClientRect();
+  const g=kd.el.cloneNode(true);g.classList.add('kghost');g.style.width=r.width+'px';g.style.left=r.left+'px';g.style.top=r.top+'px';
+  document.body.appendChild(g);kd.ghost=g;kd.ox=kd.x-r.left;kd.oy=kd.y-r.top;kd.cx=kd.x;kd.cy=kd.y;
+  kd.el.classList.add('ph');if(navigator.vibrate)try{navigator.vibrate(12);}catch(x){}
+  kd.loop=setInterval(kScroll,16);
+}
+function kScroll(){
+  if(!kd||!kd.on)return;
+  const b=document.querySelector('.kboard'),f=document.querySelector('.full.camp');
+  if(b){const r=b.getBoundingClientRect();if(kd.cx<r.left+44)b.scrollLeft-=14;else if(kd.cx>r.right-44)b.scrollLeft+=14;}
+  if(f){if(kd.cy<130)f.scrollTop-=12;else if(kd.cy>innerHeight-110)f.scrollTop+=12;}
+  kPlace();
+}
+function kPlace(){
+  if(!kd||!kd.on)return;
+  kd.ghost.style.transform='translate('+(kd.cx-kd.x)+'px,'+(kd.cy-kd.y)+'px)';
+  kd.ghost.style.visibility='hidden';const at=document.elementFromPoint(kd.cx,kd.cy);kd.ghost.style.visibility='';
+  const col=at&&at.closest&&at.closest('.kcol');if(!col)return;
+  document.querySelectorAll('.kcol.hot').forEach(c=>{if(c!==col)c.classList.remove('hot');});col.classList.add('hot');
+  const box=col.querySelector('.kcards');const cards=[...box.querySelectorAll('.kc:not(.ph)')];
+  let before=null;for(const c of cards){const r=c.getBoundingClientRect();if(kd.cy<r.top+r.height/2){before=c;break;}}
+  if(before){if(kd.el.nextSibling!==before||kd.el.parentNode!==box)box.insertBefore(kd.el,before);}
+  else if(box.lastElementChild!==kd.el)box.appendChild(kd.el);
+}
+function kEnd(drop){
+  if(!kd)return;const d=kd;kd=null;clearTimeout(d.t);if(!d.on)return;
+  clearInterval(d.loop);d.ghost.remove();d.el.classList.remove('ph');document.querySelectorAll('.kcol.hot').forEach(c=>c.classList.remove('hot'));
+  suppress=Date.now()+400;
+  if(!drop){renderOverlay();return;}
+  const t=S.tasks.find(x=>x.id===d.id),q=t&&questOf(t.q),colEl=d.el.closest('.kcol');if(!t||!q||!colEl){renderOverlay();return;}
+  const col=colEl.dataset.col;
+  [...colEl.querySelectorAll('.kc')].forEach((c,i)=>{const x=S.tasks.find(y=>y.id===c.dataset.id);if(x)x.ord=i*10;});
+  const was=!!t.done,toDone=!!colsOf(q).find(c=>c.id===col).done;
+  t.col=col;
+  if(was!==toDone){tick(t.id);}else{save();renderOverlay();renderMain();}
+}
+document.addEventListener('pointerdown',e=>{
+  if(!U.camp||U.sheet)return;
+  const c=e.target.closest('.kc');if(!c||e.target.closest('.cb'))return;
+  kd={el:c,id:c.dataset.id,x:e.clientX,y:e.clientY,pid:e.pointerId,on:false,mouse:e.pointerType==='mouse'};
+  if(!kd.mouse)kd.t=setTimeout(kLift,260);
+});
+document.addEventListener('pointermove',e=>{
+  if(!kd||e.pointerId!==kd.pid)return;
+  if(!kd.on){
+    const dx=e.clientX-kd.x,dy=e.clientY-kd.y;
+    if(kd.mouse){if(Math.abs(dx)+Math.abs(dy)>6)kLift();else return;}
+    else{if(Math.abs(dx)>9||Math.abs(dy)>9){clearTimeout(kd.t);kd=null;}return;}
+  }
+  kd.cx=e.clientX;kd.cy=e.clientY;kPlace();
+});
+document.addEventListener('pointerup',e=>{if(kd&&e.pointerId===kd.pid){if(kd.on)kEnd(true);else{clearTimeout(kd.t);kd=null;}}});
+document.addEventListener('pointercancel',e=>{if(kd&&e.pointerId===kd.pid){if(kd.on)kEnd(false);else{clearTimeout(kd.t);kd=null;}}});
+document.addEventListener('touchmove',e=>{if(kd&&kd.on)e.preventDefault();},{passive:false});
+document.addEventListener('contextmenu',e=>{if(kd||e.target.closest&&e.target.closest('.kc'))e.preventDefault();});

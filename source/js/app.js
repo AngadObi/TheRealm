@@ -120,7 +120,7 @@ const REPS=[['','Once'],['daily','Daily'],['weekdays','Weekdays'],['weekly','Wee
 
 /* ---------- Sir Reg ---------- */
 function context(){
-  const td=today(),all=S.tasks,tt=all.filter(t=>t.date===td),open=tt.filter(t=>!t.done),over=all.filter(t=>!t.done&&t.date<td);
+  const td=today(),all=S.tasks,tt=all.filter(t=>t.date===td),open=tt.filter(t=>!t.done),over=all.filter(t=>!t.done&&t.date&&t.date<td);
   return {td,tt,open,over,done:tt.length-open.length};
 }
 function scenario(c){
@@ -165,7 +165,7 @@ function toast(line,undo){
 function tick(id){
   const t=S.tasks.find(x=>x.id===id);if(!t)return;
   const prev={done:t.done,doneAt:t.doneAt,steps:(t.steps||[]).map(s=>s.done)};const tier0=tierOf(t);let spawned=null;
-  t.done=!t.done;t.doneAt=t.done?Date.now():null;if(t.done&&t.steps)t.steps.forEach(s=>s.done=true);
+  t.done=!t.done;t.doneAt=t.done?Date.now():null;if(t.done&&t.steps)t.steps.forEach(s=>s.done=true);syncCol(t);
   if(t.done&&t.rep&&!t.spawn){const nd=nextDate(t.date<today()?today():t.date,t.rep);spawned={id:uid(),title:t.title,cat:t.cat,date:nd,time:t.time||'',dur:t.dur,done:false,moves:0,createdAt:Date.now(),rep:t.rep,q:t.q};if(t.note)spawned.note=t.note;if(t.steps&&t.steps.length)spawned.steps=t.steps.map(s=>({id:uid(),t:s.t,done:false}));S.tasks.push(spawned);t.spawn=spawned.id;}
   else if(!t.done&&t.spawn){const sp=S.tasks.find(x=>x.id===t.spawn);if(sp&&!sp.done)S.tasks.splice(S.tasks.indexOf(sp),1);t.spawn=null;}
   save();
@@ -177,7 +177,7 @@ function tick(id){
     else if(age>=14)line=say('longOverdue',{days:age});
     else if(Date.now()-t.createdAt<60000)line=say('quick');
     else line=say('done',{n:c.open.length});
-    toast(line,()=>{t.done=prev.done;t.doneAt=prev.doneAt;(t.steps||[]).forEach((s,i)=>{s.done=!!prev.steps[i];});if(spawned){const i=S.tasks.indexOf(spawned);if(i>=0)S.tasks.splice(i,1);t.spawn=null;}save();U.bubble=null;render();});
+    toast(line,()=>{t.done=prev.done;t.doneAt=prev.doneAt;(t.steps||[]).forEach((s,i)=>{s.done=!!prev.steps[i];});syncCol(t);if(spawned){const i=S.tasks.indexOf(spawned);if(i>=0)S.tasks.splice(i,1);t.spawn=null;}save();U.bubble=null;render();});
   }else{U.bubble=null;}
   render();
 }
@@ -216,22 +216,23 @@ function stepTick(i){const t=curTask();if(!t||!t.steps||!t.steps[i])return;const
   if(s.done&&!t.done&&t.steps.every(x=>x.done)){toast({face:3,text:'All steps done. Tick the task itself?'});}}
 function openAdd(id){U.toast=null;renderToast();
   const t=id?S.tasks.find(x=>x.id===id):null;
-  U.add={id:id||null,text:t?t.title:'',date:t?t.date:today(),time:t?t.time:'',cat:t?t.cat:(S.last||S.cats[0].id),dur:t?t.dur:30,rep:t?(t.rep||''):'',q:t?(t.q||''):'',over:{date:!!t,time:!!t,cat:!!t,dur:!!t,rep:!!t},confirmDel:false,open:null};
+  U.add={id:id||null,text:t?t.title:'',date:t?t.date:today(),time:t?t.time:'',cat:t?t.cat:(S.last||S.cats[0].id),dur:t?t.dur:30,rep:t?(t.rep||''):'',q:t?(t.q||''):'',col:t?(t.col||''):'',over:{date:!!t,time:!!t,cat:!!t,dur:!!t,rep:!!t},confirmDel:false,open:null};
   U.sheet='add';renderOverlay();
   setTimeout(()=>{const i=$('#addInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},60);
 }
 function metaHTML(){
   const a=U.add,td=today(),tm=addDays(td,1),k=cat(a.cat);
-  const dl=a.date===td?'Today':a.date===tm?'Tomorrow':fmtHead(a.date);
+  const dl=!a.date?'No date':a.date===td?'Today':a.date===tm?'Tomorrow':fmtHead(a.date);
   const dur=a.dur>=60&&a.dur%60===0?(a.dur/60)+' h':a.dur+' min';
   const pill=(id,inner)=>`<button type="button" class="chip ${U.add.open===id?'on':''}" data-act="pick" data-v="${id}">${inner}</button>`;
-  let h=`<div class="chips sm">${a.n>1?`<span class="cnt2">${a.n} tasks</span>`:''}${pill('date',esc(dl))}${pill('time',a.time||'No time')}${pill('cat',ico(iconOf(k),16,'var(--brass-l)',1.6)+esc(k.name))}${pill('dur',dur)}${a.rep?pill('rep','\u21bb '+(REPS.find(r=>r[0]===a.rep)||[0,''])[1]):pill('rep','Repeat')}${S.quests.some(q=>!q.done)||a.q?pill('quest',(questOf(a.q)?esc(questOf(a.q).title):'No quest')):''}</div>`;
+  let h=`<div class="chips sm">${a.n>1?`<span class="cnt2">${a.n} tasks</span>`:''}${pill('date',esc(dl))}${pill('time',a.time||'No time')}${pill('cat',ico(iconOf(k),16,'var(--brass-l)',1.6)+esc(k.name))}${pill('dur',dur)}${a.rep?pill('rep','\u21bb '+(REPS.find(r=>r[0]===a.rep)||[0,''])[1]):pill('rep','Repeat')}${S.quests.some(q=>!q.done)||a.q?pill('quest',(questOf(a.q)?esc(questOf(a.q).title):'No quest')):''}${a.q&&questOf(a.q)?pill('col',esc((()=>{const qq=questOf(a.q),cs=colsOf(qq);const c=cs.find(x=>x.id===a.col);return c?c.name:cs.find(x=>x.id===(a.id?(S.tasks.find(t=>t.id===a.id)||{}).col:''))?.name||cs.find(x=>x.id===startCol(qq)).name;})())):''}</div>`;
   const o=a.open;
-  if(o==='date')h+=`<div class="chips sm sub"><button type="button" class="chip ${a.date===td?'on':''}" data-act="setDate" data-v="${td}">Today</button><button type="button" class="chip ${a.date===tm?'on':''}" data-act="setDate" data-v="${tm}">Tomorrow</button><input type="date" id="addDate" value="${a.date}" aria-label="Date"></div>`;
+  if(o==='date')h+=`<div class="chips sm sub"><button type="button" class="chip ${a.date===td?'on':''}" data-act="setDate" data-v="${td}">Today</button><button type="button" class="chip ${a.date===tm?'on':''}" data-act="setDate" data-v="${tm}">Tomorrow</button>${a.q?`<button type="button" class="chip ${!a.date?'on':''}" data-act="setDate" data-v="">No date</button>`:''}<input type="date" id="addDate" value="${a.date}" aria-label="Date"></div>`;
   else if(o==='time')h+=`<div class="chips sm sub"><input type="time" id="addTime" value="${a.time||''}" aria-label="Time"><button type="button" class="chip" data-act="clearTime">No time</button></div>`;
   else if(o==='cat')h+=`<div class="chips sm sub">${S.cats.map(c=>`<button type="button" class="chip ${a.cat===c.id?'on':''}" data-act="setCat" data-v="${c.id}">${ico(iconOf(c),16,'var(--brass-l)',1.6)}${esc(c.name)}</button>`).join('')}<button type="button" class="chip" data-act="newCat">${ico('plus',16)}New</button></div>`;
   else if(o==='rep')h+=`<div class="chips sm sub">${REPS.map(([v,l])=>`<button type="button" class="chip ${a.rep===v?'on':''}" data-act="setRep" data-v="${v}">${l}</button>`).join('')}</div>`;
   else if(o==='quest')h+=`<div class="chips sm sub"><button type="button" class="chip ${!a.q?'on':''}" data-act="setQuest" data-v="">None</button>${S.quests.filter(q=>!q.done).map(q=>`<button type="button" class="chip ${a.q===q.id?'on':''}" data-act="setQuest" data-v="${q.id}">${ico(q.icon,16,'var(--brass-l)',1.6)}${esc(q.title)}</button>`).join('')}</div>`;
+  else if(o==='col'&&questOf(a.q))h+=`<div class="chips sm sub">${colsOf(questOf(a.q)).map(c=>`<button type="button" class="chip ${(a.col||(S.tasks.find(t=>t.id===a.id)||{}).col||startCol(questOf(a.q)))===c.id?'on':''}" data-act="setCol" data-v="${c.id}">${esc(c.name)}</button>`).join('')}</div>`;
   else if(o==='dur')h+=`<div class="chips sm sub">${[[15,'15 min'],[30,'30 min'],[45,'45 min'],[60,'1 h'],[90,'90 min'],[120,'2 h']].map(([v,l])=>`<button type="button" class="chip ${a.dur===v?'on':''}" data-act="setDur" data-v="${v}">${l}</button>`).join('')}</div>`;
   return h;
 }
@@ -261,7 +262,7 @@ function submitAdd(){
   const a=U.add;const raw=($('#addInput').value||'').trim();if(!raw)return;
   if(a.id){
     const t=S.tasks.find(x=>x.id===a.id);if(!t)return;
-    const oc=t.cat;t.title=raw;t.date=a.date||today();t.time=a.time||'';t.cat=a.cat;t.dur=a.dur;t.rep=a.rep||'';t.q=a.q||'';learn(raw,a.cat);save();if(oc!==a.cat)logEv('recat',t,{from:cat(oc).name});U.sheet=null;render();return;
+    const oc=t.cat;t.title=raw;t.date=a.date||(a.q?'':today());t.time=a.time||'';t.cat=a.cat;t.dur=a.dur;t.rep=a.rep||'';t.q=a.q||'';assignCol(t,a.col);learn(raw,a.cat);save();if(oc!==a.cat)logEv('recat',t,{from:cat(oc).name});U.sheet=null;render();return;
   }
   const parts=raw.split(',').map(x=>x.trim()).filter(Boolean);
   const made=[];
@@ -274,7 +275,7 @@ function submitAdd(){
       dur=p.dur||(a.over.dur?a.dur:(p.guess||30));cid=a.over.cat?a.cat:(p.cat||a.cat||S.last);
     }
     const t={id:uid(),title,cat:cid,date,time,dur,done:false,moves:0,createdAt:Date.now()+i,rep:(parts.length===1?a.rep:(p.rep||(a.over.rep?a.rep:'')))||'',q:a.q||''};
-    S.tasks.push(t);made.push(t);learn(title,cid);
+    S.tasks.push(t);made.push(t);if(t.q)assignCol(t,'');learn(title,cid);
     if(p.dragon){S.plans[date]=Object.assign({},S.plans[date]||{},{dragonId:t.id});t.dragonSet=true;}
     logEv('added',t,{raw:part,catManual:parts.length===1?!!a.over.cat:!!a.over.cat,suggested:p.cat?cat(p.cat).name:'',batch:parts.length>1});
   });
@@ -437,13 +438,15 @@ function renderOverlay(){
   let h='';
   if(U.menu)h+=menuHTML();
   if(U.council)h+=councilHTML();
+  if(U.camp)h+=campHTML();
   h+=extSheets();
   if(U.sheet==='add')h+=addSheetHTML();
   if(U.sheet==='newcat')h+=newCatHTML();
   if(U.sheet==='tray')h+=trayHTML();
-  const host=$('#overlay');const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;
+  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;
   host.innerHTML=h;
   const f=host.querySelector('.full');if(f)f.scrollTop=ks;
+  const nb=host.querySelector('.kboard');if(nb)nb.scrollLeft=kbs;
   if(typeof navSync==='function')navSync();
 }
 function renderToast(){
@@ -504,7 +507,8 @@ document.addEventListener('click',e=>{
     case 'place':U.placing=id;U.sheet=null;U.view='road';render();break;
     case 'cancelPlace':U.placing=null;renderMain();break;
     case 'setRep':U.add.rep=v;U.add.over.rep=true;U.add.open=null;refreshMeta();break;
-    case 'setQuest':U.add.q=v;U.add.open=null;refreshMeta();break;
+    case 'setCol':U.add.col=v;U.add.open=null;refreshMeta();break;
+    case 'setQuest':U.add.col='';U.add.q=v;U.add.open=null;refreshMeta();break;
     default:extAct(act,v,id,el);
   }
 });
@@ -527,7 +531,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='Enter'&&e.target.classList.contains('stin')){e.preventDefault();e.target.blur();}
   else if(e.key==='Enter'&&e.target.id==='addInput'){e.preventDefault();submitAdd();}
   else if(e.key==='Enter'&&e.target.id==='ncName'){e.preventDefault();const b=document.querySelector('[data-act=ncSave]');b&&b.click();}
-  else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.council){U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
+  else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.camp){U.camp=null;renderOverlay();renderMain();}else if(U.council){U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
   else if(extKey(e)){e.preventDefault();}
 });
 
