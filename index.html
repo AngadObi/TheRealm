@@ -987,9 +987,7 @@ function currentLine(c){
 let bubbleTimer=0,PEND=null,EVT='';
 function say(key,vars){
   const ln=pickLine(key,vars);EVT=ln.text;try{localStorage.removeItem('sirreg.line');}catch(e){}LC={key:''};
-  U.bubble=Object.assign({},ln,{until:Date.now()+6000});
-  clearTimeout(bubbleTimer);bubbleTimer=setTimeout(()=>{U.bubble=null;renderHead();},6200);
-  return U.bubble;
+  return ln;
 }
 function toast(line,undo){
   U.toast={face:line.face,text:line.text,undo:undo||null,id:Date.now()};
