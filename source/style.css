@@ -337,3 +337,10 @@ section.cat{position:relative}
 .mil div{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px dashed var(--border);color:var(--dim);font:17px var(--fell)}
 .mil div.on{color:var(--bone)}.mil span{width:20px;height:20px;border:1.5px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center}
 .mil div.on span{background:var(--brass);border-color:var(--brass);color:var(--page)}.mil em{margin-left:auto;font:500 11px var(--mono);font-style:normal}
+
+.dues{border:1.5px solid var(--border);border-radius:4px;background:var(--tile)}
+.dr{display:flex;align-items:center;gap:2px;padding:2px 12px 2px 2px;border-bottom:1px dashed var(--border)}.dr:last-child{border:0}
+.dr .cb{margin-left:0;width:40px}.dr .cb i{width:18px;height:18px}
+.dr .kt{flex:1;min-width:0}.dr .kt b{font:500 16px var(--sans,Inter,sans-serif);color:var(--bone)}
+.dr em{font:500 11.5px var(--mono);font-style:normal;letter-spacing:.06em;color:var(--dim);white-space:nowrap}
+.dr em b,.dr .od,.dr .soon{font-weight:500}.dr .od{color:var(--ember-dark,#d05a3a)}.dr .soon{color:var(--brass-l)}

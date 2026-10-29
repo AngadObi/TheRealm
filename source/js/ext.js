@@ -198,14 +198,14 @@ function extAct(act,v,id,el){
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;
     /* quests */
     case 'addQuest':U.qs={id:null,title:'',icon:'flag',due:'',open:null,confirmDel:false};U.sheet='quest';renderOverlay();setTimeout(()=>{const x=$('#qTitle');x&&x.focus();},60);break;
-    case 'openQuest':{const q=questOf(id);if(!q)break;U.camp={id:q.id,tab:'board'};renderOverlay();campFocusBoard();break;}
+    case 'openQuest':{const q=questOf(id);if(!q)break;U.camp={id:q.id,tab:'brief'};renderOverlay();break;}
     case 'qOpen':{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.open=U.qs.open===v?null:v;renderOverlay();break;}
     case 'qNoDate':U.qs.due='';U.qs.open=null;renderOverlay();break;
     case 'qIcon':U.qs.icon=v;U.qs.open=null;renderOverlay();break;
     case 'qSave':{
       const q=U.qs;q.title=(($('#qTitle')||{}).value||'').trim();if(!q.title)break;
       if(q.id){const o=questOf(q.id);if(o){o.title=q.title;o.icon=q.icon;o.due=q.due;}}
-      else{const nq={id:uid(),title:q.title,icon:q.icon,due:q.due,created:Date.now(),cols:DEFCOLS()};S.quests.push(nq);U.camp={id:nq.id,tab:'board'};}
+      else{const nq={id:uid(),title:q.title,icon:q.icon,due:q.due,created:Date.now(),cols:DEFCOLS()};S.quests.push(nq);U.camp={id:nq.id,tab:'brief'};}
       save();U.sheet=null;U.qs=null;say('added');render();break;}
     case 'qTick':{tick(id);U.qs&&U.qs.id&&(U.sheet='quest');renderOverlay();break;}
     case 'qEditTask':U.sheet=null;openAdd(id);break;

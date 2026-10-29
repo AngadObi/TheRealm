@@ -74,11 +74,19 @@ function journeyHTML(q,s){
   const cap=q.due?(s.left<0?-s.left+'d overdue':s.left===0?'battle today':s.left+'d left'):'no deadline set';
   return `<div class="jr"><div class="jt"><i style="width:${s.pc}%"></i>${MILES.slice(0,3).map(m=>`<u style="left:${m[0]}%" class="${s.pc>=m[0]?'on':''}"></u>`).join('')}<span class="jm" style="left:${s.pc}%">${ico('family',16,'var(--page)',2)}</span></div><div class="jc"><b>${rk[0].toUpperCase()}</b><span>${s.done}/${s.n} \u00b7 ${cap}</span></div></div>`;
 }
+function dueHTML(q){
+  const td=today();
+  const ts=S.tasks.filter(t=>t.q===q.id&&!t.done&&t.date).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.time||'99')<(b.time||'99')?-1:1);
+  const rows=ts.slice(0,8).map(t=>{const d=diffDays(t.date,td);const w=d<0?`<b class="od">${-d}d overdue</b>`:d===0?'<b class="soon">today</b>':d===1?'tomorrow':shortDue(t.date).toLowerCase();
+    return `<div class="dr"><button type="button" class="cb" data-act="kTick" data-id="${t.id}" aria-label="Mark done: ${esc(t.title)}"><i></i></button><span class="kt" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b></span><em>${w}${t.time?' '+t.time:''}</em></div>`;}).join('');
+  return `<div class="bf"><label>Due</label>${rows?`<div class="dues">${rows}</div>${ts.length>8?`<p class="note" style="border:0;background:none;padding:4px 0 0;margin:0">and ${ts.length-8} more</p>`:''}`:'<p class="note" style="margin:0">Nothing dated. Give a card a date and it shows up here and on your days.</p>'}</div>`;
+}
 function briefHTML(q){
   const s=campStats(q),rk=rankOf(s,q),L=campLine(q),C=U.camp;
   const fld=(k,label,ph)=>{const v=q[k]||'';return `<div class="bf"><label>${label}</label>${C.edit===k||!v?`<textarea id="bf_${k}" class="note ta" rows="2" placeholder="${ph}" data-k="${k}">${esc(v)}</textarea>`:`<div class="note" data-act="briefEdit" data-v="${k}">${linkify(v)}</div>`}</div>`;};
   return `<div class="brief"><div class="bsr"><img src="${kn(L.face)}" alt=""><span>${esc(L.text)}</span></div>
   <div class="rank"><span class="qtile">${ico(rk[1],26,'var(--glow)',1.5)}</span><div><b>${rk[0]}</b><i>${s.xp} XP \u00b7 ${s.pc}% OF THE CAMPAIGN</i></div></div>
+  ${dueHTML(q)}
   ${fld('goal','The goal','What does victory look like?')}${fld('stakes','At stake','What happens if you do not finish?')}${fld('reward','The spoils','What do you get when you win?')}
   <div class="tiles"><div><b>${s.done}</b><i>SLAIN</i></div><div><b>${s.doing}</b><i>IN BATTLE</i></div><div><b>${s.blocked}</b><i>BLOCKED</i></div><div><b>${s.left===null?'-':Math.max(0,s.left)}</b><i>DAYS LEFT</i></div></div>
   <div class="mil">${MILES.map(m=>`<div class="${s.pc>=m[0]?'on':''}"><span>${s.pc>=m[0]?ico('check',14,'currentColor',3):''}</span>${m[1]}<em>${m[0]}%</em></div>`).join('')}</div></div>`;
@@ -114,7 +122,7 @@ document.addEventListener('click',e=>{
   const q=U.camp?questOf(U.camp.id):null;
   switch(a){
     case 'campBack':U.camp=null;renderOverlay();renderMain();break;
-    case 'campTab':U.camp.tab=el.dataset.v;U.camp.noteEdit=false;renderOverlay();break;
+    case 'campTab':U.camp.tab=el.dataset.v;U.camp.noteEdit=false;renderOverlay();if(el.dataset.v==='board')campFocusBoard();break;
     case 'campNoteEdit':U.camp.noteEdit=true;renderOverlay();{const x=$('#campNoteTx');x&&x.focus();}break;
     case 'briefEdit':U.camp.edit=el.dataset.v;renderOverlay();{const x=$('#bf_'+el.dataset.v);x&&x.focus();}break;
     case 'kTick':tick(el.dataset.id);break;
