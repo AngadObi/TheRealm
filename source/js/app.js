@@ -67,7 +67,7 @@ S=load();S.logq=S.logq||[];S.quests=S.quests||[];S.ideas=S.ideas||[];S.halls=S.h
 let DB=null,flushing=false;
 async function flush(){
   if(!DB||flushing||!S.logq.length)return;flushing=true;
-  try{while(S.logq.length){const e=S.logq[0];await DB.collection('log').doc(e.id).set(e);S.logq.shift();save();}}catch(err){}
+  try{while(S.logq.length){const e=S.logq[0];await DB.collection('log').doc(e.id).set(e);S.logq.shift();save(true);}}catch(err){}
   flushing=false;
 }
 function logEv(ev,t,extra){
@@ -373,6 +373,7 @@ function menuHTML(){
   <p class="note">${memOnly?'Storage is blocked here, so changes last only until you close this page.':'Data is kept on this device, and synced when sync is on. Task titles are also logged so Sir Reg can learn your habits.'}</p></div>`;
 }
 const MOODS=[['steady','Steady','Calm and consistent.','steady'],['focus','Focused','One task at a time.','focus'],['bolt','Relentless','No mercy today.','bolt'],['easy','Easy going','We do what we can.','easy'],['eye','Wary','Trust nothing, tick everything.','eye'],['flame','Bold','Do the scary thing first.','flame']];
+const newDragonHTML=()=>`<div class="arow" style="margin-top:10px"><input id="dragonNew" class="inp" type="text" placeholder="Or name a new dragon" autocomplete="off" aria-label="New dragon"><button type="button" class="go" data-act="dragonNew" aria-label="Add as dragon">${ico('plus',22,'currentColor',2.6)}</button></div>`;
 function councilHTML(){
   if(U.council.kind&&U.council.kind!=='day')return extCouncilHTML();
   const C=U.council,c=context();
@@ -385,14 +386,14 @@ function councilHTML(){
   let dr;
   if(dt)dr=`<div class="dcard"><div style="flex:1;line-height:1.2"><div style="font-size:16.5px;font-weight:600">${esc(dt.title)}</div><div class="mono" style="font-size:12px;color:var(--dim)">${esc(cat(dt.cat).name)}${dt.time?' · '+dt.time:''}${dt.moves?' · moved '+dt.moves+' times':''}</div></div><button type="button" class="ib quiet" style="border:0;background:none" data-act="dragonClear" aria-label="Clear the dragon">${ico('x',20,'currentColor',2)}</button></div>
     <div class="rg"><img src="${kn(8)}" alt="Sir Reg, scheming"><span>${esc(C.line||'A brave choice. I would have picked the easier dread.')}</span></div>`;
-  else dr=`<button type="button" class="dcard" style="border-style:dashed;color:var(--dim);font:italic 18px var(--fell)" data-act="dragonOpen">${cands.length?'Pick the task you dread most':'No open tasks to pick from'}</button>${sug&&sug.moves>0?`<p class="note" style="margin-top:8px">Sir Reg suggests ${esc(sug.title)}. It has been moved ${sug.moves} times.</p>`:''}`;
+  else dr=`<button type="button" class="dcard" style="border-style:dashed;color:var(--dim);font:italic 18px var(--fell)" data-act="dragonOpen">${cands.length?'Pick the task you dread most':'No open tasks yet'}</button>${sug&&sug.moves>0?`<p class="note" style="margin-top:8px">Sir Reg suggests ${esc(sug.title)}. It has been moved ${sug.moves} times.</p>`:''}`;
   const picker=C.pickOpen?`<div class="pick">${cands.map(t=>`<button type="button" data-act="dragonPick" data-id="${t.id}">${ico(iconOf(cat(t.cat)),18,'var(--brass-l)',1.6)}${esc(t.title)}${t.moves?`<small>moved ${t.moves}x</small>`:''}</button>`).join('')}</div>`:'';
   const moods=MOODS.map(([k,n,s,i])=>`<button type="button" class="mood g ${C.mood===k?'on':''}" data-act="mood" data-v="${k}" role="radio" aria-checked="${C.mood===k}">${ico(i,38,C.mood===k?'var(--glow)':'var(--brass-l)',1.5)}<b>${n}</b><span>${s}</span></button>`).join('');
   return `<div class="full g" role="dialog" aria-label="The Council"><div style="display:flex;align-items:center;height:64px;padding-top:16px"><button type="button" class="ib quiet" data-act="closeCouncil" aria-label="Close the Council">${ico('x',22,'currentColor',2)}</button><span class="mono" style="margin-left:auto;font:500 12.5px var(--mono);letter-spacing:.1em;color:var(--dim)">${fmtHead(c.td).toUpperCase()}</span></div>
   <h1 class="fell" style="margin:6px 0 0;text-align:center;font:400 40px/1 var(--fell)">The Council</h1><p class="fell" style="margin:6px 0 0;text-align:center;font:italic 17px var(--fell);color:var(--dim)">Plan your day with intention, my lord.</p>
   ${left}
   ${sh('flag','var(--brass-l)','Focus of the day','What is today for?')}<textarea id="focusTxt" class="tb" rows="2" placeholder="One sentence, for yourself" aria-label="Focus of the day">${esc(C.focus||'')}</textarea>
-  ${sh('flame','var(--glow)','Slay the Dragon','The one you dread most today')}${dr}${picker}
+  ${sh('flame','var(--glow)','Slay the Dragon','The one you dread most today')}${dr}${picker}${dt?'':newDragonHTML()}
   ${sh('compass','var(--brass-l)','Mood and mindset','How shall we approach today?')}<div class="moods" role="radiogroup" aria-label="Mood">${moods}</div>
   <div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncil">Save Plan</button></div></div>`;
 }
@@ -420,6 +421,7 @@ function renderOverlay(){
   const host=$('#overlay');const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;
   host.innerHTML=h;
   const f=host.querySelector('.full');if(f)f.scrollTop=ks;
+  if(typeof navSync==='function')navSync();
 }
 function renderToast(){
   const t=U.toast,host=$('#toast');
@@ -427,7 +429,7 @@ function renderToast(){
   const top=U.sheet==='add'||U.council||U.menu;
   host.innerHTML=`<div class="toast g" role="status" style="${top?'bottom:auto;top:16px':''}"><img src="${kn(t.face)}" alt=""><span>${esc(t.text)}</span>${t.undo?'<button type="button" data-act="undo">UNDO</button>':''}</div>`;
 }
-function render(keepOverlay){renderHead();renderMain();renderDock();if(!keepOverlay)renderOverlay();renderToast();}
+function render(keepOverlay){renderHead();renderMain();renderDock();if(!keepOverlay)renderOverlay();else if(typeof navSync==='function')navSync();renderToast();}
 
 /* ---------- events ---------- */
 let suppress=0;

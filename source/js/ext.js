@@ -183,6 +183,12 @@ function candidates(){return S.tasks.filter(t=>!t.done).sort((a,b)=>(b.moves||0)
 function extAct(act,v,id,el){
   switch(act){
     case 'goto':goto(v);break;
+    case 'dragonNew':{
+      const inp=$('#dragonNew');const raw=((inp||{}).value||'').trim();if(!raw||!U.council)break;
+      const p=parseQuick(raw,pctx());const title=p.title||raw;
+      const t={id:uid(),title:title[0].toUpperCase()+title.slice(1),cat:p.cat||S.last||S.cats[0].id,date:p.date||today(),time:p.time||'',dur:p.dur||p.guess||60,done:false,moves:0,createdAt:Date.now(),rep:'',q:''};
+      S.tasks.push(t);learn(t.title,t.cat);save();logEv('added',t,{raw,catManual:false,suggested:p.cat?cat(p.cat).name:'',batch:false,viaCouncil:true});
+      U.council.focus=($('#focusTxt')||{}).value||U.council.focus;U.council.dragonId=t.id;U.council.pickOpen=false;U.council.line=pickLine('dragonPicked',{id:t.id,task:t.title}).text;renderOverlay();render(true);break;}
     case 'sync':if(window.realmSync){realmSync.user()?realmSync.signOut():realmSync.signIn();}break;
     case 'councilK':openCouncil(v);break;
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;
@@ -233,6 +239,7 @@ function extInput(t){
 document.addEventListener('change',e=>{if(e.target.id==='qDue'&&U.qs){U.qs.due=e.target.value;U.qs.open=null;renderOverlay();}});
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.id==='qTitle'){e.preventDefault();const b=document.querySelector('[data-act=qSave]');b&&b.click();}
+  else if(e.key==='Enter'&&e.target.id==='dragonNew'){e.preventDefault();const b=document.querySelector('[data-act=dragonNew]');b&&b.click();}
   else if(e.key==='Enter'&&e.target.id==='iTitle'){e.preventDefault();const b=document.querySelector('[data-act=iSave]');b&&b.click();}
 });
 function extKey(e){
@@ -309,32 +316,33 @@ function extCouncilHTML(){
   let dr;
   if(dt)dr=`<div class="dcard"><div style="flex:1;line-height:1.2"><div style="font-size:16.5px;font-weight:600">${esc(dt.title)}</div><div class="mono" style="font-size:12px;color:var(--dim)">${esc(cat(dt.cat).name)}${dt.moves?' · moved '+dt.moves+' times':''} · ${shortDue(dt.date)}</div></div><button type="button" class="ib quiet" style="border:0;background:none" data-act="dragonClear" aria-label="Clear the dragon">${ico('x',20,'currentColor',2)}</button></div>
     <div class="rg"><img src="${kn(tier==='ancient'?2:tier==='wyrm'?7:8)}" alt=""><span>${esc(C.line||pickLine(TIERLINE[tier],{since:DAYS[new Date(dt.createdAt).getDay()]}).text)}</span></div>`;
-  else dr=`<button type="button" class="dcard" style="border-style:dashed;color:var(--dim);font:italic 18px var(--fell)" data-act="dragonOpen">${cands.length?'Pick the task you dread most':'No open tasks to pick from'}</button>`;
+  else dr=`<button type="button" class="dcard" style="border-style:dashed;color:var(--dim);font:italic 18px var(--fell)" data-act="dragonOpen">${cands.length?'Pick the task you dread most':'No open tasks yet'}</button>`;
   const picker=C.pickOpen?`<div class="pick">${cands.map(t=>`<button type="button" data-act="dragonPick" data-id="${t.id}">${ico(iconOf(cat(t.cat)),18,'var(--brass-l)',1.6)}${esc(t.title)}${t.moves?`<small>moved ${t.moves}x</small>`:''}</button>`).join('')}</div>`:'';
   return `<div class="full g" role="dialog" aria-label="${title}"><div style="display:flex;align-items:center;height:64px;padding-top:16px"><button type="button" class="ib quiet" data-act="closeCouncil" aria-label="Close the Council">${ico('x',22,'currentColor',2)}</button><span class="mono" style="margin-left:auto;font:500 12.5px var(--mono);letter-spacing:.1em;color:var(--dim)">${head}</span></div>
   <h1 class="fell" style="margin:6px 0 0;text-align:center;font:400 38px/1 var(--fell)">${title}</h1><p class="fell" style="margin:6px 0 0;text-align:center;font:italic 17px var(--fell);color:var(--dim)">${sub}</p>
   ${sections('flag','var(--brass-l)',focusLbl,focusQ)}<textarea id="focusTxt" class="tb" rows="2" placeholder="One sentence, for yourself" aria-label="${focusLbl}">${esc(C.focus||'')}</textarea>
   ${mid}
-  ${sections('flame','var(--glow)','Slay the '+dragonName,'The one you dread most '+scope,TAGS[tier])}${dr}${picker}
+  ${sections('flame','var(--glow)','Slay the '+dragonName,'The one you dread most '+scope,TAGS[tier])}${dr}${picker}${dt?'':newDragonHTML()}
   <div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncilK">Save Plan</button></div></div>`;
 }
 
 /* ---------- sync across devices through the artifact database ---------- */
-var pushT=0;
+var pushT=0,lastJson='';
 function pushSoon(){clearTimeout(pushT);pushT=setTimeout(push,1500);}
 async function push(){
   if(!DB)return;
   try{
     const copy=Object.assign({},S);delete copy.logq;const st=Object.assign({},S.settings);delete st.theme;copy.settings=st;
-    await DB.doc('state/main').set({rev:S.rev,json:JSON.stringify(copy),at:new Date().toISOString()});
+    const js=JSON.stringify(copy);lastJson=js;await DB.doc('state/main').set({rev:S.rev,json:js,at:new Date().toISOString()});
   }catch(e){}
 }
 function syncInit(){
   if(!DB)return;
   try{
     DB.doc('state/main').onSnapshot(snap=>{
+      if(snap.metadata&&snap.metadata.hasPendingWrites)return;
       if(!snap.exists){if(S.rev>0)push();return;}
-      const d=snap.data();if(!d||!d.json)return;
+      const d=snap.data();if(!d||!d.json||d.json===lastJson)return;lastJson=d.json;
       if(d.rev>S.rev){
         try{
           const o=JSON.parse(d.json);
@@ -343,7 +351,7 @@ function syncInit(){
             S=o;S.logq=keep.logq;S.settings=S.settings||{};S.settings.theme=keep.theme;S.rev=d.rev;
             S.quests=S.quests||[];S.ideas=S.ideas||[];S.halls=S.halls||defaultHalls();S.cplans=S.cplans||{};
             save(true);applyTheme();LC.key='';
-            if(!document.activeElement||!/INPUT|TEXTAREA/.test(document.activeElement.tagName))render();
+            if(!U.sheet&&!U.council&&!U.menu&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)))render();else{renderHead();renderMain();renderDock();}
           }
         }catch(e){}
       }else if(d.rev<S.rev){pushSoon();}
@@ -435,6 +443,27 @@ function pickLine(key,vars){
   let r=null;try{r=libPick(key,vars);}catch(e){r=null;}
   return r||pick0(key,vars);
 }
+
+
+/* ---------- phone back gesture: close the top layer, or go back to Today, before leaving the app ---------- */
+var navCur=0,navBusy=false,navTarget=0;
+function navWant(){return (U.view!=='list'?1:0)+((U.sheet||U.council||U.menu)?1:0);}
+function navSync(){
+  if(navBusy)return;
+  const d=navWant();
+  try{
+    if(d>navCur){for(let i=navCur+1;i<=d;i++)history.pushState({d:i},'');navCur=d;}
+    else if(d<navCur){navBusy=true;navTarget=d;history.go(-(navCur-d));}
+  }catch(x){navBusy=false;}
+}
+addEventListener('popstate',()=>{
+  if(navBusy){navBusy=false;navCur=navTarget;navSync();return;}
+  navCur=(history.state&&history.state.d)||0;
+  if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}
+  else if(U.sheet||U.council||U.menu){U.sheet=null;U.council=null;U.menu=false;renderOverlay();}
+  else if(U.view!=='list'){goto('list');}
+  navSync();
+});
 
 /* ---------- boot ---------- */
 $('#app').insertAdjacentHTML('afterbegin','<header class="head" id="head"></header><main class="scroll" id="main"></main><div id="dockhost"></div><div id="overlay"></div><div id="toast"></div>');
