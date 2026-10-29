@@ -1,4 +1,4 @@
-const V='realm-1793292047';
+const V='realm-1793292192';
 const SHELL=['./','./index.html','./manifest.webmanifest','./sync.js','./firebase-config.js','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL.concat(KN()))).then(()=>self.skipWaiting()));});
 function KN(){const a=[];for(let i=1;i<=10;i++){a.push('./knight/n'+i+'.png','./knight/l'+i+'.png');}return a;}

@@ -198,7 +198,7 @@ function extAct(act,v,id,el){
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;
     /* quests */
     case 'addQuest':U.qs={id:null,title:'',icon:'flag',due:'',open:null,confirmDel:false};U.sheet='quest';renderOverlay();setTimeout(()=>{const x=$('#qTitle');x&&x.focus();},60);break;
-    case 'openQuest':{const q=questOf(id);if(!q)break;U.camp={id:q.id,tab:'board'};renderOverlay();break;}
+    case 'openQuest':{const q=questOf(id);if(!q)break;U.camp={id:q.id,tab:'board'};renderOverlay();campFocusBoard();break;}
     case 'qOpen':{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.open=U.qs.open===v?null:v;renderOverlay();break;}
     case 'qNoDate':U.qs.due='';U.qs.open=null;renderOverlay();break;
     case 'qIcon':U.qs.icon=v;U.qs.open=null;renderOverlay();break;
@@ -210,7 +210,7 @@ function extAct(act,v,id,el){
     case 'qTick':{tick(id);U.qs&&U.qs.id&&(U.sheet='quest');renderOverlay();break;}
     case 'qEditTask':U.sheet=null;openAdd(id);break;
     case 'qAddTask':{const qid=U.qs.id;U.sheet=null;openAdd(null);U.add.q=qid;refreshMeta();break;}
-    case 'qDone':{const o=questOf(U.qs.id);if(o){o.done=!o.done;save();if(o.done){const l=say('questDone');toast(l);}U.sheet=null;render();}break;}
+    case 'qDone':{const o=questOf(U.qs.id);if(o){o.done=!o.done;save();if(o.done){const l=say('questDone');if(o.reward)l.text='Victory. Claim your spoils: '+o.reward;toast(l);}U.sheet=null;render();}break;}
     case 'qDel':if(U.qs.confirmDel){const qid=U.qs.id;S.tasks=S.tasks.filter(t=>!(t.q===qid&&!t.date));S.tasks.forEach(t=>{if(t.q===qid){t.q='';delete t.col;delete t.ord;}});S.quests=S.quests.filter(x=>x.id!==qid);save();U.sheet=null;U.camp=null;render();}else{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.confirmDel=true;renderOverlay();}break;
     /* ideas */
     case 'addIdea':U.is={id:null,text:'',hall:v||S.halls[0].id,confirmDel:false};U.sheet='idea';renderOverlay();setTimeout(()=>{const x=$('#iTitle');x&&x.focus();},60);break;

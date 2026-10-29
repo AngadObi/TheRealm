@@ -39,20 +39,65 @@ function cardHTML(t){
   const tier=tierOf(t);
   return `<div class="kc ${t.done?'done':''}" data-id="${t.id}"><button type="button" class="cb" data-act="kTick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${!!t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button><div class="kt" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${meta.length||tier?`<em>${tier?TAGS[tier]+(meta.length?' · ':''):''}${esc(meta.join(' · '))}</em>`:''}</div></div>`;
 }
+
+function campStats(q){
+  const ts=S.tasks.filter(t=>t.q===q.id),n=ts.length,done=ts.filter(t=>t.done).length;
+  const inCol=id=>ts.filter(t=>colOfTask(t,q)===id&&!t.done).length;
+  const left=q.due?diffDays(q.due,today()):null;
+  return {n,done,pc:n?Math.round(done/n*100):0,doing:inCol('doing'),blocked:inCol('blocked'),left,xp:done*10};
+}
+function rankOf(s,q){
+  if(q.done||(s.n&&s.done===s.n))return ['Victory','crown'];
+  if(!s.n)return ['Mustering','flag'];
+  if(s.pc<40)return ['On the march','path'];
+  if(s.pc<75)return ['Deep in enemy lands','compass'];
+  return ['At the gates','focus'];
+}
+const CL={
+ empty:[5,['A campaign without cards is a rumour. Give me three, my lord.','Every great war began with a list. Start the list.','The map is empty. That is fine. Maps are cheap.']],
+ blocked:[4,['Something blocks the road. Name it. Blockers hate being named.','A blocker is just a task you have not been introduced to yet.']],
+ late:[7,['The deadline has passed. The war has not. Move the date and march on.','Late, but not lost. Armies have been later.']],
+ soon:[9,['The battle is close. Spend your cards wisely, not widely.','Few days left. This is where legends are made, or at least finished.']],
+ won:[6,['Every card cleared. Mark the campaign complete. You earned the smugness.','Victory. I will pretend I never doubted you.']],
+ high:[3,['The gates are in sight. Do not stop to admire them.','Nearly there. The enemy is rehearsing a speech about mercy.']],
+ mid:[3,['Steady progress. The enemy has noticed. Good.','Keep the cards moving. Doing beats planning, narrowly.','You are further along than it feels. That is how campaigns work.']]
+};
+function campLine(q){
+  const s=campStats(q);let k='mid';
+  if(!s.n)k='empty';else if(s.done===s.n)k='won';else if(s.left!==null&&s.left<0&&!q.done)k='late';else if(s.blocked)k='blocked';else if(s.left!==null&&s.left<=7)k='soon';else if(s.pc>=75)k='high';
+  const [face,ls]=CL[k];let h=0;const key=q.id+today()+k;for(let i=0;i<key.length;i++)h=(h*31+key.charCodeAt(i))>>>0;
+  return {face,text:ls[h%ls.length]};
+}
+const MILES=[[25,'Muster the troops'],[50,'Cross the border'],[75,'Storm the gates'],[100,'Victory']];
+function journeyHTML(q,s){
+  const rk=rankOf(s,q);
+  const cap=q.due?(s.left<0?-s.left+'d overdue':s.left===0?'battle today':s.left+'d left'):'no deadline set';
+  return `<div class="jr"><div class="jt"><i style="width:${s.pc}%"></i>${MILES.slice(0,3).map(m=>`<u style="left:${m[0]}%" class="${s.pc>=m[0]?'on':''}"></u>`).join('')}<span class="jm" style="left:${s.pc}%">${ico('family',16,'var(--page)',2)}</span></div><div class="jc"><b>${rk[0].toUpperCase()}</b><span>${s.done}/${s.n} \u00b7 ${cap}</span></div></div>`;
+}
+function briefHTML(q){
+  const s=campStats(q),rk=rankOf(s,q),L=campLine(q),C=U.camp;
+  const fld=(k,label,ph)=>{const v=q[k]||'';return `<div class="bf"><label>${label}</label>${C.edit===k||!v?`<textarea id="bf_${k}" class="note ta" rows="2" placeholder="${ph}" data-k="${k}">${esc(v)}</textarea>`:`<div class="note" data-act="briefEdit" data-v="${k}">${linkify(v)}</div>`}</div>`;};
+  return `<div class="brief"><div class="bsr"><img src="${kn(L.face)}" alt=""><span>${esc(L.text)}</span></div>
+  <div class="rank"><span class="qtile">${ico(rk[1],26,'var(--glow)',1.5)}</span><div><b>${rk[0]}</b><i>${s.xp} XP \u00b7 ${s.pc}% OF THE CAMPAIGN</i></div></div>
+  ${fld('goal','The goal','What does victory look like?')}${fld('stakes','At stake','What happens if you do not finish?')}${fld('reward','The spoils','What do you get when you win?')}
+  <div class="tiles"><div><b>${s.done}</b><i>SLAIN</i></div><div><b>${s.doing}</b><i>IN BATTLE</i></div><div><b>${s.blocked}</b><i>BLOCKED</i></div><div><b>${s.left===null?'-':Math.max(0,s.left)}</b><i>DAYS LEFT</i></div></div>
+  <div class="mil">${MILES.map(m=>`<div class="${s.pc>=m[0]?'on':''}"><span>${s.pc>=m[0]?ico('check',14,'currentColor',3):''}</span>${m[1]}<em>${m[0]}%</em></div>`).join('')}</div></div>`;
+}
 function campHTML(){
   const C=U.camp,q=questOf(C.id);if(!q){U.camp=null;return '';}
   const cs=colsOf(q);
   let due='';
   if(q.due){const n=diffDays(q.due,today());due=`${shortDue(q.due)} · ${n<0?-n+(n===-1?' day':' days')+' overdue':n===0?'today':n===1?'tomorrow':'in '+n+' days'}`;}
   else due='NO DEADLINE';
-  const tabs=`<div class="chips sm" style="margin:0 0 12px"><button type="button" class="chip ${C.tab!=='notes'?'on':''}" data-act="campTab" data-v="board">Board</button><button type="button" class="chip ${C.tab==='notes'?'on':''}" data-act="campTab" data-v="notes">Notes</button>${C.tab!=='notes'?`<button type="button" class="chip" data-act="colsOpen">Columns</button>`:''}</div>`;
+  const tabs=`<div class="chips sm" style="margin:0 0 12px"><button type="button" class="chip ${(C.tab||'board')==='board'?'on':''}" data-act="campTab" data-v="board">Board</button><button type="button" class="chip ${C.tab==='brief'?'on':''}" data-act="campTab" data-v="brief">Brief</button><button type="button" class="chip ${C.tab==='notes'?'on':''}" data-act="campTab" data-v="notes">Notes</button>${(C.tab||'board')==='board'?`<button type="button" class="chip" data-act="colsOpen">Columns</button>`:''}</div>`;
   let body;
-  if(C.tab==='notes'){
+  if(C.tab==='brief')body=briefHTML(q);
+  else if(C.tab==='notes'){
     body=q.note&&!C.noteEdit?`<div class="note" data-act="campNoteEdit">${linkify(q.note)}</div>`:`<textarea id="campNoteTx" class="note ta" rows="10" placeholder="Context, contacts, links, whatever this campaign needs" aria-label="Campaign notes">${esc(q.note||'')}</textarea>`;
   }else{
     body=`<div class="kboard">${cs.map(c=>{const cards=cardsOf(q,c.id);return `<div class="kcol ${c.done?'dn':''}" data-col="${c.id}"><div class="kh"><b>${esc(c.name)}</b><span>${cards.length}</span></div><div class="kcards">${cards.map(cardHTML).join('')}</div><input class="kin" data-col="${c.id}" placeholder="+ Add a card" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" aria-label="Add a card to ${esc(c.name)}"></div>`;}).join('')}</div>`;
   }
-  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt"><b>${esc(q.title)}</b><i>${q.done?'DONE':due.toUpperCase()}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${tabs}${body}</div>`;
+  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt"><b>${esc(q.title)}</b><i>${q.done?'DONE':due.toUpperCase()}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${tabs}${C.tab==='board'||!C.tab?journeyHTML(q,campStats(q)):''}${body}</div>`;
 }
 function colsSheetHTML(){
   const q=questOf(U.camp.id);if(!q)return '';const cs=colsOf(q);
@@ -71,6 +116,7 @@ document.addEventListener('click',e=>{
     case 'campBack':U.camp=null;renderOverlay();renderMain();break;
     case 'campTab':U.camp.tab=el.dataset.v;U.camp.noteEdit=false;renderOverlay();break;
     case 'campNoteEdit':U.camp.noteEdit=true;renderOverlay();{const x=$('#campNoteTx');x&&x.focus();}break;
+    case 'briefEdit':U.camp.edit=el.dataset.v;renderOverlay();{const x=$('#bf_'+el.dataset.v);x&&x.focus();}break;
     case 'kTick':tick(el.dataset.id);break;
     case 'qEdit':{if(!q)break;U.qs={id:q.id,title:q.title,icon:q.icon,due:q.due||'',open:null,confirmDel:false,done:q.done};U.sheet='quest';renderOverlay();break;}
     case 'colsOpen':U.sheet='cols';renderOverlay();break;
@@ -97,11 +143,13 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('input',e=>{
   const t=e.target;
-  if(t.id==='campNoteTx'&&U.camp){const q=questOf(U.camp.id);if(q){q.note=t.value;save();}}
+  if(t.dataset&&t.dataset.k&&t.id.startsWith('bf_')&&U.camp){const q=questOf(U.camp.id);if(q){q[t.dataset.k]=t.value;save();}}
+  else if(t.id==='campNoteTx'&&U.camp){const q=questOf(U.camp.id);if(q){q.note=t.value;save();}}
   else if(t.classList&&t.classList.contains('cin')&&U.camp){const q=questOf(U.camp.id);const c=q&&colsOf(q)[+t.dataset.i];if(c){c.name=t.value;save();}}
 });
 document.addEventListener('focusout',e=>{
-  if(e.target.id==='campNoteTx'&&U.camp){const q=questOf(U.camp.id);if(q){q.note=(q.note||'').trim();if(!q.note)delete q.note;save();}U.camp.noteEdit=false;setTimeout(()=>{if(U.camp&&U.camp.tab==='notes'&&!U.sheet)renderOverlay();},0);}
+  if(e.target.id&&e.target.id.startsWith('bf_')&&U.camp){const q=questOf(U.camp.id),k=e.target.dataset.k;if(q){q[k]=(q[k]||'').trim();if(!q[k])delete q[k];save();}U.camp.edit=null;setTimeout(()=>{if(U.camp&&U.camp.tab==='brief'&&!U.sheet)renderOverlay();},0);}
+  else if(e.target.id==='campNoteTx'&&U.camp){const q=questOf(U.camp.id);if(q){q.note=(q.note||'').trim();if(!q.note)delete q.note;save();}U.camp.noteEdit=false;setTimeout(()=>{if(U.camp&&U.camp.tab==='notes'&&!U.sheet)renderOverlay();},0);}
   else if(e.target.classList&&e.target.classList.contains('cin')){const q=U.camp&&questOf(U.camp.id);if(q){colsOf(q).forEach(c=>{if(!c.name.trim())c.name='Column';});save();}}
 });
 
@@ -167,3 +215,5 @@ document.addEventListener('pointerup',e=>{if(kd&&e.pointerId===kd.pid){if(kd.on)
 document.addEventListener('pointercancel',e=>{if(kd&&e.pointerId===kd.pid){if(kd.on)kEnd(false);else{clearTimeout(kd.t);kd=null;}}});
 document.addEventListener('touchmove',e=>{if(kd&&kd.on)e.preventDefault();},{passive:false});
 document.addEventListener('contextmenu',e=>{if(kd||e.target.closest&&e.target.closest('.kc'))e.preventDefault();});
+
+function campFocusBoard(){const b=document.querySelector('.kboard');if(!b)return;const k=[...b.querySelectorAll('.kcol')].find(x=>x.querySelector('.kc'));if(k)b.scrollLeft=Math.max(0,k.offsetLeft-b.offsetLeft-16);}
