@@ -437,7 +437,7 @@ function libPick(key,vars){
   const v={n:x.n,task:tk?tk.title:(vars&&vars.task)||'',time:tk&&tk.time?tk.time:z2(now.getHours())+':'+z2(now.getMinutes()),day:DAYN[dayDate.getDay()],days:(vars&&vars.days)||(x.t&&x.t.od)||'',times:tk?(tk.moves||0):'',emails:x.emails,overdue:x.over};
   let text=FILL(LIB[m][i][0],v);text=text.charAt(0).toUpperCase()+text.slice(1);
   const base=LINES[key]||LINES.briefing;
-  return {face:base.face||5,text};
+  return {face:LIB[m][i][2]||base.face||5,text};
 }
 function pickLine(key,vars){
   let r=null;try{r=libPick(key,vars);}catch(e){r=null;}

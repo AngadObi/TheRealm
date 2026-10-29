@@ -14,7 +14,7 @@ const LINES={
     "One task. Do it, and the day is yours.",
     "A single task. I have seen braver lists, but none shorter.",
     "One task today. The rest of the day is yours to waste."]},
-  empty:{face:1,lines:[
+  empty:{face:3,lines:[
     "Nothing today. I checked twice, and then behind the tapestry.",
     "An empty scroll. Suspicious, or restful. I cannot tell.",
     "No tasks. The kingdom is quiet. Enjoy it before it notices.",
