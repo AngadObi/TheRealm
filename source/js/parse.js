@@ -50,11 +50,15 @@ function parseQuick(text,ctx){
   if(!take(/\s(?:at\s)?(\d{1,2})\s?(am|pm)\b/i,m=>{out.time=hm(+m[1],0,m[2]);}))
   take(/\sat\s(\d{1,2})(?=\s|$)/i,m=>{out.time=hm(+m[1],0,null);});
   if(out.time&&!out.date){/* time only: leave date to caller */}
+  // category named outright: "#work" anywhere, or the category name as the first or last word
+  {const nm=c=>c.name.toLowerCase().replace(/[^a-z0-9]/g,'');
+   for(const c of ctx.cats){const n=nm(c);if(!n)continue;const re=new RegExp('\\s#'+n+'(?=\\s|$)','i');if(re.test(t)){out.cat=c.id;t=t.replace(re,' ');break;}}
+   if(!out.cat){for(const c of ctx.cats){const n=nm(c);if(!n)continue;const re=new RegExp('^\\s'+n+'(?:\\s*:\\s*|\\s+)|\\s'+n+'\\s*$','i');const m=t.match(re);if(m&&t.replace(re,' ').trim().length>0){out.cat=c.id;t=t.replace(re,' ');break;}}}}
   let title=t.replace(/\s+/g,' ').trim();
   out.title=title?title.charAt(0).toUpperCase()+title.slice(1):'';
   // category
   const low=text.toLowerCase();
-  for(const c of ctx.cats){const re=new RegExp('\\b'+c.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'\\b','i');if(re.test(low)){out.cat=c.id;break;}}
+  if(!out.cat)for(const c of ctx.cats){const re=new RegExp('\\b'+c.name.toLowerCase().replace(/[^a-z0-9]/g,'')+'\\b','i');if(re.test(low)){out.cat=c.id;break;}}
   if(!out.cat){const votes={};for(const w of low.split(/[^a-zäöüß0-9]+/)){if(w.length>3&&ctx.kw[w])votes[ctx.kw[w]]=(votes[ctx.kw[w]]||0)+1;}
     const best=Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];if(best&&ctx.cats.some(c=>c.id===best[0]))out.cat=best[0];}
   if(!out.cat){for(const [re,name] of HINTS){if(re.test(low)){const c=ctx.cats.find(c=>c.name.toLowerCase()===name.toLowerCase());if(c){out.cat=c.id;break;}}}}
