@@ -360,7 +360,7 @@ function headHTML(){
   const c=context(),eh=(U.view==='list'||U.view==='road')?null:extHead(),line=eh?eh.line:currentLine(c);
   return `<img class="bust" src="${kn(line.face)}" alt="Sir Reg" width="134" height="134"><div class="shelf"></div>
   <h1 class="ttl">${eh?eh.title:fmtHead(c.td)}</h1><span class="cnt">${eh?eh.sub:c.done+' of '+c.tt.length+' done'}</span>
-  <div class="top"><button type="button" class="ib" data-act="goto" data-v="main" aria-label="Campaigns">${ico('flag',22,'currentColor',1.7)}</button><button type="button" class="ib" data-act="council" aria-label="The Council: plan your day">${ico('crown',22,'currentColor',1.7)}</button><button type="button" class="ib" data-act="menu" aria-label="Open menu">${ico('menu',22,'currentColor',2)}</button></div>
+  <div class="top">${(U.view==='list'||U.view==='road')?`<button type="button" class="ib" data-act="goto" data-v="main" aria-label="Campaigns">${ico('flag',22,'currentColor',1.7)}</button><button type="button" class="ib" data-act="council" aria-label="The Council: plan your day">${ico('crown',22,'currentColor',1.7)}</button>`:`<button type="button" class="ib" data-act="goto" data-v="list" aria-label="Back to Today">${ico('list',22,'currentColor',1.9)}</button>`}<button type="button" class="ib" data-act="menu" aria-label="Open menu">${ico('menu',22,'currentColor',2)}</button></div>
   <div class="bub g ${line.text.length>105?'s4':line.text.length>80?'s3':line.text.length>55?'s2':''}" role="status">${esc(line.text)}</div>`;
 }
 function dockHTML(){
