@@ -23,15 +23,7 @@ tail='''<script>if('serviceWorker' in navigator){var had=!!navigator.serviceWork
 </body></html>'''
 open(out+'/index.html','w',encoding='utf-8').write(head+frag+'</body>'.replace('</body>','')+tail)
 open(out+'/manifest.webmanifest','w').write(json.dumps({"name":"The Realm","short_name":"The Realm","description":"A task manager for one knight and his lord.","start_url":"./","scope":"./","display":"standalone","orientation":"portrait","background_color":"#070504","theme_color":"#070504","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-512-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},indent=1))
-open(out+'/firebase-config.js','w').write('''/* Paste your Firebase web app config here (Project settings > Your apps > Web app > Config). */
-window.REALM_FIREBASE={
-  apiKey:"",
-  authDomain:"the-realm-f6b41.firebaseapp.com",
-  projectId:"the-realm-f6b41",
-  appId:"",
-  messagingSenderId:""
-};
-''')
+shutil.copy(d+'/site-src/firebase-config.js',out+'/firebase-config.js')
 src=Image.open(d+'/knight/n1.png').convert('RGBA')
 def icon(size,pad):
     bg=Image.new('RGBA',(size,size),(7,5,4,255));k=int(size*(1-2*pad));im=src.resize((k,k),Image.LANCZOS)
