@@ -977,12 +977,18 @@ let LC={key:'',line:null};
 function currentLine(c){
   if(U.bubble&&U.bubble.until>Date.now())return U.bubble;
   const [k,v]=scenario(c);const key=c.td+k+JSON.stringify(v);
-  if(LC.key!==key){LC={key,line:pickLine(k,v)};}
+  if(PEND){LC={key:''};}
+  if(LC.key!==key){
+    let st=null;if(!PEND)try{st=JSON.parse(localStorage.getItem('sirreg.line')||'null');}catch(e){}
+    if(st&&st.key===key&&st.line&&st.line.text)LC={key,line:st.line};
+    else{LC={key,line:PEND||pickLine(k,v)};PEND=null;try{localStorage.setItem('sirreg.line',JSON.stringify({key,line:LC.line}));}catch(e){}}
+  }
   return LC.line;
 }
-let bubbleTimer=0;
+let bubbleTimer=0,PEND=null;
 function say(key,vars){
-  U.bubble=Object.assign(pickLine(key,vars),{until:Date.now()+6000});
+  const ln=pickLine(key,vars);PEND={face:ln.face,text:ln.text};
+  U.bubble=Object.assign({},ln,{until:Date.now()+6000});
   clearTimeout(bubbleTimer);bubbleTimer=setTimeout(()=>{U.bubble=null;renderHead();},6200);
   return U.bubble;
 }
