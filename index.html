@@ -1308,24 +1308,24 @@ function menuHTML(){
   const row=(icon,t,sub,act,extra,dis,v)=>`<button type="button" class="mrow" ${dis?'disabled':''} ${act?`data-act="${act}"`:''} ${v?`data-v="${v}"`:''}><span class="tl">${ico(icon,20,'var(--brass-l)',1.6)}</span><span class="tx"><b>${t}</b><i>${sub}</i></span>${extra||ico('chevr',18,'var(--dim)',1.8)}</button>`;
   const bn=(n,col,ic)=>`<div class="ban g" style="background-color:${col};border-radius:3px 3px 0 0">${ico(ic,22,'var(--brass-l)',1.6)}<b>${n}</b></div>`;
   return `<div class="full g" role="dialog" aria-label="Menu"><div style="display:flex;align-items:center;height:64px;padding-top:16px;margin-bottom:12px"><h1 class="fell" style="margin:0;flex:1;font:400 34px var(--fell)">The Realm</h1><button type="button" class="ib quiet" data-act="closeMenu" aria-label="Close menu">${ico('x',20,'currentColor',2)}</button></div>
-  ${bn('The Council','#2B4542','crown')}
-  ${row('sun','The Day','plan today, now','councilK','', false,'day')}
-  ${row('week','The Week','look ahead','councilK','',false,'week')}
-  <div style="height:12px"></div>${bn('Quests','#4A4128','flag')}
+${bn('Quests','#4A4128','flag')}
   ${row('list','Today','the list and the road','goto','',false,'list')}
-  ${row('flag','Main Quests','projects, with progress','goto','',false,'main')}
-  ${row('path','Side Quests','ideas, in halls','goto','',false,'side')}
   ${row('week','Calendar','the week, day by day','goto','',false,'cal')}
   ${row('flame','The Dragons','day and week','goto','',false,'dragons')}
-  <div style="height:12px"></div>${bn('Settings','#3D2E3F','gear')}
-  ${row('sun','Theme',{dark:'dark',light:'light',system:'follows your phone'}[S.settings.theme||'dark'],null,'<span></span>')}
+  ${row('flag','Campaigns','projects, boards and goals','goto','',false,'main')}
+  ${row('path','Side Quests','ideas, in halls','goto','',false,'side')}
+  <div style="height:12px"></div>${bn('The Council','#2B4542','crown')}
+  ${row('sun','The Day','plan today, now','councilK','', false,'day')}
+  ${row('week','The Week','look ahead','councilK','',false,'week')}
+  <div style="height:12px"></div><button type="button" class="ban g sbtn" data-act="setToggle" style="background-color:#3D2E3F;border-radius:3px 3px 0 0;width:100%;border:0;text-align:left" aria-expanded="${!!U.setOpen}">${ico('gear',22,'var(--brass-l)',1.6)}<b>Settings</b><span style="margin-left:auto">${ico('chev',18,'var(--brass-l)',2)}</span></button>
+  ${U.setOpen?`  ${row('sun','Theme',{dark:'dark',light:'light',system:'follows your phone'}[S.settings.theme||'dark'],null,'<span></span>')}
   <div class="themes">${['dark','light','system'].map(v=>`<button type="button" class="chip ${(S.settings.theme||'dark')===v?'on':''}" data-act="theme" data-v="${v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div>
   ${row('eye','Sir Reg speaks',S.settings.mute?'muted':'on, dry as ever','mute',`<span class="tag ${S.settings.mute?'dim':''}" style="margin:0">${S.settings.mute?'OFF':'ON'}</span>`)}
   ${row('tech','Sync across devices',(window.realmSync?realmSync.status():(DB?'on, through this link':'off')),'sync',window.realmSync&&realmSync.user()?'<span class="tag" style="margin:0">ON</span>':'')}
   ${row('admin','Copy data as JSON','your backup, as text','export')}
   ${row('tech','Reset to sample tasks',U.confirm==='reset'?'tap again to confirm':'start over with the examples','reset')}
-  ${row('rest','Clear everything',U.confirm==='clear'?'tap again to confirm':'delete all tasks','clear')}
-  <p class="note">${memOnly?'Storage is blocked here, so changes last only until you close this page.':'Data is kept on this device, and synced when sync is on. Task titles are also logged so Sir Reg can learn your habits.'}</p></div>`;
+  ${row('rest','Clear everything',U.confirm==='clear'?'tap again to confirm':'delete all tasks','clear')}`:''}
+    <p class="note">${memOnly?'Storage is blocked here, so changes last only until you close this page.':'Data is kept on this device, and synced when sync is on. Task titles are also logged so Sir Reg can learn your habits.'}</p></div>`;
 }
 const MOODS=[['steady','Steady','Calm and consistent.','steady'],['focus','Focused','One task at a time.','focus'],['bolt','Relentless','No mercy today.','bolt'],['easy','Easy going','We do what we can.','easy'],['eye','Wary','Trust nothing, tick everything.','eye'],['flame','Bold','Do the scary thing first.','flame']];
 const newDragonHTML=()=>`<div class="arow" style="margin-top:10px"><input id="dragonNew" class="inp" type="text" placeholder="Or name a new dragon" autocomplete="off" aria-label="New dragon"><button type="button" class="go" data-act="dragonNew" aria-label="Add as dragon">${ico('plus',22,'currentColor',2.6)}</button></div>`;
@@ -1426,6 +1426,7 @@ document.addEventListener('click',e=>{
     case 'export':{const j=JSON.stringify(S,null,1);let ok=false;try{navigator.clipboard.writeText(j).then(()=>toast({face:5,text:'Copied. Paste it somewhere safe.'}),()=>toast({face:5,text:'Copy was refused here.'}));ok=true;}catch(err){}if(!ok)toast({face:5,text:'Copy was refused here.'});break;}
     case 'reset':if(U.confirm==='reset'){{const q=S.logq;S=seed();S.logq=q;}save();U.confirm=null;U.menu=false;LC.key='';render();}else{U.confirm='reset';renderOverlay();}break;
     case 'clear':if(U.confirm==='clear'){S.tasks=[];S.plans={};S.quests=[];S.ideas=[];S.cplans={};S.sample=false;save();U.confirm=null;U.menu=false;LC.key='';render();}else{U.confirm='clear';renderOverlay();}break;
+    case 'setToggle':U.setOpen=!U.setOpen;renderOverlay();break;
     case 'council':{U.toast=null;renderToast();const p=plan();U.menu=false;U.council={focus:p.focus||'',dragonId:p.dragonId||null,mood:p.mood||'steady',pickOpen:false,line:''};renderOverlay();break;}
     case 'closeCouncil':U.council=null;renderOverlay();renderToast();break;
     case 'dragonOpen':U.council.focus=($('#focusTxt')||{}).value||'';U.council.pickOpen=!U.council.pickOpen;renderOverlay();break;
