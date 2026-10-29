@@ -225,3 +225,37 @@ document.addEventListener('touchmove',e=>{if(kd&&kd.on)e.preventDefault();},{pas
 document.addEventListener('contextmenu',e=>{if(kd||e.target.closest&&e.target.closest('.kc'))e.preventDefault();});
 
 function campFocusBoard(){const b=document.querySelector('.kboard');if(!b)return;const k=[...b.querySelectorAll('.kcol')].find(x=>x.querySelector('.kc'));if(k)b.scrollLeft=Math.max(0,k.offsetLeft-b.offsetLeft-16);}
+
+/* ---------- week calendar ---------- */
+const monOf=ds=>{const d=new Date(ds+'T12:00:00');return addDays(ds,-((d.getDay()+6)%7));};
+function calStart(){if(!U.calStart)U.calStart=monOf(today());return U.calStart;}
+function calHead(){
+  const s=calStart(),e=addDays(s,6),ds=[...Array(7)].map((_,i)=>addDays(s,i));
+  const open=S.tasks.filter(t=>!t.done&&t.date>=s&&t.date<=e).length;
+  const pool=!open?['An empty week. Suspicious, but welcome.']:open<6?['Manageable. Do not tell the week I said so.']:open<14?[open+' open this week. Spread thin, spread kind.']:['Busy. The week has opinions, and so do I.'];
+  const a=new Date(s+'T12:00:00'),b=new Date(e+'T12:00:00');
+  const rng=a.getDate()+' '+MON[a.getMonth()]+' to '+b.getDate()+' '+MON[b.getMonth()];
+  return {title:'Calendar',sub:rng.toUpperCase(),line:S.settings.mute?pickLine('muted',{n:open}):{face:open>13?4:open?5:6,text:pool[0]}};
+}
+function weekHTML(){
+  const s=calStart(),td=today(),isNow=s===monOf(td);
+  let h=`<div class="wnav"><button type="button" class="chip" data-act="calPrev" aria-label="Previous week">\u2039</button><button type="button" class="chip ${isNow?'on':''}" data-act="calToday">This week</button><button type="button" class="chip" data-act="calNext" aria-label="Next week">\u203a</button></div>`;
+  for(let i=0;i<7;i++){
+    const d=addDays(s,i),ts=S.tasks.filter(t=>t.date===d).sort((x,y)=>x.done!==y.done?(x.done?1:-1):(x.time||'99')<(y.time||'99')?-1:(x.time||'99')>(y.time||'99')?1:0);
+    const dl=S.quests.filter(q=>!q.done&&q.due===d);
+    const open=ts.filter(t=>!t.done).length;
+    h+=`<section class="wd ${d===td?'now':''} ${d<td?'past':''}"><div class="wh"><b>${fmtHead(d)}</b><span>${d===td?'TODAY':d===addDays(td,1)?'TOMORROW':''}${open?(d===td||d===addDays(td,1)?' \u00b7 ':'')+open+' OPEN':''}</span><button type="button" class="wplus" data-act="calAdd" data-v="${d}" aria-label="Add a task on ${fmtHead(d)}">${ico('plus',18,'var(--bone)',2.2)}</button></div>`+
+      dl.map(q=>`<div class="wdl" data-act="openQuest" data-id="${q.id}">${ico('flag',16,'var(--brass-l)',1.8)}<span>${esc(q.title)}</span><em>DEADLINE</em></div>`).join('')+
+      (ts.length?ts.map(t=>rowHTML(t,false)).join(''):dl.length?'':'<p class="wfree">Free.</p>')+'</section>';
+  }
+  return h;
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el||Date.now()<suppress)return;
+  const a=el.dataset.act;
+  if(a==='calPrev'){U.calStart=addDays(calStart(),-7);renderHead();renderMain();}
+  else if(a==='calNext'){U.calStart=addDays(calStart(),7);renderHead();renderMain();}
+  else if(a==='calToday'){U.calStart=monOf(today());renderHead();renderMain();}
+  else if(a==='calAdd'){openAdd(null);U.add.date=el.dataset.v;U.add.over.date=true;U.add.time='';refreshMeta();}
+  else if(a==='goto'&&el.dataset.v==='cal'){U.calStart=monOf(today());}
+});

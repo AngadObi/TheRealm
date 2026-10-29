@@ -356,6 +356,20 @@ section.cat{position:relative}
 .dr em{font:500 11.5px var(--mono);font-style:normal;letter-spacing:.06em;color:var(--dim);white-space:nowrap}
 .dr em b,.dr .od,.dr .soon{font-weight:500}.dr .od{color:var(--ember-dark,#d05a3a)}.dr .soon{color:var(--brass-l)}
 
+/* week view */
+.wnav{display:flex;gap:8px;justify-content:center;margin:2px 0 12px}
+.wnav .chip{min-width:48px;justify-content:center;font-size:20px}
+.wd{margin:0 0 14px}
+.wh{display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1.5px solid var(--border);margin-bottom:6px}
+.wh b{font:400 20px var(--fell);color:var(--bone)}
+.wh span{flex:1;font:500 11px var(--mono);letter-spacing:.1em;color:var(--dim)}
+.wd.now .wh{border-bottom-color:var(--brass)}.wd.now .wh b{color:var(--brass-l)}
+.wd.past{opacity:.7}
+.wfree{margin:2px 6px 8px;font:italic 15px var(--fell);color:var(--dim)}
+.wdl{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border:1.5px dashed var(--brass);border-radius:4px;color:var(--bone);font:17px var(--fell)}
+.wdl span{flex:1;min-width:0}.wdl em{font:500 10.5px var(--mono);letter-spacing:.1em;font-style:normal;color:var(--brass-l)}
+.wplus{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(232,223,200,.35);background:none;display:flex;align-items:center;justify-content:center}
+
 </style>
 <div class="app" id="app"></div>
 <script src="firebase-config.js"></script>
@@ -1020,8 +1034,6 @@ const TIERS=[['dragon','Dragon','The day','flame'],['elder','Elder Dragon','The 
 function tierOf(t){
   if(!t||t.done)return '';
   const cp=S.cplans;
-  if(cp[yrKey()]&&cp[yrKey()].dragonId===t.id)return 'ancient';
-  if(cp[moKey()]&&cp[moKey()].dragonId===t.id)return 'wyrm';
   if((cp[wkKey()]&&cp[wkKey()].dragonId===t.id)||(t.moves||0)>=7)return 'elder';
   if(plan().dragonId===t.id)return 'dragon';
   return '';
@@ -1299,13 +1311,12 @@ function menuHTML(){
   ${bn('The Council','#2B4542','crown')}
   ${row('sun','The Day','plan today, now','councilK','', false,'day')}
   ${row('week','The Week','look ahead','councilK','',false,'week')}
-  ${row('moon','The Month','the long view','councilK','',false,'month')}
-  ${row('wheel','The Year','themes and great quests','councilK','',false,'year')}
   <div style="height:12px"></div>${bn('Quests','#4A4128','flag')}
   ${row('list','Today','the list and the road','goto','',false,'list')}
   ${row('flag','Main Quests','projects, with progress','goto','',false,'main')}
   ${row('path','Side Quests','ideas, in halls','goto','',false,'side')}
-  ${row('flame','The Dragons','day, week, month, year','goto','',false,'dragons')}
+  ${row('week','Calendar','the week, day by day','goto','',false,'cal')}
+  ${row('flame','The Dragons','day and week','goto','',false,'dragons')}
   <div style="height:12px"></div>${bn('Settings','#3D2E3F','gear')}
   ${row('sun','Theme',{dark:'dark',light:'light',system:'follows your phone'}[S.settings.theme||'dark'],null,'<span></span>')}
   <div class="themes">${['dark','light','system'].map(v=>`<button type="button" class="chip ${(S.settings.theme||'dark')===v?'on':''}" data-act="theme" data-v="${v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div>
@@ -1745,6 +1756,40 @@ document.addEventListener('contextmenu',e=>{if(kd||e.target.closest&&e.target.cl
 
 function campFocusBoard(){const b=document.querySelector('.kboard');if(!b)return;const k=[...b.querySelectorAll('.kcol')].find(x=>x.querySelector('.kc'));if(k)b.scrollLeft=Math.max(0,k.offsetLeft-b.offsetLeft-16);}
 
+/* ---------- week calendar ---------- */
+const monOf=ds=>{const d=new Date(ds+'T12:00:00');return addDays(ds,-((d.getDay()+6)%7));};
+function calStart(){if(!U.calStart)U.calStart=monOf(today());return U.calStart;}
+function calHead(){
+  const s=calStart(),e=addDays(s,6),ds=[...Array(7)].map((_,i)=>addDays(s,i));
+  const open=S.tasks.filter(t=>!t.done&&t.date>=s&&t.date<=e).length;
+  const pool=!open?['An empty week. Suspicious, but welcome.']:open<6?['Manageable. Do not tell the week I said so.']:open<14?[open+' open this week. Spread thin, spread kind.']:['Busy. The week has opinions, and so do I.'];
+  const a=new Date(s+'T12:00:00'),b=new Date(e+'T12:00:00');
+  const rng=a.getDate()+' '+MON[a.getMonth()]+' to '+b.getDate()+' '+MON[b.getMonth()];
+  return {title:'Calendar',sub:rng.toUpperCase(),line:S.settings.mute?pickLine('muted',{n:open}):{face:open>13?4:open?5:6,text:pool[0]}};
+}
+function weekHTML(){
+  const s=calStart(),td=today(),isNow=s===monOf(td);
+  let h=`<div class="wnav"><button type="button" class="chip" data-act="calPrev" aria-label="Previous week">\u2039</button><button type="button" class="chip ${isNow?'on':''}" data-act="calToday">This week</button><button type="button" class="chip" data-act="calNext" aria-label="Next week">\u203a</button></div>`;
+  for(let i=0;i<7;i++){
+    const d=addDays(s,i),ts=S.tasks.filter(t=>t.date===d).sort((x,y)=>x.done!==y.done?(x.done?1:-1):(x.time||'99')<(y.time||'99')?-1:(x.time||'99')>(y.time||'99')?1:0);
+    const dl=S.quests.filter(q=>!q.done&&q.due===d);
+    const open=ts.filter(t=>!t.done).length;
+    h+=`<section class="wd ${d===td?'now':''} ${d<td?'past':''}"><div class="wh"><b>${fmtHead(d)}</b><span>${d===td?'TODAY':d===addDays(td,1)?'TOMORROW':''}${open?(d===td||d===addDays(td,1)?' \u00b7 ':'')+open+' OPEN':''}</span><button type="button" class="wplus" data-act="calAdd" data-v="${d}" aria-label="Add a task on ${fmtHead(d)}">${ico('plus',18,'var(--bone)',2.2)}</button></div>`+
+      dl.map(q=>`<div class="wdl" data-act="openQuest" data-id="${q.id}">${ico('flag',16,'var(--brass-l)',1.8)}<span>${esc(q.title)}</span><em>DEADLINE</em></div>`).join('')+
+      (ts.length?ts.map(t=>rowHTML(t,false)).join(''):dl.length?'':'<p class="wfree">Free.</p>')+'</section>';
+  }
+  return h;
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el||Date.now()<suppress)return;
+  const a=el.dataset.act;
+  if(a==='calPrev'){U.calStart=addDays(calStart(),-7);renderHead();renderMain();}
+  else if(a==='calNext'){U.calStart=addDays(calStart(),7);renderHead();renderMain();}
+  else if(a==='calToday'){U.calStart=monOf(today());renderHead();renderMain();}
+  else if(a==='calAdd'){openAdd(null);U.add.date=el.dataset.v;U.add.over.date=true;U.add.time='';refreshMeta();}
+  else if(a==='goto'&&el.dataset.v==='cal'){U.calStart=monOf(today());}
+});
+
 /* ---------- extensions: quests, side quests, dragons, councils, sync, shortcuts ---------- */
 Object.assign(ICONS,{
   dice:'<path d="M12 2.5l8.5 5v9l-8.5 5-8.5-5v-9z"/><path d="M12 7.5l4.2 7.5H7.8z"/><path d="M12 2.5v5M3.5 7.5L7.8 15M20.5 7.5L16.2 15M7.8 15l-4.3 1.5M16.2 15l4.3 1.5M12 21.5V15"/>',
@@ -1768,6 +1813,7 @@ function viewLine(pool,vars,key){
   return VL.line;
 }
 function extHead(){
+  if(U.view==='cal')return calHead();
   const live=S.quests.filter(q=>!q.done).length,ni=S.ideas.length,nh=new Set(S.ideas.map(i=>i.hall)).size;
   if(U.bubble&&U.bubble.until>Date.now()){
     const b=U.bubble;
@@ -1786,9 +1832,7 @@ function dragonList(){
   const elder=get(w&&w.dragonId)||S.tasks.filter(t=>!t.done&&(t.moves||0)>=7).sort((a,b)=>b.moves-a.moves)[0];
   return [
     {tier:'dragon',t:get(plan().dragonId)},
-    {tier:'elder',t:elder},
-    {tier:'wyrm',t:get(m&&m.dragonId)},
-    {tier:'ancient',t:get(y&&y.dragonId)}];
+    {tier:'elder',t:elder}];
 }
 
 /* ---------- Main Quests ---------- */
@@ -1848,10 +1892,10 @@ function dragonsHTML(){
   <p class="note" style="margin-top:0">One dragon per tier. Name it in the matching Council. Postpone any task seven times and it becomes an Elder Dragon by itself. Slaying any dragon earns Sir Reg’s delighted face. The higher tier wins when a task is named twice.</p>`;
   return h;
 }
-function extMainHTML(){return U.view==='main'?mainHTML():U.view==='side'?sideHTML():dragonsHTML();}
+function extMainHTML(){return U.view==='cal'?weekHTML():U.view==='main'?mainHTML():U.view==='side'?sideHTML():dragonsHTML();}
 function extDock(){
   const pill=(v,ic,l)=>`<button type="button" role="tab" aria-selected="${U.view===v}" class="${U.view===v?'on':''}" data-act="goto" data-v="${v}">${ico(ic,20,'currentColor',1.7)}${l}</button>`;
-  if(U.view==='dragons')return `<div class="dock"><div class="pill" style="width:150px"><button type="button" class="on" data-act="goto" data-v="list" style="width:100%">${ico('list',20,'currentColor',1.8)}Today</button></div></div>`;
+  if(U.view==='dragons'||U.view==='cal')return `<div class="dock"><div class="pill" style="width:150px"><button type="button" class="on" data-act="goto" data-v="list" style="width:100%">${ico('list',20,'currentColor',1.8)}Today</button></div></div>`;
   return `<div class="dock"><div class="pill" role="tablist" aria-label="Quests">${pill('main','flag','Main')}${pill('side','path','Side')}</div>
   ${U.view==='side'?`<button type="button" class="tray" data-act="roll" aria-label="Roll the dice for a side quest">${ico('dice',26,'currentColor',1.5)}</button>`:''}</div>
   <button type="button" class="fab" data-act="${U.view==='main'?'addQuest':'addIdea'}" aria-label="${U.view==='main'?'Add a quest':'Add an idea'}">${ico('plus',28,'currentColor',2.4)}</button>`;

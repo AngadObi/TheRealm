@@ -21,6 +21,7 @@ function viewLine(pool,vars,key){
   return VL.line;
 }
 function extHead(){
+  if(U.view==='cal')return calHead();
   const live=S.quests.filter(q=>!q.done).length,ni=S.ideas.length,nh=new Set(S.ideas.map(i=>i.hall)).size;
   if(U.bubble&&U.bubble.until>Date.now()){
     const b=U.bubble;
@@ -39,9 +40,7 @@ function dragonList(){
   const elder=get(w&&w.dragonId)||S.tasks.filter(t=>!t.done&&(t.moves||0)>=7).sort((a,b)=>b.moves-a.moves)[0];
   return [
     {tier:'dragon',t:get(plan().dragonId)},
-    {tier:'elder',t:elder},
-    {tier:'wyrm',t:get(m&&m.dragonId)},
-    {tier:'ancient',t:get(y&&y.dragonId)}];
+    {tier:'elder',t:elder}];
 }
 
 /* ---------- Main Quests ---------- */
@@ -101,10 +100,10 @@ function dragonsHTML(){
   <p class="note" style="margin-top:0">One dragon per tier. Name it in the matching Council. Postpone any task seven times and it becomes an Elder Dragon by itself. Slaying any dragon earns Sir Reg’s delighted face. The higher tier wins when a task is named twice.</p>`;
   return h;
 }
-function extMainHTML(){return U.view==='main'?mainHTML():U.view==='side'?sideHTML():dragonsHTML();}
+function extMainHTML(){return U.view==='cal'?weekHTML():U.view==='main'?mainHTML():U.view==='side'?sideHTML():dragonsHTML();}
 function extDock(){
   const pill=(v,ic,l)=>`<button type="button" role="tab" aria-selected="${U.view===v}" class="${U.view===v?'on':''}" data-act="goto" data-v="${v}">${ico(ic,20,'currentColor',1.7)}${l}</button>`;
-  if(U.view==='dragons')return `<div class="dock"><div class="pill" style="width:150px"><button type="button" class="on" data-act="goto" data-v="list" style="width:100%">${ico('list',20,'currentColor',1.8)}Today</button></div></div>`;
+  if(U.view==='dragons'||U.view==='cal')return `<div class="dock"><div class="pill" style="width:150px"><button type="button" class="on" data-act="goto" data-v="list" style="width:100%">${ico('list',20,'currentColor',1.8)}Today</button></div></div>`;
   return `<div class="dock"><div class="pill" role="tablist" aria-label="Quests">${pill('main','flag','Main')}${pill('side','path','Side')}</div>
   ${U.view==='side'?`<button type="button" class="tray" data-act="roll" aria-label="Roll the dice for a side quest">${ico('dice',26,'currentColor',1.5)}</button>`:''}</div>
   <button type="button" class="fab" data-act="${U.view==='main'?'addQuest':'addIdea'}" aria-label="${U.view==='main'?'Add a quest':'Add an idea'}">${ico('plus',28,'currentColor',2.4)}</button>`;

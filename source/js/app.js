@@ -100,8 +100,6 @@ const TIERS=[['dragon','Dragon','The day','flame'],['elder','Elder Dragon','The 
 function tierOf(t){
   if(!t||t.done)return '';
   const cp=S.cplans;
-  if(cp[yrKey()]&&cp[yrKey()].dragonId===t.id)return 'ancient';
-  if(cp[moKey()]&&cp[moKey()].dragonId===t.id)return 'wyrm';
   if((cp[wkKey()]&&cp[wkKey()].dragonId===t.id)||(t.moves||0)>=7)return 'elder';
   if(plan().dragonId===t.id)return 'dragon';
   return '';
@@ -379,13 +377,12 @@ function menuHTML(){
   ${bn('The Council','#2B4542','crown')}
   ${row('sun','The Day','plan today, now','councilK','', false,'day')}
   ${row('week','The Week','look ahead','councilK','',false,'week')}
-  ${row('moon','The Month','the long view','councilK','',false,'month')}
-  ${row('wheel','The Year','themes and great quests','councilK','',false,'year')}
   <div style="height:12px"></div>${bn('Quests','#4A4128','flag')}
   ${row('list','Today','the list and the road','goto','',false,'list')}
   ${row('flag','Main Quests','projects, with progress','goto','',false,'main')}
   ${row('path','Side Quests','ideas, in halls','goto','',false,'side')}
-  ${row('flame','The Dragons','day, week, month, year','goto','',false,'dragons')}
+  ${row('week','Calendar','the week, day by day','goto','',false,'cal')}
+  ${row('flame','The Dragons','day and week','goto','',false,'dragons')}
   <div style="height:12px"></div>${bn('Settings','#3D2E3F','gear')}
   ${row('sun','Theme',{dark:'dark',light:'light',system:'follows your phone'}[S.settings.theme||'dark'],null,'<span></span>')}
   <div class="themes">${['dark','light','system'].map(v=>`<button type="button" class="chip ${(S.settings.theme||'dark')===v?'on':''}" data-act="theme" data-v="${v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div>
