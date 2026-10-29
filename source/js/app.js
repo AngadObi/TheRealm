@@ -164,9 +164,9 @@ function toast(line,undo){
 /* ---------- actions ---------- */
 function tick(id){
   const t=S.tasks.find(x=>x.id===id);if(!t)return;
-  const prev={done:t.done,doneAt:t.doneAt};const tier0=tierOf(t);let spawned=null;
-  t.done=!t.done;t.doneAt=t.done?Date.now():null;
-  if(t.done&&t.rep&&!t.spawn){const nd=nextDate(t.date<today()?today():t.date,t.rep);spawned={id:uid(),title:t.title,cat:t.cat,date:nd,time:t.time||'',dur:t.dur,done:false,moves:0,createdAt:Date.now(),rep:t.rep,q:t.q};S.tasks.push(spawned);t.spawn=spawned.id;}
+  const prev={done:t.done,doneAt:t.doneAt,steps:(t.steps||[]).map(s=>s.done)};const tier0=tierOf(t);let spawned=null;
+  t.done=!t.done;t.doneAt=t.done?Date.now():null;if(t.done&&t.steps)t.steps.forEach(s=>s.done=true);
+  if(t.done&&t.rep&&!t.spawn){const nd=nextDate(t.date<today()?today():t.date,t.rep);spawned={id:uid(),title:t.title,cat:t.cat,date:nd,time:t.time||'',dur:t.dur,done:false,moves:0,createdAt:Date.now(),rep:t.rep,q:t.q};if(t.note)spawned.note=t.note;if(t.steps&&t.steps.length)spawned.steps=t.steps.map(s=>({id:uid(),t:s.t,done:false}));S.tasks.push(spawned);t.spawn=spawned.id;}
   else if(!t.done&&t.spawn){const sp=S.tasks.find(x=>x.id===t.spawn);if(sp&&!sp.done)S.tasks.splice(S.tasks.indexOf(sp),1);t.spawn=null;}
   save();
   if(t.done)logEv('done',t,{ageDays:diffDays(today(),t.date)});
@@ -177,7 +177,7 @@ function tick(id){
     else if(age>=14)line=say('longOverdue',{days:age});
     else if(Date.now()-t.createdAt<60000)line=say('quick');
     else line=say('done',{n:c.open.length});
-    toast(line,()=>{t.done=prev.done;t.doneAt=prev.doneAt;if(spawned){const i=S.tasks.indexOf(spawned);if(i>=0)S.tasks.splice(i,1);t.spawn=null;}save();U.bubble=null;render();});
+    toast(line,()=>{t.done=prev.done;t.doneAt=prev.doneAt;(t.steps||[]).forEach((s,i)=>{s.done=!!prev.steps[i];});if(spawned){const i=S.tasks.indexOf(spawned);if(i>=0)S.tasks.splice(i,1);t.spawn=null;}save();U.bubble=null;render();});
   }else{U.bubble=null;}
   render();
 }
@@ -198,6 +198,22 @@ function learn(title,catId){S.last=catId;for(const w of title.toLowerCase().spli
 
 /* ---------- add / edit sheet ---------- */
 const pctx=()=>({today:today(),cats:S.cats,kw:S.kw});
+function linkify(s){return esc(s).replace(/(https?:\/\/[^\s<]+|www\.[^\s<]+)/g,(m)=>{const u=m.replace(/[.,;:!?)]+$/,''),tail=m.slice(u.length);return `<a class="lk" href="${u.startsWith('www.')?'https://'+u:u}" target="_blank" rel="noopener">${u}</a>${tail}`;}).replace(/\n/g,'<br>');}
+function curTask(){return U.add&&U.add.id?S.tasks.find(x=>x.id===U.add.id):null;}
+function noteHTML(){
+  const t=curTask();if(!t)return '';
+  if(t.note&&!U.add.noteEdit)return `<div class="note" data-act="noteEdit">${linkify(t.note)}</div>`;
+  return `<textarea id="addNoteTx" class="note ta" rows="${t.note?3:2}" placeholder="Notes, links, anything for later" aria-label="Notes">${esc(t.note||'')}</textarea>`;
+}
+function stepsHTML(){
+  const t=curTask();if(!t)return '';
+  const st=t.steps||[];
+  return st.map((s,i)=>`<div class="st ${s.done?'done':''}"><button type="button" class="cb" data-act="stTick" data-i="${i}" aria-label="${s.done?'Mark step not done':'Mark step done'}" aria-pressed="${!!s.done}"><i class="${s.done?'on':''}">${s.done?ico('check',12,'currentColor',3.2):''}</i></button><input class="stin" data-i="${i}" value="${esc(s.t)}" aria-label="Step" autocomplete="off"><button type="button" class="stx" data-act="stDel" data-i="${i}" aria-label="Remove step">\u00d7</button></div>`).join('')+`<div class="st add"><span class="stp">+</span><input id="stNew" class="stin" placeholder="Add a step" enterkeyhint="next" autocomplete="off" aria-label="New step"></div>`;
+}
+function refreshSteps(focusNew){const m=$('#addSteps');if(m)m.innerHTML=stepsHTML();if(focusNew){const i=$('#stNew');i&&i.focus();}}
+function stepAdd(txt){const t=curTask();if(!t)return;txt=(txt||'').trim();if(!txt)return;(t.steps=t.steps||[]).push({id:uid(),t:txt,done:false});save();refreshSteps(true);}
+function stepTick(i){const t=curTask();if(!t||!t.steps||!t.steps[i])return;const s=t.steps[i];s.done=!s.done;save();refreshSteps();
+  if(s.done&&!t.done&&t.steps.every(x=>x.done)){toast({face:3,text:'All steps done. Tick the task itself?'});}}
 function openAdd(id){U.toast=null;renderToast();
   const t=id?S.tasks.find(x=>x.id===id):null;
   U.add={id:id||null,text:t?t.title:'',date:t?t.date:today(),time:t?t.time:'',cat:t?t.cat:(S.last||S.cats[0].id),dur:t?t.dur:30,rep:t?(t.rep||''):'',q:t?(t.q||''):'',over:{date:!!t,time:!!t,cat:!!t,dur:!!t,rep:!!t},confirmDel:false,open:null};
@@ -225,6 +241,7 @@ function addSheetHTML(){
   <div class="sheet" role="dialog" aria-label="${edit?'Edit task':'Add a task'}">
     <div class="arow"><input id="addInput" class="inp" type="text" value="${esc(a.text)}" placeholder="${edit?'Title':'What needs doing? Try: dentist fri 3pm'}" autocomplete="off" autocapitalize="sentences" enterkeyhint="done" aria-label="Task"><button type="button" class="go" data-act="submit" aria-label="${edit?'Save':'Add task'}">${ico(edit?'check':'plus',22,'currentColor',2.6)}</button></div>
     <div id="addMeta">${metaHTML()}</div>
+    ${edit?`<div id="addNote">${noteHTML()}</div><div id="addSteps" class="steps">${stepsHTML()}</div>`:''}
     ${edit?`<button type="button" class="lnk" data-act="delTask">${a.confirmDel?'Tap again to drop this task':'Drop this task'}</button>`:''}
   </div>`;
 }
@@ -289,6 +306,8 @@ function rowHTML(t,over){
   else if(t.moves>=2&&!t.done)rem=`moved ${t.moves} times`;
   if(!over&&!rem&&t.q&&questOf(t.q))rem='for '+esc(questOf(t.q).title);
   if(t.rep&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'repeats '+t.rep;
+  if(t.steps&&t.steps.length){const sd=t.steps.filter(x=>x.done).length;rem=(rem?rem+' \u00b7 ':'')+sd+'/'+t.steps.length+' steps';}
+  if(t.note&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'note';
   return `<div class="rw" data-id="${t.id}"><div class="bgp">Tomorrow ${ico('chevr',18,'var(--glow)',2)}</div>
   <div class="row g ${t.done?'done':''} ${dragon?'dragon':''}" data-id="${t.id}">
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
@@ -439,9 +458,13 @@ function render(keepOverlay){renderHead();renderMain();renderDock();if(!keepOver
 let suppress=0;
 document.addEventListener('click',e=>{
   if(Date.now()<suppress)return;
+  if(e.target.closest('a.lk'))return;
   const el=e.target.closest('[data-act]');if(!el)return;
   const act=el.dataset.act,v=el.dataset.v,id=el.dataset.id;
   switch(act){
+    case 'noteEdit':U.add.noteEdit=true;{const m=$('#addNote');if(m){m.innerHTML=noteHTML();const x=$('#addNoteTx');x&&x.focus();}}break;
+    case 'stTick':stepTick(+el.dataset.i);break;
+    case 'stDel':{const t=curTask();if(t&&t.steps){t.steps.splice(+el.dataset.i,1);if(!t.steps.length)delete t.steps;save();refreshSteps();}}break;
     case 'tick':tick(id);break;
     case 'edit':openAdd(id);break;
     case 'add':U.placing=null;openAdd(null);break;
@@ -488,6 +511,8 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{
   const t=e.target;
   if(t.id==='addInput')onAddInput(t.value);
+  else if(t.id==='addNoteTx'){const k=curTask();if(k){k.note=t.value;save();}}
+  else if(t.classList&&t.classList.contains('stin')&&t.id!=='stNew'){const k=curTask();if(k&&k.steps&&k.steps[+t.dataset.i]){k.steps[+t.dataset.i].t=t.value;save();}}
   else if(t.id==='addDate'){U.add.date=t.value;U.add.over.date=true;}
   else if(t.id==='addTime'){U.add.time=t.value;U.add.over.time=true;}
   else if(t.id==='focusTxt'&&U.council)U.council.focus=t.value;
@@ -496,8 +521,11 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{if(e.target.id==='addDate'||e.target.id==='addTime')refreshMetaKeep();});
 function refreshMetaKeep(){refreshMeta();return;const m=$('#addMeta');if(!m)return;/* chips depend on date only */const chips=m.querySelectorAll('[data-act=setDate]');chips.forEach(c=>c.classList.toggle('on',c.dataset.v===U.add.date));}
+document.addEventListener('focusout',e=>{if(e.target.id==='addNoteTx'&&U.add){const k=curTask();if(k){k.note=(k.note||'').trim();if(!k.note)delete k.note;save();}U.add.noteEdit=false;setTimeout(()=>{const m=$('#addNote');if(m&&U.sheet==='add')m.innerHTML=noteHTML();},0);}});
 document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&e.target.id==='addInput'){e.preventDefault();submitAdd();}
+  if(e.key==='Enter'&&e.target.id==='stNew'){e.preventDefault();stepAdd(e.target.value);}
+  else if(e.key==='Enter'&&e.target.classList.contains('stin')){e.preventDefault();e.target.blur();}
+  else if(e.key==='Enter'&&e.target.id==='addInput'){e.preventDefault();submitAdd();}
   else if(e.key==='Enter'&&e.target.id==='ncName'){e.preventDefault();const b=document.querySelector('[data-act=ncSave]');b&&b.click();}
   else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.council){U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
   else if(extKey(e)){e.preventDefault();}

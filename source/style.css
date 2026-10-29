@@ -258,3 +258,16 @@ section.cat{position:relative}
 /* longer lines use the gap beside the knight and a smaller size, so the bubble stays above the shelf */
 .bub{width:228px;max-height:106px}
 .bub.s2{font-size:16.5px}.bub.s3{font-size:15.5px}.bub.s4{font-size:14.5px;line-height:1.18}
+
+/* notes + steps */
+.note{display:block;width:100%;margin-top:12px;padding:10px 12px;border:1.5px solid var(--border);border-radius:4px;background:var(--tile);color:var(--bone);font:16px/1.4 var(--fell);box-sizing:border-box;word-break:break-word}
+.note.ta{resize:none;outline:none;font-family:var(--fell)}.note.ta:focus{border-color:var(--brass)}
+.note a.lk{color:var(--brass-l);text-decoration:underline}
+.steps{margin-top:8px}
+.st{display:flex;align-items:center;gap:2px;min-height:44px}
+.st .cb{margin-left:-8px;width:40px}.st .cb i{width:18px;height:18px}
+.stin{flex:1;min-width:0;background:none;border:0;border-bottom:1px solid transparent;color:var(--bone);font:17px var(--fell);padding:8px 4px;outline:none}
+.stin:focus{border-bottom-color:var(--brass)}
+.st.done .stin{text-decoration:line-through;opacity:.55}
+.st .stx{flex:none;width:36px;height:36px;border:0;background:none;color:var(--bone);opacity:.5;font-size:22px}
+.st.add .stp{width:32px;text-align:center;opacity:.6;font-size:20px}
