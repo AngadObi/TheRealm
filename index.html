@@ -1150,7 +1150,7 @@ function openAdd(id){U.toast=null;renderToast();
   const t=id?S.tasks.find(x=>x.id===id):null;
   U.add={id:id||null,text:t?t.title:'',date:t?t.date:today(),time:t?t.time:'',cat:t?t.cat:(S.last||S.cats[0].id),dur:t?t.dur:30,rep:t?(t.rep||''):'',q:t?(t.q||''):'',col:t?(t.col||''):'',over:{date:!!t,time:!!t,cat:!!t,dur:!!t,rep:!!t},confirmDel:false,open:null};
   U.sheet='add';renderOverlay();
-  setTimeout(()=>{const i=$('#addInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},60);
+  if(!id)setTimeout(()=>{const i=$('#addInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},60);
 }
 function metaHTML(){
   const a=U.add,td=today(),tm=addDays(td,1),k=cat(a.cat);
