@@ -1,0 +1,1888 @@
+{
+"briefing": [
+[
+1,
+"{emails} tasks today are emails. Nobody is surprised.",
+"2 or more email tasks today ({emails} = count)"
+],
+[
+2,
+"The day is {n} tasks long. I have seen worse sieges.",
+"{n} is 4 to 9"
+],
+[
+3,
+"Today holds {n} duties. I have sharpened nothing in preparation.",
+"Any"
+],
+[
+4,
+"{n} tasks. Start with the smallest one, coward.",
+"{n} is 3 or more"
+],
+[
+5,
+"Good morning. The kingdom, such as it is, awaits.",
+"Any"
+],
+[
+6,
+"{n} tasks, and \"{task}\" has been here since last week. We do not speak of it.",
+"A task carried over 5 or more days exists ({task} = oldest)"
+],
+[
+7,
+"The scroll says {n} things. The scroll is usually right.",
+"Any"
+],
+[
+8,
+"You rose. That was the hard part. The rest is {n} tasks.",
+"App opened before 07:00"
+],
+[
+9,
+"A task at {time}. Ambitious, my lord.",
+"A timed task exists before 10:00"
+],
+[
+10,
+"It is {day}. There are {n} tasks. Both facts are unchangeable.",
+"Any"
+],
+[
+11,
+"A light day. {n} tasks. I will pretend to be busy alongside you.",
+"{n} is 1 to 3"
+],
+[
+12,
+"Today's duties are listed below. I would read them, but I read them yesterday.",
+"Second or later open of the day"
+],
+[
+13,
+"Monday. The word alone should be a punishable offence.",
+"Day is Monday"
+],
+[
+14,
+"It is Friday. Do the tasks, then flee.",
+"Day is Friday"
+],
+[
+15,
+"{day}. Nobody asked you to be here, and yet.",
+"Day is Saturday or Sunday, {n} is 1 or more"
+],
+[
+16,
+"Midweek. The dungeon is long and the torches are short.",
+"Day is Wednesday"
+],
+[
+17,
+"{n} tasks, {overdue} of them already guilty.",
+"1 or more overdue tasks"
+],
+[
+18,
+"Your frog today is \"{task}\". It is already looking at you.",
+"A frog is chosen for today"
+],
+[
+19,
+"A clean slate, nothing carried over. Savour it, it is the rarest treasure.",
+"No overdue tasks, {n} is 1 or more"
+],
+[
+20,
+"It is {time}. {n} tasks remain. The sun has seen better days.",
+"App opened after 16:00 with tasks still open"
+]
+],
+"done": [
+[
+1,
+"Done. Unsung, as is tradition.",
+"Any"
+],
+[
+2,
+"\"{task}\" is finished. I will tell no one.",
+"Any"
+],
+[
+3,
+"One fewer thing to dread.",
+"Any"
+],
+[
+4,
+"Noted. The realm continues to exist.",
+"Any"
+],
+[
+5,
+"Finally. I had begun to treat it as furniture.",
+"Task was carried over 3 or more days"
+],
+[
+6,
+"Well done. Do not let it go to your head. It is a small head.",
+"Any"
+],
+[
+7,
+"Another one down. The dragon is unmoved.",
+"Any"
+],
+[
+8,
+"I would applaud, but the gauntlets.",
+"Any"
+],
+[
+9,
+"That counts. Barely, but it counts.",
+"Task title is 3 words or fewer"
+],
+[
+10,
+"{n} left. I do not say this to rush you. I say it with my eyes.",
+"3 or more tasks still open today"
+],
+[
+11,
+"Struck from the scroll. A good clean strike.",
+"Any"
+],
+[
+12,
+"Quick work. Suspiciously quick. Were you even doing it?",
+"Ticked within 60 seconds of being added"
+],
+[
+13,
+"{days} days overdue, and now done. A resurrection. I am moved, slightly.",
+"Task was overdue 2 or more days"
+],
+[
+14,
+"It is done and nobody died. Excellent odds for a {day}.",
+"Any"
+],
+[
+15,
+"That was the frog and you ate it. I will tell the bards. They will not care.",
+"Task was today's frog"
+],
+[
+16,
+"Done before {time}. The early knight catches the worm. The worm is a task.",
+"Ticked before 10:00"
+],
+[
+17,
+"Ticked at {time}. The night watch salutes you, wearily.",
+"Ticked after 22:00"
+],
+[
+18,
+"You did the awful one. Everything after this is a victory lap.",
+"Task was today's frog, ticked before 12:00"
+],
+[
+19,
+"Done. I have updated the scroll and my opinion of you, by a small amount.",
+"Any"
+],
+[
+20,
+"A streak. I will not jinx it, so I am jinxing it quietly.",
+"3 or more ticks within the last hour"
+]
+],
+"overdue": [
+[
+1,
+"\"{task}\" was due {day}. It has taken this well.",
+"Overdue by 1 or more days"
+],
+[
+2,
+"This was due at {time}. Time, like the drawbridge, waits for no one.",
+"Overdue today, task has a time"
+],
+[
+3,
+"Overdue. The scroll has gone quiet in a way I find pointed.",
+"Any"
+],
+[
+4,
+"I have seen this task so often we are on first-name terms.",
+"Overdue 7 or more days"
+],
+[
+5,
+"It is not late. It is merely ahead of schedule in a different kingdom.",
+"Overdue exactly 1 day"
+],
+[
+6,
+"The deadline has passed. The task remains. One of them is stubborn.",
+"Any"
+],
+[
+7,
+"Overdue, my lord. I say it gently, which costs me.",
+"First overdue task of the day"
+],
+[
+8,
+"Somewhere, someone is waiting on this. I would rather not think about who.",
+"Category is Work"
+],
+[
+9,
+"It was due {day}. We are now in the part of the story where it gets worse.",
+"Overdue 3 to 6 days"
+],
+[
+10,
+"Late, but not lost. Like most knights I have served.",
+"Any"
+],
+[
+11,
+"The task is overdue. I have drafted an apology. It is one word long.",
+"Any"
+],
+[
+12,
+"{overdue} overdue. I do not wish to alarm you. I am alarmed.",
+"2 or more overdue tasks"
+],
+[
+13,
+"This one is a month old. Some cheeses are less patient.",
+"Overdue 30 or more days"
+],
+[
+14,
+"Overdue and the sun is barely up. This is how bad mornings are made.",
+"App opened before 12:00, 1 or more overdue"
+],
+[
+15,
+"{days} days late. At this point it is less a task than a family member.",
+"Overdue 14 or more days"
+],
+[
+16,
+"A bill, overdue. If kingdoms agree on one thing, it is that this ends badly.",
+"Title has bill, tax, pay, invoice or rent"
+],
+[
+17,
+"They have not chased you yet. This is a trap in the shape of mercy.",
+"Category is Work, overdue by 1 or more days"
+],
+[
+18,
+"A few hours late is simply tactical timing.",
+"Overdue by less than 6 hours"
+],
+[
+19,
+"Overdue. The task is not angry, only disappointed, and it has no mouth.",
+"Any"
+],
+[
+20,
+"Delete it or do it. The third option is what we have been doing.",
+"Overdue 5 or more days"
+]
+],
+"postponed": [
+[
+1,
+"Moved to {day}. A bold new lie, but a fresh one.",
+"Moved for the 1st time"
+],
+[
+2,
+"Postponed. The task sighs. I sigh with it.",
+"Moved for the 1st or 2nd time"
+],
+[
+3,
+"Tomorrow, then. Tomorrow is very busy these days.",
+"New date is tomorrow"
+],
+[
+4,
+"That is {times} postponements. I have started a tally on my shield.",
+"Moved 3 or more times"
+],
+[
+5,
+"\"{task}\" has more travel miles than I do.",
+"Moved 3 or more times"
+],
+[
+6,
+"Rescheduled. I will pretend this is strategy.",
+"Any"
+],
+[
+7,
+"Pushed to {day}. The task is not going anywhere, which is the problem.",
+"Any"
+],
+[
+8,
+"Very well. It will keep. It always keeps. That is its whole personality.",
+"Any"
+],
+[
+9,
+"Again? I admire the commitment to not doing it.",
+"Moved 4 or more times"
+],
+[
+10,
+"Postponed. Might I suggest deleting it and feeling lighter?",
+"Moved 5 or more times"
+],
+[
+11,
+"Next week. Bold. I will be here, in spirit, rolling my eyes.",
+"New date is 6 or more days away"
+],
+[
+12,
+"Noted. Consider this the last time. I say that every time.",
+"Any"
+],
+[
+13,
+"Moved to the weekend. Spoken like someone who has never met the weekend.",
+"New date is Saturday or Sunday"
+],
+[
+14,
+"Pushed to {time} tonight. The evening version of you is no more reliable.",
+"Moved to later the same day, after 18:00"
+],
+[
+15,
+"The frog is postponed. The frog notices.",
+"Task was today's frog"
+],
+[
+16,
+"{day} already has {n} tasks. Optimism is a love language.",
+"New day already has 5 or more tasks"
+],
+[
+17,
+"Moved. The person on the other end of this is now mildly offended.",
+"Task has a person or booking in it (call, meeting, with, appointment)"
+],
+[
+18,
+"Postponed on a {day}. It had every chance.",
+"Any"
+],
+[
+19,
+"I will update the scroll. I will not update my expectations.",
+"Any"
+],
+[
+20,
+"Seven times. I have named it. It is called Gerald now.",
+"Moved 7 or more times"
+]
+],
+"empty": [
+[
+1,
+"Nothing today. I checked twice, and then behind the tapestry.",
+"Any"
+],
+[
+2,
+"A day with no duties. I do not trust it.",
+"Any"
+],
+[
+3,
+"The scroll is blank. Either you are free or you have forgotten something.",
+"Any"
+],
+[
+4,
+"No tasks. Rest, my lord. I will guard the nothing.",
+"Any"
+],
+[
+5,
+"Empty. It is a rare peace. Do not look directly at it.",
+"Any"
+],
+[
+6,
+"Nothing is due. This is how kingdoms fall: someone relaxes.",
+"Any"
+],
+[
+7,
+"No tasks today. I have polished the helm for the fourth time.",
+"Any"
+],
+[
+8,
+"Free day. You may add a task, or you may become a person.",
+"Any"
+],
+[
+9,
+"Nothing on the list. The dragon has also taken the day off.",
+"Saturday or Sunday"
+],
+[
+10,
+"An empty {day}. Use it wisely, or at least use it.",
+"Monday to Friday"
+],
+[
+11,
+"No quests. I came all this way for a clean scroll.",
+"First open of the day"
+],
+[
+12,
+"The list is empty. If this is a mistake, the plus button is down there.",
+"App opened after 12:00"
+],
+[
+13,
+"Nothing today, but tomorrow has {n} tasks. I mention it only as a kindness.",
+"Tomorrow has 3 or more tasks"
+],
+[
+14,
+"No tasks, and nothing overdue. A knight could weep.",
+"No tasks today and 0 overdue"
+],
+[
+15,
+"Empty, and yet the Side Quests pile grows. I say nothing.",
+"Ideas list has 1 or more items"
+],
+[
+16,
+"Monday and nothing planned. Either you are a genius or in denial.",
+"Day is Monday"
+],
+[
+17,
+"No tasks. Might I suggest booking the dentist, while courage is cheap.",
+"Monday to Friday, no medical task in the next 60 days"
+],
+[
+18,
+"No tasks. The only enemy today is boredom, and I am not paid enough to fight it.",
+"Any"
+],
+[
+19,
+"I have nothing to report. This is the finest report I have ever given.",
+"Any"
+],
+[
+20,
+"No tasks at {time}. A great hour to do absolutely nothing.",
+"App opened after 18:00"
+]
+],
+"allDone": [
+[
+1,
+"Every task done. I am as surprised as you are.",
+"Any"
+],
+[
+2,
+"The scroll is clear. Go outside. Be seen.",
+"Any"
+],
+[
+3,
+"All {n} tasks complete. The realm is, briefly, in order.",
+"Day had 3 or more tasks"
+],
+[
+4,
+"Nothing left. I would call it a victory, but I am cautious with that word.",
+"Any"
+],
+[
+5,
+"Done for the day. The dragon will have to find someone else.",
+"Any"
+],
+[
+6,
+"You finished everything. I shall inform no one, as no one asked.",
+"Any"
+],
+[
+7,
+"A clean list. Savour it. It will not last.",
+"Any"
+],
+[
+8,
+"That is all of them. You may now stare at the wall with a clear conscience.",
+"Any"
+],
+[
+9,
+"Everything done before {time}. Show-off.",
+"Last task ticked before 17:00"
+],
+[
+10,
+"Cleared. I have seen kings do less. Most kings, in fact.",
+"Any"
+],
+[
+11,
+"Nothing remains but the evening. Do with it as you please.",
+"Last task ticked after 18:00"
+],
+[
+12,
+"All done, including the awful one. I salute you with a small, tired nod.",
+"Today's frog was completed"
+],
+[
+13,
+"All done on a {day}. History will not note it. I have.",
+"Any"
+],
+[
+14,
+"Finished at {time}. The night watch has relieved you of duty.",
+"Last task ticked after 22:00"
+],
+[
+15,
+"You cleared the old ones too. The ghosts are quiet.",
+"At least one overdue task was cleared today"
+],
+[
+16,
+"A full list, and now an empty one. That is called a day.",
+"Day had 8 or more tasks"
+],
+[
+17,
+"Just the one task, and it is done. I will not undersell it.",
+"Day had exactly 1 task"
+],
+[
+18,
+"Done. The rest of the day belongs to you. Spend it badly.",
+"Any"
+],
+[
+19,
+"Nothing overdue and nothing open. This is the sort of thing bards embellish.",
+"0 overdue tasks at the end"
+],
+[
+20,
+"All clear on a weekend. You are either very disciplined or very strange.",
+"Saturday or Sunday"
+]
+],
+"late": [
+[
+1,
+"It is {time}. The tasks will still be here. Regrettably.",
+"Any"
+],
+[
+2,
+"Even the dragon sleeps. You are using a phone.",
+"Any"
+],
+[
+3,
+"Planning at this hour is how wars start. Go to bed.",
+"2 or more tasks added in this session"
+],
+[
+4,
+"Nothing here is urgent enough for {time}. I checked.",
+"No task due today and 0 overdue"
+],
+[
+5,
+"Sleep, my lord. I will keep watch. I will also keep the list.",
+"Any"
+],
+[
+6,
+"The candle is low and so is the quality of this decision.",
+"A task is being postponed or rescheduled"
+],
+[
+7,
+"Ah, the midnight audit. Nothing good has ever come of it.",
+"2 or more tasks postponed or deleted in this session"
+],
+[
+8,
+"I am on duty at all hours. This is not a boast.",
+"Any"
+],
+[
+9,
+"Tomorrow's tasks look much smaller after eight hours of nothing.",
+"Tomorrow has 1 or more tasks"
+],
+[
+10,
+"It is very late. I will not judge. I will merely stand here, judging.",
+"Any"
+],
+[
+11,
+"Whatever you are avoiding, it will be there at breakfast.",
+"1 or more overdue tasks"
+],
+[
+12,
+"A quest at this hour needs a lantern and a better reason.",
+"Exactly 1 task added in this session"
+],
+[
+13,
+"You are awake, and so are the {overdue} tasks you owe. A coincidence.",
+"1 or more overdue tasks"
+],
+[
+14,
+"The one thing you can do now is nothing, and you are bad at it.",
+"Any"
+],
+[
+15,
+"The Council is closed. The Road is dark. Do go to bed.",
+"Any"
+],
+[
+16,
+"After midnight, every task becomes a crisis. By daylight it becomes an email.",
+"Time is 00:00 to 04:00"
+],
+[
+17,
+"Early start tomorrow? Then this is a questionable investment.",
+"A task tomorrow is timed before 08:00"
+],
+[
+18,
+"It is {day} night. Or morning. Time has abandoned us.",
+"Time is 00:00 to 04:00"
+],
+[
+19,
+"Your list is complete. Your sleep is not. Prioritise accordingly.",
+"All of today's tasks are done"
+],
+[
+20,
+"Going to bed is also a task. I shall not add it. You would postpone it.",
+"Any"
+]
+],
+"added": [
+[
+1,
+"Added. It now exists, and so does the obligation.",
+"Any"
+],
+[
+2,
+"\"{task}\" is on the scroll. No take-backs.",
+"Any"
+],
+[
+3,
+"Recorded for {day}. I have written it in ink, so it is your problem now.",
+"Task has a day that is not today"
+],
+[
+4,
+"Booked for {time}. I shall be there, silently.",
+"Task has a time"
+],
+[
+5,
+"Another task. The list grows. Like a moat, but worse.",
+"Any"
+],
+[
+6,
+"Understood. I have read it as {day} at {time}. Correct me if I am wrong. I am rarely wrong.",
+"Quick add parsed both a day and a time"
+],
+[
+7,
+"I did not catch a date. It will float, like a ghost.",
+"Quick add found no date"
+],
+[
+8,
+"Added to the list. You were so confident typing it.",
+"Any"
+],
+[
+9,
+"Accepted. I will remind you at the appropriate moment of dread.",
+"Task has a reminder"
+],
+[
+10,
+"Noted. That makes {n} for today. I am not counting. I am counting.",
+"Added to today, {n} is 3 or more"
+],
+[
+11,
+"A new quest, and it is only a phone call. Fantasy is dead.",
+"Title has call, phone or ring"
+],
+[
+12,
+"Written down. Some people feel that is the same as doing it. I have met them.",
+"Any"
+],
+[
+13,
+"Another email. The scroll groans.",
+"Title has email, mail, reply or inbox"
+],
+[
+14,
+"A healer's appointment, noted. I will pretend not to know what is bothering you.",
+"Title has doctor, dentist, clinic or check-up"
+],
+[
+15,
+"Added for {day}. It is not that I doubt you. I do.",
+"Any"
+],
+[
+16,
+"Added and due within the hour. Planning was never your thing, and yet here we are.",
+"Due within 60 minutes of being added"
+],
+[
+17,
+"Another task for today. The day is now officially more optimistic than you.",
+"Added to today, {n} is 6 or more"
+],
+[
+18,
+"Noted. It goes into the pile with the rest of the ghosts.",
+"Any"
+],
+[
+19,
+"A task with no category. It will wander the realm, homeless.",
+"No category chosen"
+],
+[
+20,
+"Added at {time}. Inspiration at this hour is either genius or dread.",
+"Added after 22:00"
+]
+],
+"overloaded": [
+[
+1,
+"{n} tasks. This is not a list. This is a siege.",
+"{n} is 10 or more"
+],
+[
+2,
+"I have counted {n} tasks. I counted again, hoping for a different number.",
+"{n} is 10 or more"
+],
+[
+3,
+"Nobody does {n} things in a day. Pick the three you can defend.",
+"{n} is 10 or more"
+],
+[
+4,
+"The list is long. Mercifully, some of it is imaginary.",
+"{n} is 10 or more"
+],
+[
+5,
+"Today is overbooked. I suggest diplomacy, which here means postponing.",
+"{n} is 12 or more"
+],
+[
+6,
+"{n} tasks. At this rate even the chain mail will need a holiday.",
+"{n} is 10 or more"
+],
+[
+7,
+"I do not wish to be dramatic, but this is how legends end.",
+"{n} is 15 or more"
+],
+[
+8,
+"That is a great deal of day. Shall we move some of it to the week of never?",
+"{n} is 10 or more"
+],
+[
+9,
+"\"{task}\" and \"{task2}\" are both at {time}. One of you will have to yield.",
+"Two timed tasks share a start time"
+],
+[
+10,
+"{n} tasks and not a single break planned. A cruel ratio.",
+"{n} is 10 or more and no task has lunch or break in the title"
+],
+[
+11,
+"You may do all of it. You may also be a different person by evening.",
+"{n} is 10 or more"
+],
+[
+12,
+"This much work needs an army. You have me. Consider your odds.",
+"{n} is 12 or more"
+],
+[
+13,
+"{n} tasks and {emails} of them are emails. I am not saying it is your fault. I am saying it.",
+"{n} is 8 or more and 3 or more email tasks"
+],
+[
+14,
+"{n} tasks across several categories. Even the realm's map has fewer borders.",
+"{n} is 10 or more, 3 or more categories used"
+],
+[
+15,
+"Overloaded on a Monday. A classic, if unkind.",
+"{n} is 10 or more and the day is Monday"
+],
+[
+16,
+"This is a day that wants a plan. Council is two buttons away.",
+"{n} is 10 or more and no frog chosen"
+],
+[
+17,
+"You added most of these on one day. Past you is a tyrant.",
+"{n} is 10 or more, 6 or more were created on the same day"
+],
+[
+18,
+"Triage: three must, three should, the rest is fiction.",
+"{n} is 10 or more"
+],
+[
+19,
+"Today's tasks add up to {hours} hours. There are 24 in a day, and you were planning to sleep, I assume.",
+"Timed durations sum to 10 hours or more"
+],
+[
+20,
+"{n} tasks. Even the dragon declined.",
+"{n} is 15 or more"
+]
+],
+"frogPicked": [
+[
+1,
+"\"{task}\" is the frog. Eat it first, and do not look at it.",
+"Any"
+],
+[
+2,
+"A brave choice. I would have picked the easier dread.",
+"Any"
+],
+[
+3,
+"The frog is chosen. It does not know yet.",
+"Any"
+],
+[
+4,
+"The worst task, named and committed. This is the whole secret, and it is unpleasant.",
+"Any"
+],
+[
+5,
+"Do it before noon and the rest of the day is downhill. Mostly.",
+"Frog picked before 10:00"
+],
+[
+6,
+"You have chosen \"{task}\". I admire it the way one admires a cliff.",
+"Any"
+],
+[
+7,
+"One frog. Every other task is now, by comparison, a pleasant stroll.",
+"{n} is 4 or more"
+],
+[
+8,
+"Good. Face the thing first. I will hold the shield, ornamentally.",
+"Any"
+],
+[
+9,
+"That frog has been on the list a while. It has grown.",
+"Frog was moved 2 or more times, or is older than 7 days"
+],
+[
+10,
+"Chosen. Now do not reconsider, which I know you are about to do.",
+"Any"
+],
+[
+11,
+"You picked a frog from a pond of {n}. Stirring.",
+"{n} is 6 or more"
+],
+[
+12,
+"The frog is set. Tomorrow you may choose a smaller one, as a treat.",
+"Any"
+],
+[
+13,
+"A doctor's visit as the frog. Understandable. They all smell of antiseptic and judgement.",
+"Frog title has doctor, dentist, clinic or check-up"
+],
+[
+14,
+"An email as the frog. A noble fight: small enemy, enormous dread.",
+"Frog title has email, mail or reply"
+],
+[
+15,
+"The frog is a phone call. Few things kill a man faster, apart from knives.",
+"Frog title has call or phone"
+],
+[
+16,
+"The frog is paperwork. Even dragons file in March.",
+"Frog title has tax, form, bill, insurance or paperwork"
+],
+[
+17,
+"Frog chosen at {time}. Late, but frogs do not wear watches.",
+"Frog picked after 12:00"
+],
+[
+18,
+"If this frog is not done by sundown, we will meet again. I will not be gentle.",
+"Any"
+],
+[
+19,
+"You chose the frog yourself. This is called agency. It also removes all excuses.",
+"Any"
+],
+[
+20,
+"Frog chosen. Every other task is now a sheepdog, and this one is the wolf.",
+"Any"
+]
+],
+"doctor": [
+[
+1,
+"A healer's appointment, noted. I will pretend not to know what is bothering you.",
+"Task added"
+],
+[
+2,
+"\"{task}\" is booked. Hold the date, and try not to hold your breath.",
+"Task added with a date"
+],
+[
+3,
+"Appointment set for {day} at {time}. Bring courage and a form of ID.",
+"Task added with day and time"
+],
+[
+4,
+"You visit the healer at {time}. Answer honestly. They have heard worse.",
+"The appointment is today"
+],
+[
+5,
+"Healer at {time}. Whatever they say, the plan is to nod gravely.",
+"The appointment is today"
+],
+[
+6,
+"The healer awaits tomorrow at {time}. A good night's sleep would impress them.",
+"The appointment is tomorrow"
+],
+[
+7,
+"Tomorrow: {task}. I have prepared a speech for the receptionist. It is mostly sighing.",
+"The appointment is tomorrow"
+],
+[
+8,
+"{task} in two hours. Leave now. The road is long and parking is a cruel myth.",
+"2 hours before the appointment"
+],
+[
+9,
+"The healer expects you in an hour. Time to find your insurance card and your dignity.",
+"1 hour before the appointment"
+],
+[
+10,
+"Back from the healer. Intact? Good. The scroll thanks you for your service.",
+"Appointment task ticked"
+],
+[
+11,
+"You went. Half the realm never does. I am proud, in a quiet and bureaucratic way.",
+"Appointment task ticked"
+],
+[
+12,
+"The dentist. Ah. Floss tonight, with the speed of someone who has just been caught.",
+"Title has dentist, task added"
+],
+[
+13,
+"The dentist today. Floss now. It will not help, but it is a gesture.",
+"Title has dentist, appointment is today"
+],
+[
+14,
+"The dentist is survived. The numbness is the true reward.",
+"Title has dentist, task ticked"
+],
+[
+15,
+"You are rescheduling the healer. The healer notes this and sighs in Latin.",
+"Appointment task postponed"
+],
+[
+16,
+"Booking the healer is overdue. It takes five minutes. I timed it. I have never timed anything.",
+"Title has book or make, and is overdue"
+],
+[
+17,
+"You must book a healer. The hold music is the true quest.",
+"Title has book, make or call"
+],
+[
+18,
+"A check-up. Nothing is wrong, which is the entire purpose, and still it feels like a trial.",
+"Title has check-up"
+],
+[
+19,
+"A blood test. A small tax, paid in a vein.",
+"Title has blood test or bloods"
+],
+[
+20,
+"Physio. The one appointment where you pay to be told to do the exercises you were already told to do.",
+"Title has physio"
+]
+],
+"emails": [
+[
+1,
+"Another email. The scroll groans.",
+"Task added"
+],
+[
+2,
+"{emails} emails today. A modern plague, and you are the only physician.",
+"2 or more email tasks today"
+],
+[
+3,
+"One email. Two minutes of work, forty minutes of dread.",
+"Exactly 1 email task today"
+],
+[
+4,
+"Sent. Now you must wait for the reply, which is a different kind of torture.",
+"Email task ticked"
+],
+[
+5,
+"Email sent. I noticed you read it six times first. I say nothing.",
+"Email task ticked"
+],
+[
+6,
+"The email is {days} days overdue. \"Sorry for the delay\" has a certain poetry.",
+"Email task overdue 1 to 6 days"
+],
+[
+7,
+"Overdue {days} days. \"Apologies for the delay\" has been used up. Write a new lie.",
+"Email task overdue 7 or more days"
+],
+[
+8,
+"An email as the frog. A noble fight: small enemy, enormous dread.",
+"Email task is today's frog"
+],
+[
+9,
+"An email, postponed. It will not get shorter. It will, in fact, get angrier.",
+"Email task postponed"
+],
+[
+10,
+"{emails} emails. Remember: \"per my last email\" is a battle cry.",
+"3 or more email tasks today"
+],
+[
+11,
+"A reply is needed. If the words will not come, begin with \"Thanks for your message.\" It has solved worse.",
+"Title has reply or respond"
+],
+[
+12,
+"An email at {time}. The recipient will read it at 9am and feel your doom.",
+"Email task ticked after 22:00"
+],
+[
+13,
+"{emails} of today's {n} tasks are emails. Inbox zero is a legend told to children.",
+"{n} is 10 or more and 3 or more emails"
+],
+[
+14,
+"One short email. Do it now and be a hero for exactly two minutes.",
+"Email task with a title of 4 words or fewer, added"
+],
+[
+15,
+"A message to send. Keep it short, or they will answer with a longer one.",
+"Title has message or Slack"
+],
+[
+16,
+"Remember the attachment. The universe will not remember it for you.",
+"Title has attach, send file or send doc"
+],
+[
+17,
+"An email to the boss. Three drafts, one send, zero confidence.",
+"Title has boss, manager, client or CEO"
+],
+[
+18,
+"A complaint email. Write it hot, leave it in drafts, send it cold.",
+"Title has complain, refund or dispute"
+],
+[
+19,
+"That is {emails} emails cleared today. The scroll is thinner. The inbox is not.",
+"3 or more email tasks ticked today"
+],
+[
+20,
+"A group email. Do not reply all. I will not forgive that.",
+"Title has team, group, everyone or all"
+]
+],
+"calls": [
+[
+1,
+"A phone call. A scroll is easier, and a scroll cannot interrupt you.",
+"Task added"
+],
+[
+2,
+"A call today. Rehearse it once, aloud, in the shower of dread.",
+"Call task is today"
+],
+[
+3,
+"Call made. They did not bite. Nobody died. Very good.",
+"Call task ticked"
+],
+[
+4,
+"Call done. Reward: five minutes of silence and no one speaking to you.",
+"Call task ticked"
+],
+[
+5,
+"The frog is a phone call. Few things kill a man faster, apart from knives.",
+"Call task is today's frog"
+],
+[
+6,
+"The call is overdue. The silence has become more awkward than the call would have been.",
+"Call task overdue"
+],
+[
+7,
+"You postponed the call. The phone is never angry. The phone is patient and evil.",
+"Call task postponed"
+],
+[
+8,
+"On hold with the realm's bureaucracy? Take the music. It is the closest we have to a tavern.",
+"Title has insurance, bank, office, authority or hotline"
+],
+[
+9,
+"A call to family. Pick up quickly. They have been waiting since last Sunday.",
+"Title has mum, mom, dad, parents or grandma"
+],
+[
+10,
+"A call to the bank. May the queue be short and the clerk human.",
+"Title has bank"
+],
+[
+11,
+"Customer support: press 1, then 3, then despair, then hold for a human.",
+"Title has support, service or hotline"
+],
+[
+12,
+"Booking by phone. The website was too modern for you, I assume.",
+"Title has book and call"
+],
+[
+13,
+"A call at {time}. Take a breath and a pen, and do not pace by the window.",
+"Timed call within the next 2 hours"
+],
+[
+14,
+"A call on the list. Texting is an option. I have given up pretending it is not.",
+"Task added"
+],
+[
+15,
+"If no one picks up, a voicemail counts. I have checked the bylaws.",
+"Call task today"
+],
+[
+16,
+"A call before 09:00. The other side is also unhappy to be there.",
+"Call task timed before 09:00"
+],
+[
+17,
+"A call on a Friday afternoon. Optimism is a kind of courage.",
+"Call task timed after 15:00 on a Friday"
+],
+[
+18,
+"{calls} calls today. You have become a switchboard.",
+"3 or more call tasks today"
+],
+[
+19,
+"A call to a stranger. Open with one sentence and the rest is improvisation, or a shield.",
+"Title has cold, sales, lead or stranger"
+],
+[
+20,
+"Call crossed off. The phone returns to being a camera with ambitions.",
+"Call task ticked"
+]
+],
+"frog": [
+[
+1,
+"Frog set for {day}. You named your own dread. I respect that.",
+"A task is chosen as the frog for a future day"
+],
+[
+2,
+"\"{task}\" is today. It will be unpleasant. It always is, and then it is finished.",
+"Frog is today"
+],
+[
+3,
+"The dreaded one is today. Start it before you have time to improve your excuses.",
+"Frog is today, app opened before 12:00"
+],
+[
+4,
+"Done. The awful thing is over, and you are still here. A neat trick.",
+"Frog ticked"
+],
+[
+5,
+"You ate the frog. The scroll weeps with joy, which is rare.",
+"Frog ticked"
+],
+[
+6,
+"You postponed the frog. It remains a frog. Dread does not erode, it accumulates.",
+"Frog postponed"
+],
+[
+7,
+"Postponed {times} times. It is no longer a task. It is a pet.",
+"Frog moved 3 or more times"
+],
+[
+8,
+"Do the frog first. By noon you will have forgotten how it felt.",
+"Frog is today, app opened before 10:00"
+],
+[
+9,
+"It is {time}. Frogs do not improve after lunch. They hold a grudge.",
+"Frog open, app opened after 13:00"
+],
+[
+10,
+"Not done by evening? Then tomorrow's you inherits it, with interest.",
+"Frog open, app opened after 18:00"
+],
+[
+11,
+"A frog with a deadline. The best kind. The worst kind.",
+"Frog has a due date"
+],
+[
+12,
+"Break it into three smaller tasks. A dragon dies the same way, in the end: by slices.",
+"Frog moved 2 or more times"
+],
+[
+13,
+"This frog is vague. Vague tasks are hard because they are many tasks in a coat.",
+"Frog title has plan, strategy, project, finish or sort out"
+],
+[
+14,
+"You have been dreading this since {day}. I was there. It was a long {day}.",
+"Frog created 3 or more days ago and still open"
+],
+[
+15,
+"It has been done by braver and dumber people than you. They also survived.",
+"Frog is today"
+],
+[
+16,
+"Open the file. That is the whole first step. Do nothing else.",
+"Frog is today and not yet started"
+],
+[
+17,
+"When it is done, you may have a snack. I have decided this. I hold the authority.",
+"Frog is today"
+],
+[
+18,
+"The frog, done at {time}. Late is a kind of on time, and I will not argue.",
+"Frog ticked after 21:00"
+],
+[
+19,
+"A frog chosen at {time}. That is sleep banditry.",
+"Frog set after 22:00"
+],
+[
+20,
+"The same frog again. It is not a frog, it is a lodger.",
+"Same task chosen as the frog on 2 or more different days"
+]
+],
+"paper": [
+[
+1,
+"Paperwork. The oldest enemy, and the one that never fights fair.",
+"Task added"
+],
+[
+2,
+"Tax. Two inevitabilities, and only one of them has a deadline.",
+"Title has tax"
+],
+[
+3,
+"A bill is due. The kingdom pays, one coin at a time and complaining all the way.",
+"Title has bill or invoice"
+],
+[
+4,
+"Insurance. A bet that nothing terrible will happen, placed with someone betting the opposite.",
+"Title has insurance"
+],
+[
+5,
+"A form. Every box is a small battle. Use black ink and do not stray from the lines.",
+"Title has form"
+],
+[
+6,
+"The form is filed. The state acknowledges you. Please do not feel anything about it.",
+"Paperwork task ticked"
+],
+[
+7,
+"The bill is overdue. The fines are patient and have no sense of humour.",
+"Title has bill, rent or invoice, overdue"
+],
+[
+8,
+"Due in {days} days. The authorities do not read excuses. They stamp them.",
+"Paperwork task due in 1 to 7 days"
+],
+[
+9,
+"Renew. Something has expired. It is not the first time and it will not be the last.",
+"Title has renew"
+],
+[
+10,
+"Documents. Make three copies. The fourth will be requested at the last minute.",
+"Title has visa, passport, permit or ID"
+],
+[
+11,
+"Receipts. The careful keep them in a folder. The rest keep them in a coat pocket, and a rumour.",
+"Title has receipt or expenses"
+],
+[
+12,
+"The frog is paperwork. The dragon wears a lanyard.",
+"Paperwork task is today's frog"
+],
+[
+13,
+"Paperwork postponed. It will not be lighter. Paper never loses weight.",
+"Paperwork task postponed"
+],
+[
+14,
+"Taxes filed. The realm is in order, and you are poorer in only the usual ways.",
+"Title has tax, task ticked"
+],
+[
+15,
+"Payment made. A coin has left the coffer. May it be used on something worthier than itself.",
+"Title has pay, bill or rent, ticked"
+],
+[
+16,
+"An appointment at an office. Take a number, a book and your lowest expectations.",
+"Title has office, authority or appointment, with paperwork"
+],
+[
+17,
+"The portal is down. It is always down. It may rise again at dawn.",
+"Title has portal, login, account or upload"
+],
+[
+18,
+"A password reset. The password will be new, and forgotten by the end of the week.",
+"Title has password"
+],
+[
+19,
+"Paperwork on a weekend. The state does not rest, but it has not asked you to be there either.",
+"Paperwork task on Saturday or Sunday"
+],
+[
+20,
+"Admin at {time}. Even the clerks have gone home.",
+"Paperwork task ticked or added after 20:00"
+]
+],
+"chores": [
+[
+1,
+"A chore. Epic quests are about slaying dragons. Yours is about slaying a dishwasher.",
+"Task added"
+],
+[
+2,
+"Laundry. The tide never ends, it only hides in a basket.",
+"Title has laundry or washing"
+],
+[
+3,
+"Dishes. The mountain grows in the night, as mountains do.",
+"Title has dishes or dishwasher"
+],
+[
+4,
+"Bins. The one quest performed by every knight and sung by none.",
+"Title has bins, trash or recycling"
+],
+[
+5,
+"Groceries. Bring a list. The list will be ignored and you will return with biscuits.",
+"Title has groceries or shopping"
+],
+[
+6,
+"Cleaning. The dust has an army, and it is winning.",
+"Title has clean, hoover or vacuum"
+],
+[
+7,
+"A repair. Begin with a video, end with a professional.",
+"Title has fix or repair"
+],
+[
+8,
+"Chore done. The home is one degree less hostile.",
+"Home task ticked"
+],
+[
+9,
+"Shopping. Buy the thing on the list and nothing else. I know you will not.",
+"Title has shopping or buy"
+],
+[
+10,
+"Cooking tonight. Bold. The kitchen is a battlefield with its own weather.",
+"Title has cook or dinner, and the task is today"
+],
+[
+11,
+"Water the plants. They cannot complain, which somehow makes it worse.",
+"Title has water or plants"
+],
+[
+12,
+"The chore is postponed. It has not gone away, it has merely dressed in dust.",
+"Home task postponed"
+],
+[
+13,
+"The chore is overdue. The kingdom has begun to smell of consequences.",
+"Home task overdue"
+],
+[
+14,
+"Chores on a weekend. The weekend was a rumour.",
+"Home task on Saturday or Sunday"
+],
+[
+15,
+"The frog is a chore. A knight's life is, ultimately, mostly laundry.",
+"Home task is today's frog"
+],
+[
+16,
+"{home} chores today. You are a steward now. I have already ordered the keys.",
+"3 or more Home tasks today"
+],
+[
+17,
+"Chores cleared. The household owes you a medal and will not give it.",
+"All Home tasks today ticked"
+],
+[
+18,
+"Furniture assembly. The instructions are a legend, and the screws are a rumour.",
+"Title has assemble, IKEA or furniture"
+],
+[
+19,
+"Change the sheets. A small act of civilisation.",
+"Title has sheets, bed or linen"
+],
+[
+20,
+"Chores at {time}. The neighbours are listening, and are either impressed or alarmed.",
+"Home task ticked or added after 21:00"
+]
+],
+"exercise": [
+[
+1,
+"Exercise. You will regret it for twenty minutes and feel smug for eight hours.",
+"Task added"
+],
+[
+2,
+"The gym today. Pack the bag now. The packed bag is half the work.",
+"Gym task is today"
+],
+[
+3,
+"A run. The road is long and the knees are older than they feel.",
+"Title has run"
+],
+[
+4,
+"Done. The body is grateful, and also furious. A balanced result.",
+"Exercise task ticked"
+],
+[
+5,
+"Training postponed. The weights will wait. They are very good at it.",
+"Exercise task postponed"
+],
+[
+6,
+"The workout is overdue. The couch has begun to claim you as its own.",
+"Exercise task overdue"
+],
+[
+7,
+"Training before work. The knights of old rose at dawn because they had no phones.",
+"Exercise task timed before 08:00"
+],
+[
+8,
+"Training at {time}. Good, because you will not do it at 22:00 and call it a plan.",
+"Exercise task timed after 17:00"
+],
+[
+9,
+"A walk. The humblest workout, and the one with the best snacks.",
+"Title has walk"
+],
+[
+10,
+"Swimming. Be careful. The water is deep, and your ego is deeper.",
+"Title has swim"
+],
+[
+11,
+"Yoga. Bend, breathe, and quietly resent the instructor.",
+"Title has yoga"
+],
+[
+12,
+"The third workout this week. At this rate you will be insufferable. Keep going.",
+"3 or more exercise tasks ticked this week"
+],
+[
+13,
+"{n} days of training in a row. I do not speak to runners, but I am proud.",
+"Exercise ticked on 3 or more consecutive days"
+],
+[
+14,
+"Stretching. The bit everyone skips and the knees remember.",
+"Title has stretch"
+],
+[
+15,
+"The frog is a workout. A brave and sweaty frog.",
+"Exercise task is today's frog"
+],
+[
+16,
+"Leg day. The stairs will be your enemy tomorrow, and they will take their time.",
+"Title has leg"
+],
+[
+17,
+"Training added at {time}. The gym closes. The plan survives, as a plan.",
+"Exercise task added after 21:00"
+],
+[
+18,
+"Training on a weekend. Even the dragons sleep in.",
+"Exercise task on Saturday or Sunday"
+],
+[
+19,
+"Cycling. Two wheels, one dream, no pockets.",
+"Title has cycle or bike"
+],
+[
+20,
+"A long session. The realm will sing, or at least nod.",
+"Exercise task ticked, duration 60 minutes or more"
+]
+],
+"social": [
+[
+1,
+"A social engagement. Charm will be required. I have none, so I will wait outside.",
+"Task added"
+],
+[
+2,
+"A birthday. Do not forget the card, the gift, or the correct age.",
+"Title has birthday"
+],
+[
+3,
+"A gathering today. Smile on arrival, leave after ninety minutes of politeness.",
+"Social task is today"
+],
+[
+4,
+"Dinner. A table, a menu, and the usual debate about who orders for the table.",
+"Title has dinner"
+],
+[
+5,
+"A wedding. Three days of small talk and one dance you will regret.",
+"Title has wedding"
+],
+[
+6,
+"A party. Your coat will be at the bottom of a pile, and so will your will.",
+"Title has party"
+],
+[
+7,
+"Visiting family. The one fortress where you are always twelve.",
+"Title has family, parents, mum, dad or in-laws"
+],
+[
+8,
+"Date night. Wear the nicer tunic and look interested in the menu. It is also the whole point.",
+"Title has date night"
+],
+[
+9,
+"Postponing the plans. Both parties are secretly relieved. Do not say anything.",
+"Social task postponed"
+],
+[
+10,
+"A gift to buy. The shop is open. The time is not.",
+"Title has gift or present"
+],
+[
+11,
+"You went and returned. A social victory. The scroll awards you a quiet evening.",
+"Social task ticked"
+],
+[
+12,
+"An event at {time}. Arriving late is a tradition, and a sin.",
+"Social task timed after 18:00"
+],
+[
+13,
+"Drinks. One, you said. It will be one. The knight has heard this before.",
+"Title has drinks, pub or bar"
+],
+[
+14,
+"Plans on a weekend. The weekend has been sold.",
+"Social task on Saturday or Sunday"
+],
+[
+15,
+"The frog is a social event. The quietest dread, the one with canapes.",
+"Social task is today's frog"
+],
+[
+16,
+"{n} social tasks this week. You are the court jester, apparently.",
+"3 or more social tasks in the next 7 days"
+],
+[
+17,
+"Meeting a friend. Ask questions. People love it when you appear to listen.",
+"Title has friend or meet"
+],
+[
+18,
+"An RSVP. It is not a commitment, merely the first step of one.",
+"Title has RSVP or invite"
+],
+[
+19,
+"Cancelling the plans. The scroll accepts it, the friend will accept it, and nobody will remember.",
+"Social task deleted"
+],
+[
+20,
+"You did the social. Now recharge. I will guard the sofa.",
+"Social task ticked after 20:00"
+],
+[
+1,
+"Weary: half-lidded, one eye slightly higher",
+"Morning briefing, Empty day"
+],
+[
+2,
+"Glare: heavy brow, eyes angled inward",
+"Overdue"
+],
+[
+3,
+"Smug: sly sideways look, relaxed lids",
+"All done"
+],
+[
+4,
+"Alarmed: round wide eyes, alert marks",
+"Overloaded day"
+],
+[
+5,
+"Deadpan: flat slits, one slightly tilted",
+"Task added, default face"
+],
+[
+6,
+"Delighted: eyes closed in happy arcs, cheer marks",
+"Dragon slain"
+],
+[
+7,
+"Tearful: eyes shut tight, tears running down the vents",
+"Dread"
+],
+[
+8,
+"Scheming: narrowed eyes, brow pulled down",
+"Postponed again, Dragon chosen"
+],
+[
+9,
+"Flustered: flat eyes, blush hatching under them",
+"Embarrassment"
+],
+[
+10,
+"Double-take: one eye wide, one flat, alert marks",
+"Suspicion"
+]
+]
+}
