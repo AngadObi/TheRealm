@@ -11,7 +11,7 @@ frag=re.sub(r'<title>.*?</title>\n','',frag,1)
 frag=frag.replace('<script>\n','<script src="firebase-config.js"></script>\n<script src="sync.js"></script>\n<script>\n',1)
 head='''<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>The Realm</title>
 <meta name="theme-color" content="#070504">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
