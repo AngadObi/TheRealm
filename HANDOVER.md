@@ -18,3 +18,6 @@ Solo task manager PWA with the knight Sir Reg. Full notes live in two Claude doc
 - Cards are ordinary tasks with `q` (campaign id), `col` (column id), `ord` (sort order). Undated cards have `date:''` and appear only on the board; dated ones also show in Today, Road and councils. Ticking and moving to Done are kept in sync (`syncCol`, `assignCol` in `js/camp.js`).
 - Drag and drop: long-press (touch) or click-drag (mouse), ghost card, auto-scroll at edges, undo toast.
 - Tasks have optional `note` (links are tappable) and `steps`.
+
+## Version 1.0 (locked 29 Oct 2026)
+Today list and Road, smart quick add, task notes with links and steps, Campaigns as boards (Brief, Board, Notes, columns, drag and drop, rank and journey), Side Quests with halls and dice, Dragons (day and week), Day and Week councils, Calendar week view, Firebase sync, installable PWA with auto-update. Tag: v1.0.0.
