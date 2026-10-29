@@ -266,6 +266,10 @@ section.cat{position:relative}
 .tray{left:240px}
 .full{padding:0 16px 40px}
 
+/* longer lines use the gap beside the knight and a smaller size, so the bubble stays above the shelf */
+.bub{width:228px;max-height:106px}
+.bub.s2{font-size:16.5px}.bub.s3{font-size:15.5px}.bub.s4{font-size:14.5px;line-height:1.18}
+
 </style>
 <div class="app" id="app"></div>
 <script src="firebase-config.js"></script>
@@ -1162,7 +1166,7 @@ function headHTML(){
   return `<img class="bust" src="${kn(line.face)}" alt="Sir Reg" width="134" height="134"><div class="shelf"></div>
   <h1 class="ttl">${eh?eh.title:fmtHead(c.td)}</h1><span class="cnt">${eh?eh.sub:c.done+' of '+c.tt.length+' done'}</span>
   <div class="top"><button type="button" class="ib" data-act="council" aria-label="The Council: plan your day">${ico('crown',22,'currentColor',1.7)}</button><button type="button" class="ib" data-act="menu" aria-label="Open menu">${ico('menu',22,'currentColor',2)}</button></div>
-  <div class="bub g" role="status">${esc(line.text)}</div>`;
+  <div class="bub g ${line.text.length>105?'s4':line.text.length>80?'s3':line.text.length>55?'s2':''}" role="status">${esc(line.text)}</div>`;
 }
 function dockHTML(){
   if(U.view!=='list'&&U.view!=='road')return extDock();
@@ -1858,5 +1862,5 @@ render();
 })();
 
 </script>
-<script>if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller,rl=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(had&&!rl){rl=true;location.reload();}});addEventListener('load',function(){navigator.serviceWorker.register('sw.js').then(function(r){r.update();}).catch(function(){});});}</script>
+<script>if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller,rl=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(had&&!rl){rl=true;location.reload();}});addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update();}).catch(function(){});});}</script>
 </body></html>

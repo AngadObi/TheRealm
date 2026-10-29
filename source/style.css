@@ -254,3 +254,7 @@ section.cat{position:relative}
 .fab{right:14px}
 .tray{left:240px}
 .full{padding:0 16px 40px}
+
+/* longer lines use the gap beside the knight and a smaller size, so the bubble stays above the shelf */
+.bub{width:228px;max-height:106px}
+.bub.s2{font-size:16.5px}.bub.s3{font-size:15.5px}.bub.s4{font-size:14.5px;line-height:1.18}

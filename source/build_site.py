@@ -19,7 +19,7 @@ head='''<!doctype html>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png">
 <style>html,body{margin:0;height:100%;background:#070504}</style>
 '''
-tail='''<script>if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller,rl=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(had&&!rl){rl=true;location.reload();}});addEventListener('load',function(){navigator.serviceWorker.register('sw.js').then(function(r){r.update();}).catch(function(){});});}</script>
+tail='''<script>if('serviceWorker' in navigator){var had=!!navigator.serviceWorker.controller,rl=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(had&&!rl){rl=true;location.reload();}});addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update();}).catch(function(){});});}</script>
 </body></html>'''
 open(out+'/index.html','w',encoding='utf-8').write(head+frag+'</body>'.replace('</body>','')+tail)
 open(out+'/manifest.webmanifest','w').write(json.dumps({"name":"The Realm","short_name":"The Realm","description":"A task manager for one knight and his lord.","start_url":"./","scope":"./","display":"standalone","orientation":"portrait","background_color":"#070504","theme_color":"#070504","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"icon-512-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]},indent=1))
