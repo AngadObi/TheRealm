@@ -255,10 +255,11 @@ function submitAdd(){
     }
     const t={id:uid(),title,cat:cid,date,time,dur,done:false,moves:0,createdAt:Date.now()+i,rep:(parts.length===1?a.rep:(p.rep||(a.over.rep?a.rep:'')))||'',q:a.q||''};
     S.tasks.push(t);made.push(t);learn(title,cid);
+    if(p.dragon){S.plans[date]=Object.assign({},S.plans[date]||{},{dragonId:t.id});t.dragonSet=true;}
     logEv('added',t,{raw:part,catManual:parts.length===1?!!a.over.cat:!!a.over.cat,suggested:p.cat?cat(p.cat).name:'',batch:parts.length>1});
   });
   save();
-  const line=say('added',{id:made[made.length-1].id});
+  const dm=made.find(t=>t.dragonSet);const line=dm?say('dragonPicked',{id:dm.id,task:dm.title}):say('added',{id:made[made.length-1].id});
   if(made.length>1)line.text=made.length+' tasks added. '+line.text;
   toast(line,()=>{made.forEach(t=>{const i=S.tasks.indexOf(t);if(i>=0)S.tasks.splice(i,1);});save();render();});
   U.add=Object.assign(U.add,{n:0,open:null,text:'',date:today(),time:'',dur:30,rep:'',over:{date:false,time:false,cat:false,dur:false,rep:false}});

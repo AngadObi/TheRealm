@@ -15,6 +15,9 @@ function parseQuick(text,ctx){
   let t=' '+text.replace(/\s+/g,' ')+' ';
   const out={title:'',date:null,time:null,dur:null,cat:null};
   const take=(re,fn)=>{const m=t.match(re);if(m){fn(m);t=t.replace(re,' ');return true;}return false;};
+  out.dragon=false;
+  if(take(/^\s(?:dragon(?:\stask)?)(?:\s*[:\-]\s*|\s+)/i,()=>{out.dragon=true;})){}
+  else if(take(/\s(?<!\b(?:the|a|an|my|of)\s)dragon(?:\stask)?\s*$/i,()=>{out.dragon=true;})){}
   // repeats: "daily", "every day", "weekdays", "every monday", "weekly", "monthly"
   out.rep='';
   if(take(/\s(?:every\s?day|daily|jeden\stag)\b/i,()=>{out.rep='daily';})){}

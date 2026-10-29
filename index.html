@@ -779,6 +779,9 @@ function parseQuick(text,ctx){
   let t=' '+text.replace(/\s+/g,' ')+' ';
   const out={title:'',date:null,time:null,dur:null,cat:null};
   const take=(re,fn)=>{const m=t.match(re);if(m){fn(m);t=t.replace(re,' ');return true;}return false;};
+  out.dragon=false;
+  if(take(/^\s(?:dragon(?:\stask)?)(?:\s*[:\-]\s*|\s+)/i,()=>{out.dragon=true;})){}
+  else if(take(/\s(?<!\b(?:the|a|an|my|of)\s)dragon(?:\stask)?\s*$/i,()=>{out.dragon=true;})){}
   // repeats: "daily", "every day", "weekdays", "every monday", "weekly", "monthly"
   out.rep='';
   if(take(/\s(?:every\s?day|daily|jeden\stag)\b/i,()=>{out.rep='daily';})){}
@@ -1082,10 +1085,11 @@ function submitAdd(){
     }
     const t={id:uid(),title,cat:cid,date,time,dur,done:false,moves:0,createdAt:Date.now()+i,rep:(parts.length===1?a.rep:(p.rep||(a.over.rep?a.rep:'')))||'',q:a.q||''};
     S.tasks.push(t);made.push(t);learn(title,cid);
+    if(p.dragon){S.plans[date]=Object.assign({},S.plans[date]||{},{dragonId:t.id});t.dragonSet=true;}
     logEv('added',t,{raw:part,catManual:parts.length===1?!!a.over.cat:!!a.over.cat,suggested:p.cat?cat(p.cat).name:'',batch:parts.length>1});
   });
   save();
-  const line=say('added',{id:made[made.length-1].id});
+  const dm=made.find(t=>t.dragonSet);const line=dm?say('dragonPicked',{id:dm.id,task:dm.title}):say('added',{id:made[made.length-1].id});
   if(made.length>1)line.text=made.length+' tasks added. '+line.text;
   toast(line,()=>{made.forEach(t=>{const i=S.tasks.indexOf(t);if(i>=0)S.tasks.splice(i,1);});save();render();});
   U.add=Object.assign(U.add,{n:0,open:null,text:'',date:today(),time:'',dur:30,rep:'',over:{date:false,time:false,cat:false,dur:false,rep:false}});
