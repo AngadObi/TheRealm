@@ -142,13 +142,15 @@ function kEnd(drop){
   const col=colEl.dataset.col;
   [...colEl.querySelectorAll('.kc')].forEach((c,i)=>{const x=S.tasks.find(y=>y.id===c.dataset.id);if(x)x.ord=i*10;});
   const was=!!t.done,toDone=!!colsOf(q).find(c=>c.id===col).done;
+  const from=d.from,pord=d.pord,cname=colsOf(q).find(c=>c.id===col).name;
   t.col=col;
-  if(was!==toDone){tick(t.id);}else{save();renderOverlay();renderMain();}
+  const undoMove=()=>{t.col=from;t.ord=pord;if(!!t.done!==was){t.done=was;t.doneAt=was?t.doneAt:null;(t.steps||[]).forEach(s=>{if(!was)s.done=false;});}save();render();};
+  if(was!==toDone){tick(t.id);}else{save();renderOverlay();renderMain();if(from!==col)toast({face:5,text:'Moved to '+cname+'.'},undoMove);}
 }
 document.addEventListener('pointerdown',e=>{
   if(!U.camp||U.sheet)return;
   const c=e.target.closest('.kc');if(!c||e.target.closest('.cb'))return;
-  kd={el:c,id:c.dataset.id,x:e.clientX,y:e.clientY,pid:e.pointerId,on:false,mouse:e.pointerType==='mouse'};
+  const tk=S.tasks.find(x=>x.id===c.dataset.id)||{};kd={from:c.closest('.kcol').dataset.col,pord:tk.ord,el:c,id:c.dataset.id,x:e.clientX,y:e.clientY,pid:e.pointerId,on:false,mouse:e.pointerType==='mouse'};
   if(!kd.mouse)kd.t=setTimeout(kLift,260);
 });
 document.addEventListener('pointermove',e=>{

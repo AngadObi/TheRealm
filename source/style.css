@@ -296,3 +296,8 @@ section.cat{position:relative}
 .kin{width:100%;box-sizing:border-box;border:0;border-top:1px dashed var(--border);background:none;color:var(--bone);font:16px var(--fell);padding:10px 4px;outline:none}
 .kin:focus{border-top-color:var(--brass)}
 .kboard{scroll-padding:0 16px}
+
+.qcnt{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0 6px;font:500 11.5px var(--mono);letter-spacing:.06em;color:var(--dim);text-transform:uppercase}
+.qcnt i{font-style:normal;color:var(--brass-l)}
+.qcnt .od{color:var(--ember-dark,#d05a3a);font-weight:500}.qcnt .soon{color:var(--brass-l);font-weight:500}
+@media(min-width:760px){.kboard{margin:0;padding:0 0 16px}.kcol{flex:1 1 0;max-width:none;min-width:200px}}

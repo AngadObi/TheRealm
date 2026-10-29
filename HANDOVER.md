@@ -12,3 +12,9 @@ Solo task manager PWA with the knight Sir Reg. Full notes live in two Claude doc
 - Sync: Firebase project `the-realm-f6b41` (Firestore + Google sign-in), config in `firebase-config.js`.
 - Open: Android reminders (FCM + scheduled function), two-device sync test, line/face tuning.
 - Rules from the user: concise and honest, no em dashes, metric units, finish work proactively.
+
+## Campaigns (Main Quests) as boards
+- Quest: `{id,title,icon,due,note,cols:[{id,name,done?}]}`; default columns Ideas, To do, Doing, Blocked, Done (last one has `done:true`).
+- Cards are ordinary tasks with `q` (campaign id), `col` (column id), `ord` (sort order). Undated cards have `date:''` and appear only on the board; dated ones also show in Today, Road and councils. Ticking and moving to Done are kept in sync (`syncCol`, `assignCol` in `js/camp.js`).
+- Drag and drop: long-press (touch) or click-drag (mouse), ghost card, auto-scroll at edges, undo toast.
+- Tasks have optional `note` (links are tappable) and `steps`.

@@ -53,11 +53,14 @@ function questStats(q){
   return {n:ts.length,done,next,top};
 }
 function questCard(q){
-  const st=questStats(q),pc=st.n?Math.round(st.done/st.n*100):0;
+  const st=questStats(q),cs=colsOf(q);
+  const cnt=cs.map(c=>[c.name,cardsOf(q,c.id).length]).filter(x=>x[1]);
+  let dl='';if(q.due&&!q.done){const n=diffDays(q.due,today());dl=n<0?`<b class="od">${-n}d overdue</b>`:n<=7?`<b class="soon">${n===0?'today':n+'d left'}</b>`:'';}
   return `<button type="button" class="qcard g ${q.done?'fin':''}" data-act="openQuest" data-id="${q.id}">
     <div class="qh"><span class="qtile">${ico(q.icon,24,'var(--brass-l)',1.5)}</span><span class="qt">${esc(q.title)}</span>${st.top?`<span class="tag" style="margin:0">${TAGS[st.top]}</span>`:''}<span class="qd">${q.done?'DONE':shortDue(q.due)}</span></div>
-    <div class="qbar"><i style="width:${pc}%"></i></div>
-    <div class="qf"><span>${st.done} OF ${st.n} CARDS</span>${st.next?`<em>Next: ${esc(st.next.title)}</em>`:`<em>${st.n?'Nothing left. Suspicious.':'No tasks yet. Add one.'}</em>`}</div></button>`;
+    <div class="qbar"><i style="width:${st.n?Math.round(st.done/st.n*100):0}%"></i></div>
+    <div class="qcnt">${cnt.length?cnt.map(x=>`<span><i>${x[1]}</i> ${esc(x[0])}</span>`).join(''):'<span>No cards yet</span>'}${dl}</div>
+    <div class="qf"><span>${st.done} OF ${st.n} CARDS</span>${st.next?`<em>Next: ${esc(st.next.title)}</em>`:`<em>${st.n?'Nothing left. Suspicious.':'Open it to add the first card.'}</em>`}</div></button>`;
 }
 function mainHTML(){
   if(!S.quests.length)return '<div class="empty">No campaigns yet.<br>Tap the red button to start one.</div>';

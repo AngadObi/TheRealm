@@ -308,6 +308,11 @@ section.cat{position:relative}
 .kin:focus{border-top-color:var(--brass)}
 .kboard{scroll-padding:0 16px}
 
+.qcnt{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0 6px;font:500 11.5px var(--mono);letter-spacing:.06em;color:var(--dim);text-transform:uppercase}
+.qcnt i{font-style:normal;color:var(--brass-l)}
+.qcnt .od{color:var(--ember-dark,#d05a3a);font-weight:500}.qcnt .soon{color:var(--brass-l);font-weight:500}
+@media(min-width:760px){.kboard{margin:0;padding:0 0 16px}.kcol{flex:1 1 0;max-width:none;min-width:200px}}
+
 </style>
 <div class="app" id="app"></div>
 <script src="firebase-config.js"></script>
@@ -1613,13 +1618,15 @@ function kEnd(drop){
   const col=colEl.dataset.col;
   [...colEl.querySelectorAll('.kc')].forEach((c,i)=>{const x=S.tasks.find(y=>y.id===c.dataset.id);if(x)x.ord=i*10;});
   const was=!!t.done,toDone=!!colsOf(q).find(c=>c.id===col).done;
+  const from=d.from,pord=d.pord,cname=colsOf(q).find(c=>c.id===col).name;
   t.col=col;
-  if(was!==toDone){tick(t.id);}else{save();renderOverlay();renderMain();}
+  const undoMove=()=>{t.col=from;t.ord=pord;if(!!t.done!==was){t.done=was;t.doneAt=was?t.doneAt:null;(t.steps||[]).forEach(s=>{if(!was)s.done=false;});}save();render();};
+  if(was!==toDone){tick(t.id);}else{save();renderOverlay();renderMain();if(from!==col)toast({face:5,text:'Moved to '+cname+'.'},undoMove);}
 }
 document.addEventListener('pointerdown',e=>{
   if(!U.camp||U.sheet)return;
   const c=e.target.closest('.kc');if(!c||e.target.closest('.cb'))return;
-  kd={el:c,id:c.dataset.id,x:e.clientX,y:e.clientY,pid:e.pointerId,on:false,mouse:e.pointerType==='mouse'};
+  const tk=S.tasks.find(x=>x.id===c.dataset.id)||{};kd={from:c.closest('.kcol').dataset.col,pord:tk.ord,el:c,id:c.dataset.id,x:e.clientX,y:e.clientY,pid:e.pointerId,on:false,mouse:e.pointerType==='mouse'};
   if(!kd.mouse)kd.t=setTimeout(kLift,260);
 });
 document.addEventListener('pointermove',e=>{
@@ -1691,11 +1698,14 @@ function questStats(q){
   return {n:ts.length,done,next,top};
 }
 function questCard(q){
-  const st=questStats(q),pc=st.n?Math.round(st.done/st.n*100):0;
+  const st=questStats(q),cs=colsOf(q);
+  const cnt=cs.map(c=>[c.name,cardsOf(q,c.id).length]).filter(x=>x[1]);
+  let dl='';if(q.due&&!q.done){const n=diffDays(q.due,today());dl=n<0?`<b class="od">${-n}d overdue</b>`:n<=7?`<b class="soon">${n===0?'today':n+'d left'}</b>`:'';}
   return `<button type="button" class="qcard g ${q.done?'fin':''}" data-act="openQuest" data-id="${q.id}">
     <div class="qh"><span class="qtile">${ico(q.icon,24,'var(--brass-l)',1.5)}</span><span class="qt">${esc(q.title)}</span>${st.top?`<span class="tag" style="margin:0">${TAGS[st.top]}</span>`:''}<span class="qd">${q.done?'DONE':shortDue(q.due)}</span></div>
-    <div class="qbar"><i style="width:${pc}%"></i></div>
-    <div class="qf"><span>${st.done} OF ${st.n} CARDS</span>${st.next?`<em>Next: ${esc(st.next.title)}</em>`:`<em>${st.n?'Nothing left. Suspicious.':'No tasks yet. Add one.'}</em>`}</div></button>`;
+    <div class="qbar"><i style="width:${st.n?Math.round(st.done/st.n*100):0}%"></i></div>
+    <div class="qcnt">${cnt.length?cnt.map(x=>`<span><i>${x[1]}</i> ${esc(x[0])}</span>`).join(''):'<span>No cards yet</span>'}${dl}</div>
+    <div class="qf"><span>${st.done} OF ${st.n} CARDS</span>${st.next?`<em>Next: ${esc(st.next.title)}</em>`:`<em>${st.n?'Nothing left. Suspicious.':'Open it to add the first card.'}</em>`}</div></button>`;
 }
 function mainHTML(){
   if(!S.quests.length)return '<div class="empty">No campaigns yet.<br>Tap the red button to start one.</div>';
