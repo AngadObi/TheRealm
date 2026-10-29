@@ -239,3 +239,18 @@ section.cat{position:relative}
 .dcard[data-act=dragonCall],.dcard[data-act=yqOpen],.dcard[data-act=dragonOpen]{justify-content:center}
 :root[data-rt="light"] .bars .b{background:var(--brass)}
 :root[data-rt="light"] .cal .dot{background:var(--brass)}
+
+/* phone fit: use the full width, less dead space under the status bar */
+.app{max-width:480px;height:100vh;height:100dvh}
+.head{height:208px}
+.head .bust{top:64px}
+.head .shelf{top:198px}
+.ttl{top:18px;left:16px}
+.cnt{top:64px;left:17px}
+.top{top:14px;left:16px;right:12px}
+.bub{left:16px;top:90px}
+.scroll{top:208px;padding:10px 14px 130px}
+.pill{left:14px}
+.fab{right:14px}
+.tray{left:240px}
+.full{padding:0 16px 40px}

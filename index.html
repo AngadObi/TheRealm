@@ -251,6 +251,21 @@ section.cat{position:relative}
 :root[data-rt="light"] .bars .b{background:var(--brass)}
 :root[data-rt="light"] .cal .dot{background:var(--brass)}
 
+/* phone fit: use the full width, less dead space under the status bar */
+.app{max-width:480px;height:100vh;height:100dvh}
+.head{height:208px}
+.head .bust{top:64px}
+.head .shelf{top:198px}
+.ttl{top:18px;left:16px}
+.cnt{top:64px;left:17px}
+.top{top:14px;left:16px;right:12px}
+.bub{left:16px;top:90px}
+.scroll{top:208px;padding:10px 14px 130px}
+.pill{left:14px}
+.fab{right:14px}
+.tray{left:240px}
+.full{padding:0 16px 40px}
+
 </style>
 <div class="app" id="app"></div>
 <script src="firebase-config.js"></script>
@@ -1159,7 +1174,7 @@ function dockHTML(){
 function menuHTML(){
   const row=(icon,t,sub,act,extra,dis,v)=>`<button type="button" class="mrow" ${dis?'disabled':''} ${act?`data-act="${act}"`:''} ${v?`data-v="${v}"`:''}><span class="tl">${ico(icon,20,'var(--brass-l)',1.6)}</span><span class="tx"><b>${t}</b><i>${sub}</i></span>${extra||ico('chevr',18,'var(--dim)',1.8)}</button>`;
   const bn=(n,col,ic)=>`<div class="ban g" style="background-color:${col};border-radius:3px 3px 0 0">${ico(ic,22,'var(--brass-l)',1.6)}<b>${n}</b></div>`;
-  return `<div class="full g" role="dialog" aria-label="Menu"><div style="display:flex;align-items:center;height:84px;padding-top:40px;margin-bottom:12px"><h1 class="fell" style="margin:0;flex:1;font:400 34px var(--fell)">The Realm</h1><button type="button" class="ib quiet" data-act="closeMenu" aria-label="Close menu">${ico('x',20,'currentColor',2)}</button></div>
+  return `<div class="full g" role="dialog" aria-label="Menu"><div style="display:flex;align-items:center;height:64px;padding-top:16px;margin-bottom:12px"><h1 class="fell" style="margin:0;flex:1;font:400 34px var(--fell)">The Realm</h1><button type="button" class="ib quiet" data-act="closeMenu" aria-label="Close menu">${ico('x',20,'currentColor',2)}</button></div>
   ${bn('The Council','#2B4542','crown')}
   ${row('sun','The Day','plan today, now','councilK','', false,'day')}
   ${row('week','The Week','look ahead','councilK','',false,'week')}
@@ -1196,7 +1211,7 @@ function councilHTML(){
   else dr=`<button type="button" class="dcard" style="border-style:dashed;color:var(--dim);font:italic 18px var(--fell)" data-act="dragonOpen">${cands.length?'Pick the task you dread most':'No open tasks to pick from'}</button>${sug&&sug.moves>0?`<p class="note" style="margin-top:8px">Sir Reg suggests ${esc(sug.title)}. It has been moved ${sug.moves} times.</p>`:''}`;
   const picker=C.pickOpen?`<div class="pick">${cands.map(t=>`<button type="button" data-act="dragonPick" data-id="${t.id}">${ico(iconOf(cat(t.cat)),18,'var(--brass-l)',1.6)}${esc(t.title)}${t.moves?`<small>moved ${t.moves}x</small>`:''}</button>`).join('')}</div>`:'';
   const moods=MOODS.map(([k,n,s,i])=>`<button type="button" class="mood g ${C.mood===k?'on':''}" data-act="mood" data-v="${k}" role="radio" aria-checked="${C.mood===k}">${ico(i,38,C.mood===k?'var(--glow)':'var(--brass-l)',1.5)}<b>${n}</b><span>${s}</span></button>`).join('');
-  return `<div class="full g" role="dialog" aria-label="The Council"><div style="display:flex;align-items:center;height:84px;padding-top:40px"><button type="button" class="ib quiet" data-act="closeCouncil" aria-label="Close the Council">${ico('x',22,'currentColor',2)}</button><span class="mono" style="margin-left:auto;font:500 12.5px var(--mono);letter-spacing:.1em;color:var(--dim)">${fmtHead(c.td).toUpperCase()}</span></div>
+  return `<div class="full g" role="dialog" aria-label="The Council"><div style="display:flex;align-items:center;height:64px;padding-top:16px"><button type="button" class="ib quiet" data-act="closeCouncil" aria-label="Close the Council">${ico('x',22,'currentColor',2)}</button><span class="mono" style="margin-left:auto;font:500 12.5px var(--mono);letter-spacing:.1em;color:var(--dim)">${fmtHead(c.td).toUpperCase()}</span></div>
   <h1 class="fell" style="margin:6px 0 0;text-align:center;font:400 40px/1 var(--fell)">The Council</h1><p class="fell" style="margin:6px 0 0;text-align:center;font:italic 17px var(--fell);color:var(--dim)">Plan your day with intention, my lord.</p>
   ${left}
   ${sh('flag','var(--brass-l)','Focus of the day','What is today for?')}<textarea id="focusTxt" class="tb" rows="2" placeholder="One sentence, for yourself" aria-label="Focus of the day">${esc(C.focus||'')}</textarea>
@@ -1680,7 +1695,7 @@ function extCouncilHTML(){
     <div class="rg"><img src="${kn(tier==='ancient'?2:tier==='wyrm'?7:8)}" alt=""><span>${esc(C.line||pickLine(TIERLINE[tier],{since:DAYS[new Date(dt.createdAt).getDay()]}).text)}</span></div>`;
   else dr=`<button type="button" class="dcard" style="border-style:dashed;color:var(--dim);font:italic 18px var(--fell)" data-act="dragonOpen">${cands.length?'Pick the task you dread most':'No open tasks to pick from'}</button>`;
   const picker=C.pickOpen?`<div class="pick">${cands.map(t=>`<button type="button" data-act="dragonPick" data-id="${t.id}">${ico(iconOf(cat(t.cat)),18,'var(--brass-l)',1.6)}${esc(t.title)}${t.moves?`<small>moved ${t.moves}x</small>`:''}</button>`).join('')}</div>`:'';
-  return `<div class="full g" role="dialog" aria-label="${title}"><div style="display:flex;align-items:center;height:84px;padding-top:40px"><button type="button" class="ib quiet" data-act="closeCouncil" aria-label="Close the Council">${ico('x',22,'currentColor',2)}</button><span class="mono" style="margin-left:auto;font:500 12.5px var(--mono);letter-spacing:.1em;color:var(--dim)">${head}</span></div>
+  return `<div class="full g" role="dialog" aria-label="${title}"><div style="display:flex;align-items:center;height:64px;padding-top:16px"><button type="button" class="ib quiet" data-act="closeCouncil" aria-label="Close the Council">${ico('x',22,'currentColor',2)}</button><span class="mono" style="margin-left:auto;font:500 12.5px var(--mono);letter-spacing:.1em;color:var(--dim)">${head}</span></div>
   <h1 class="fell" style="margin:6px 0 0;text-align:center;font:400 38px/1 var(--fell)">${title}</h1><p class="fell" style="margin:6px 0 0;text-align:center;font:italic 17px var(--fell);color:var(--dim)">${sub}</p>
   ${sections('flag','var(--brass-l)',focusLbl,focusQ)}<textarea id="focusTxt" class="tb" rows="2" placeholder="One sentence, for yourself" aria-label="${focusLbl}">${esc(C.focus||'')}</textarea>
   ${mid}
