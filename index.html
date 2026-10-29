@@ -977,17 +977,16 @@ let LC={key:'',line:null};
 function currentLine(c){
   if(U.bubble&&U.bubble.until>Date.now())return U.bubble;
   const [k,v]=scenario(c);const key=c.td+k+JSON.stringify(v);
-  if(PEND){LC={key:''};}
-  if(LC.key!==key){
-    let st=null;if(!PEND)try{st=JSON.parse(localStorage.getItem('sirreg.line')||'null');}catch(e){}
+    if(LC.key!==key){
+    let st=null;try{st=JSON.parse(localStorage.getItem('sirreg.line')||'null');}catch(e){}
     if(st&&st.key===key&&st.line&&st.line.text)LC={key,line:st.line};
-    else{LC={key,line:PEND||pickLine(k,v)};PEND=null;try{localStorage.setItem('sirreg.line',JSON.stringify({key,line:LC.line}));}catch(e){}}
+    else{let nl=pickLine(k,v);for(let i=0;i<6&&nl.text===EVT;i++)nl=pickLine(k,v);LC={key,line:nl};try{localStorage.setItem('sirreg.line',JSON.stringify({key,line:LC.line}));}catch(e){}}
   }
   return LC.line;
 }
-let bubbleTimer=0,PEND=null;
+let bubbleTimer=0,PEND=null,EVT='';
 function say(key,vars){
-  const ln=pickLine(key,vars);PEND={face:ln.face,text:ln.text};
+  const ln=pickLine(key,vars);EVT=ln.text;try{localStorage.removeItem('sirreg.line');}catch(e){}LC={key:''};
   U.bubble=Object.assign({},ln,{until:Date.now()+6000});
   clearTimeout(bubbleTimer);bubbleTimer=setTimeout(()=>{U.bubble=null;renderHead();},6200);
   return U.bubble;
