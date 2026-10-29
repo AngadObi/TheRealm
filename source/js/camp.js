@@ -117,9 +117,10 @@ function kLift(){
 }
 function kScroll(){
   if(!kd||!kd.on)return;
-  const b=document.querySelector('.kboard'),f=document.querySelector('.full.camp');
+  const b=document.querySelector('.kboard');
   if(b){const r=b.getBoundingClientRect();if(kd.cx<r.left+44)b.scrollLeft-=14;else if(kd.cx>r.right-44)b.scrollLeft+=14;}
-  if(f){if(kd.cy<130)f.scrollTop-=12;else if(kd.cy>innerHeight-110)f.scrollTop+=12;}
+  const at=document.elementFromPoint(kd.cx,kd.cy),box=at&&at.closest&&at.closest('.kcol')&&at.closest('.kcol').querySelector('.kcards');
+  if(box){const r=box.getBoundingClientRect();if(kd.cy<r.top+40)box.scrollTop-=10;else if(kd.cy>r.bottom-40)box.scrollTop+=10;}
   kPlace();
 }
 function kPlace(){

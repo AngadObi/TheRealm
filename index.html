@@ -313,6 +313,19 @@ section.cat{position:relative}
 .qcnt .od{color:var(--ember-dark,#d05a3a);font-weight:500}.qcnt .soon{color:var(--brass-l);font-weight:500}
 @media(min-width:760px){.kboard{margin:0;padding:0 0 16px}.kcol{flex:1 1 0;max-width:none;min-width:200px}}
 
+/* campaign board: fill the screen, no flash on redraw */
+.full.camp{animation:none;display:flex;flex-direction:column;overflow:hidden;padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
+.full.camp .chd{padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-bottom:6px}
+.full.camp .chips{margin-bottom:8px!important}
+.full.camp .kboard{flex:1;min-height:0;align-items:stretch;padding-bottom:0;margin-bottom:0;gap:8px}
+.full.camp .kcol{flex:0 0 86%;max-width:340px;align-self:stretch;max-height:100%;padding:6px;gap:4px}
+.full.camp .kcards{flex:1;overflow-y:auto;min-height:44px;-webkit-overflow-scrolling:touch}
+.full.camp .kcol.dn{opacity:.9}
+.full.camp .note{flex:1;min-height:0;overflow:auto}
+.full.camp textarea.note{flex:1;resize:none}
+.kc{min-height:48px}
+@media(min-width:760px){.full.camp .kcol{flex:1 1 0;max-width:none}}
+
 </style>
 <div class="app" id="app"></div>
 <script src="firebase-config.js"></script>
@@ -1320,10 +1333,10 @@ function renderOverlay(){
   if(U.sheet==='add')h+=addSheetHTML();
   if(U.sheet==='newcat')h+=newCatHTML();
   if(U.sheet==='tray')h+=trayHTML();
-  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;
+  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const kcs={};host.querySelectorAll('.kcol').forEach(k=>{kcs[k.dataset.col]=k.querySelector('.kcards').scrollTop;});const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;
   host.innerHTML=h;
   const f=host.querySelector('.full');if(f)f.scrollTop=ks;
-  const nb=host.querySelector('.kboard');if(nb)nb.scrollLeft=kbs;
+  const nb=host.querySelector('.kboard');if(nb)nb.scrollLeft=kbs;host.querySelectorAll('.kcol').forEach(k=>{if(kcs[k.dataset.col])k.querySelector('.kcards').scrollTop=kcs[k.dataset.col];});
   if(typeof navSync==='function')navSync();
 }
 function renderToast(){
@@ -1593,9 +1606,10 @@ function kLift(){
 }
 function kScroll(){
   if(!kd||!kd.on)return;
-  const b=document.querySelector('.kboard'),f=document.querySelector('.full.camp');
+  const b=document.querySelector('.kboard');
   if(b){const r=b.getBoundingClientRect();if(kd.cx<r.left+44)b.scrollLeft-=14;else if(kd.cx>r.right-44)b.scrollLeft+=14;}
-  if(f){if(kd.cy<130)f.scrollTop-=12;else if(kd.cy>innerHeight-110)f.scrollTop+=12;}
+  const at=document.elementFromPoint(kd.cx,kd.cy),box=at&&at.closest&&at.closest('.kcol')&&at.closest('.kcol').querySelector('.kcards');
+  if(box){const r=box.getBoundingClientRect();if(kd.cy<r.top+40)box.scrollTop-=10;else if(kd.cy>r.bottom-40)box.scrollTop+=10;}
   kPlace();
 }
 function kPlace(){

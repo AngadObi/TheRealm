@@ -301,3 +301,16 @@ section.cat{position:relative}
 .qcnt i{font-style:normal;color:var(--brass-l)}
 .qcnt .od{color:var(--ember-dark,#d05a3a);font-weight:500}.qcnt .soon{color:var(--brass-l);font-weight:500}
 @media(min-width:760px){.kboard{margin:0;padding:0 0 16px}.kcol{flex:1 1 0;max-width:none;min-width:200px}}
+
+/* campaign board: fill the screen, no flash on redraw */
+.full.camp{animation:none;display:flex;flex-direction:column;overflow:hidden;padding-bottom:max(12px,env(safe-area-inset-bottom,0px))}
+.full.camp .chd{padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-bottom:6px}
+.full.camp .chips{margin-bottom:8px!important}
+.full.camp .kboard{flex:1;min-height:0;align-items:stretch;padding-bottom:0;margin-bottom:0;gap:8px}
+.full.camp .kcol{flex:0 0 86%;max-width:340px;align-self:stretch;max-height:100%;padding:6px;gap:4px}
+.full.camp .kcards{flex:1;overflow-y:auto;min-height:44px;-webkit-overflow-scrolling:touch}
+.full.camp .kcol.dn{opacity:.9}
+.full.camp .note{flex:1;min-height:0;overflow:auto}
+.full.camp textarea.note{flex:1;resize:none}
+.kc{min-height:48px}
+@media(min-width:760px){.full.camp .kcol{flex:1 1 0;max-width:none}}
