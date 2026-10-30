@@ -524,3 +524,8 @@ section.cat{position:relative}
 .lcard .lk1{flex:1;min-width:0;display:flex;flex-direction:column}
 .lcard b{font:500 15.5px/1.25 var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lcard small{font:500 11.5px var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nch{display:flex;align-items:baseline;gap:8px;margin:18px 0 0;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.nch:first-child{margin-top:8px}
+.nch b{font:400 22px var(--fell);color:var(--brass-l)}
+.nch span{font:500 11px var(--mono);color:var(--dim)}
+.nch+.ncard{margin-top:8px}

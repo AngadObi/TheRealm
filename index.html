@@ -535,6 +535,11 @@ section.cat{position:relative}
 .lcard .lk1{flex:1;min-width:0;display:flex;flex-direction:column}
 .lcard b{font:500 15.5px/1.25 var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lcard small{font:500 11.5px var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nch{display:flex;align-items:baseline;gap:8px;margin:18px 0 0;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.nch:first-child{margin-top:8px}
+.nch b{font:400 22px var(--fell);color:var(--brass-l)}
+.nch span{font:500 11px var(--mono);color:var(--dim)}
+.nch+.ncard{margin-top:8px}
 
 </style>
 <div class="app" id="app"></div>
@@ -2506,10 +2511,14 @@ function nBodyHTML(n){
 }
 function nListInner(q){
   const C=U.camp,s=(C.ns||'').trim().toLowerCase(),f=C.nf||'',cats=ncatsOf(q);
-  let ns=notesOf(q).filter(n=>(!f||n.cat===f)&&(!s||((n.title||'')+' '+(n.body||'')).toLowerCase().includes(s)));
-  ns=ns.slice().sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||b.at-a.at);
+  const ns=notesOf(q).filter(n=>(!f||n.cat===f)&&(!s||((n.title||'')+' '+(n.body||'')).toLowerCase().includes(s)));
   if(!ns.length)return `<p class="note" style="margin:6px 0">${notesOf(q).length?'Nothing matches.':'No notes yet. Tap + to write the first one.'}</p>`;
-  return ns.map(n=>{const c=cats.find(x=>x.id===n.cat);return `<div class="ncard" data-act="nOpen" data-id="${n.id}"><div class="nh"><b>${esc(noteTitle(n))}</b>${n.pin?ico('flag',14,'var(--glow)',2):''}</div>${noteSnip(n)?`<p>${esc(noteSnip(n))}</p>`:''}<div class="nm">${c?`<span class="ncc">${esc(c.name)}</span>`:''}<em>${agoStr(n.at)}</em></div></div>`;}).join('');
+  const card=n=>`<div class="ncard" data-act="nOpen" data-id="${n.id}"><div class="nh"><b>${esc(noteTitle(n))}</b>${n.pin?ico('flag',14,'var(--glow)',2):''}</div>${noteSnip(n)?`<p>${esc(noteSnip(n))}</p>`:''}<div class="nm"><em>${agoStr(n.at)}</em></div></div>`;
+  const sortN=a=>a.slice().sort((x,y)=>(y.pin?1:0)-(x.pin?1:0)||y.at-x.at);
+  const groups=cats.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>[c.name,ns.filter(n=>n.cat===c.id)]);
+  const loose=ns.filter(n=>!cats.some(c=>c.id===n.cat));
+  if(loose.length)groups.push([cats.length?'Uncategorised':'',loose]);
+  return groups.filter(g=>g[1].length).map(([name,list])=>(name?`<div class="nch"><b>${esc(name)}</b><span>${list.length}</span></div>`:'')+sortN(list).map(card).join('')).join('');
 }
 function notesTabHTML(q){
   const C=U.camp;

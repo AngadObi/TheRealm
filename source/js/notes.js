@@ -53,10 +53,14 @@ function nBodyHTML(n){
 }
 function nListInner(q){
   const C=U.camp,s=(C.ns||'').trim().toLowerCase(),f=C.nf||'',cats=ncatsOf(q);
-  let ns=notesOf(q).filter(n=>(!f||n.cat===f)&&(!s||((n.title||'')+' '+(n.body||'')).toLowerCase().includes(s)));
-  ns=ns.slice().sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||b.at-a.at);
+  const ns=notesOf(q).filter(n=>(!f||n.cat===f)&&(!s||((n.title||'')+' '+(n.body||'')).toLowerCase().includes(s)));
   if(!ns.length)return `<p class="note" style="margin:6px 0">${notesOf(q).length?'Nothing matches.':'No notes yet. Tap + to write the first one.'}</p>`;
-  return ns.map(n=>{const c=cats.find(x=>x.id===n.cat);return `<div class="ncard" data-act="nOpen" data-id="${n.id}"><div class="nh"><b>${esc(noteTitle(n))}</b>${n.pin?ico('flag',14,'var(--glow)',2):''}</div>${noteSnip(n)?`<p>${esc(noteSnip(n))}</p>`:''}<div class="nm">${c?`<span class="ncc">${esc(c.name)}</span>`:''}<em>${agoStr(n.at)}</em></div></div>`;}).join('');
+  const card=n=>`<div class="ncard" data-act="nOpen" data-id="${n.id}"><div class="nh"><b>${esc(noteTitle(n))}</b>${n.pin?ico('flag',14,'var(--glow)',2):''}</div>${noteSnip(n)?`<p>${esc(noteSnip(n))}</p>`:''}<div class="nm"><em>${agoStr(n.at)}</em></div></div>`;
+  const sortN=a=>a.slice().sort((x,y)=>(y.pin?1:0)-(x.pin?1:0)||y.at-x.at);
+  const groups=cats.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>[c.name,ns.filter(n=>n.cat===c.id)]);
+  const loose=ns.filter(n=>!cats.some(c=>c.id===n.cat));
+  if(loose.length)groups.push([cats.length?'Uncategorised':'',loose]);
+  return groups.filter(g=>g[1].length).map(([name,list])=>(name?`<div class="nch"><b>${esc(name)}</b><span>${list.length}</span></div>`:'')+sortN(list).map(card).join('')).join('');
 }
 function notesTabHTML(q){
   const C=U.camp;
