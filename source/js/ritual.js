@@ -153,12 +153,12 @@ function ritStepHTML(){
     const dg=C.dragonId,items=context().over.concat(context().open).filter(t=>!t.done);
     const rows=items.map(t=>`<div class="left"><span>${esc(t.title)}${t.date<today()?' <small class="rtag">OVERDUE</small>':''}${t.id===dg?' <small class="rtag hot">DRAGON</small>':''}</span>${t.id===dg?'':`<button class="mini" data-act="rTri" data-id="${t.id}" data-v="tomorrow">Tomorrow</button><button class="mini" data-act="rTri" data-id="${t.id}" data-v="drop">Drop</button>`}</div>`).join('');
     const movable=items.filter(t=>t.id!==dg).length;
-    return ritHero(RIT_FACE.left,'s')+sh('list','var(--brass-l)','What is on your plate?',items.length?items.length+(items.length===1?' duty':' duties')+', no moves counted':'A clear plate')+(items.length?'':'<p class="rsay">Nothing on your plate. The overwhelm is imaginary, or at least unscheduled.</p>')+(movable>1?`<button type="button" class="btn ghost" style="width:100%;margin-top:12px" data-act="rClear">Clear the decks: everything but the dragon to tomorrow</button>`:'')+`<div style="margin-top:8px">${rows}</div>`;
+    return ritHero(RIT_FACE.left,'s')+sh('list','var(--brass-l)','What is on your plate?',items.length?items.length+(items.length===1?' duty':' duties')+', no moves counted':'A clear plate')+(items.length?'':'<p class="rsay">Nothing on your plate. The overwhelm is imaginary, or at least unscheduled.</p>')+(movable>1?`<button type="button" class="rclear" data-act="rClear"><span>${ico('bolt',20,'currentColor',1.8)}Clear the decks</span><small>all but the dragon, to tomorrow</small></button>`:'')+`<div style="margin-top:8px">${rows}</div>`;
   }
   if(s==='exit'){
     const n=R.goals.length,dt=S.tasks.find(t=>t.id===C.dragonId&&!t.done);
     const lines=['Better. Not solved, but smaller. That is what councils are for.','The realm stands. So do you. Go gently.','Smaller. That is the whole trick.'];
-    return ritHero(6)+`<h1 class="sealh" style="margin-top:6px">Council adjourned.</h1><p class="rsay big">${esc(lines[(Date.now()>>10)%lines.length])}</p><div class="rsum">${R.text&&R.text.trim()?'<div><i>NOTE</i><b>Saved on today</b></div>':''}${n?`<div><i>TASKS</i><b>${n} added</b></div>`:''}${dt?`<div><i>DRAGON</i><b>${esc(dt.title)}</b></div>`:''}</div>`;
+    return ritHero(6)+`<h1 class="sealh" style="margin-top:6px">Council adjourned.</h1><p class="rsay big">${esc(lines[(Date.now()>>10)%lines.length])}</p><div class="rsum">${R.text&&R.text.trim()?'<button type="button" class="rrow" data-act="notesOpen"><i>NOTE</i><b>Saved on today. Tap to read.</b></button>':''}${n?`<div><i>TASKS</i><b>${n} added</b></div>`:''}${dt?`<div><i>DRAGON</i><b>${esc(dt.title)}</b></div>`:''}</div>`;
   }
   /* seal */
   const dt=S.tasks.find(t=>t.id===C.dragonId),mood=(MOODS.find(m=>m[0]===C.mood)||[])[1];
@@ -201,6 +201,8 @@ function ritDraw(){
 function ritAct(act,v,id){
   const C=U.council;
   switch(act){
+    case 'notesOpen':U.menu=false;U.sheet='notes';renderOverlay();return true;
+    case 'notesDel':{const p=S.plans[v];if(p&&p.notes){p.notes=p.notes.filter(e=>String(e.at)!==String(id));if(!p.notes.length)delete p.notes;save();render(true);renderOverlay();}return true;}
     case 'rTri':{const t=S.tasks.find(x=>x.id===id);if(!t)return true;
       if(v==='tomorrow')t.date=addDays(today(),1);
       else{const snap=JSON.parse(JSON.stringify(t));S.tasks=S.tasks.filter(x=>x.id!==id);toast({face:2,text:'Dropped. Gone from the realm.'},()=>{S.tasks.push(snap);save();render(true);renderOverlay();});}
@@ -261,3 +263,9 @@ function ritNotesHTML(){
 document.addEventListener('input',e=>{
   if(e.target.id==='chamberTx'&&U.council&&U.council.rit){U.council.rit.text=e.target.value;const c=$('#chamberChips');if(c)c.innerHTML=ritChips(e.target.value);}
 });
+
+function notesSheetHTML(){
+  const days=Object.keys(S.plans).filter(k=>(S.plans[k].notes||[]).length).sort().reverse();
+  const body=days.length?days.map(k=>`<p class="ndh">${fmtHead(k).toUpperCase()}</p>`+S.plans[k].notes.slice().sort((a,b)=>b.at-a.at).map(e=>{const d=new Date(e.at);return `<div class="enote"><span class="mono">${z2(d.getHours())}:${z2(d.getMinutes())}</span><p>${esc(e.text)}</p><button type="button" class="ib quiet" style="border:0;background:none;width:34px;height:34px;flex:none" data-act="notesDel" data-id="${e.at}" data-v="${k}" aria-label="Delete note">${ico('x',16,'currentColor',2)}</button></div>`;}).join('')).join(''):'<p class="note" style="margin:0">No notes yet. They are written in the Emergency Council.</p>';
+  return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Chamber notes"><h2>Chamber notes</h2>${body}<div class="btns"><button type="button" class="btn ghost" data-act="closeSheet">Close</button></div></div>`;
+}

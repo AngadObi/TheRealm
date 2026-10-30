@@ -322,6 +322,8 @@ function banner(id,name,count,bg,icon,shut){
 }
 function listHTML(){
   const c=context();let h='';
+  const tn=(plan().notes||[]);
+  if(tn.length)h+=`<button type="button" class="nrow" data-act="notesOpen">${ico('pen',18,'var(--brass-l)',1.7)}<span>Chamber note from ${z2(new Date(tn[tn.length-1].at).getHours())}:${z2(new Date(tn[tn.length-1].at).getMinutes())}</span>${ico('chevr',16,'var(--dim)',2)}</button>`;
   if(c.over.length){
     h+=`<section class="cat ${S.shut.__over?'shut':''}">${banner('__over','Overdue',c.over.length,'#5A2B26','rest',S.shut.__over)}${c.over.sort(sortTasks).map(t=>rowHTML(t,true)).join('')}</section>`;
   }
@@ -388,6 +390,7 @@ ${bn('Quests','#4A4128','flag')}
   ${row('sun','The Day','plan today, now','councilK','', false,'day')}
   ${row('week','The Week','look ahead','councilK','',false,'week')}
   ${row('bolt','Emergency','overwhelmed? start here','councilK','',false,'emergency')}
+  ${row('pen','Chamber notes',(()=>{const n=Object.values(S.plans).reduce((a,p)=>a+((p.notes||[]).length),0);return n?n+(n===1?' note saved':' notes saved'):'written in the Emergency Council';})(),'notesOpen','',false,'')}
   <div style="height:12px"></div><button type="button" class="ban g sbtn" data-act="setToggle" style="background-color:#3D2E3F;border-radius:3px 3px 0 0;width:100%;border:0;text-align:left" aria-expanded="${!!U.setOpen}">${ico('gear',22,'var(--brass-l)',1.6)}<b>Settings</b><span style="margin-left:auto">${ico('chev',18,'var(--brass-l)',2)}</span></button>
   ${U.setOpen?`  ${row('sun','Theme',{dark:'dark',light:'light',system:'follows your phone'}[S.settings.theme||'dark'],null,'<span></span>')}
   <div class="themes">${['dark','light','system'].map(v=>`<button type="button" class="chip ${(S.settings.theme||'dark')===v?'on':''}" data-act="theme" data-v="${v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div>
@@ -441,7 +444,7 @@ let _mh='';function renderMain(){
 }
 let _dh='';function renderDock(){const h=dockHTML();if(h===_dh)return;_dh=h;$('#dockhost').innerHTML=h;}
 function renderOverlay(){
-  if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&!U.camp&&ritDraw()){if(typeof navSync==='function')navSync();return;}
+  if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&!U.camp&&ritDraw()){[...$('#overlay').children].forEach(x=>{if(!x.classList.contains('rit'))x.remove();});if(typeof navSync==='function')navSync();return;}
   let h='';
   if(U.menu)h+=menuHTML();
   if(U.council)h+=councilHTML();

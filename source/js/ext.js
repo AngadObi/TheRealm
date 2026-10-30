@@ -148,6 +148,7 @@ function extSheets(){
   if(U.sheet==='cols'&&U.camp)return colsSheetHTML();
   if(U.sheet==='idea'&&U.is)return ideaSheetHTML();
   if(U.sheet==='roll'&&U.roll)return rollSheetHTML();
+  if(U.sheet==='notes')return notesSheetHTML();
   return '';
 }
 
