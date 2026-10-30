@@ -358,3 +358,5 @@ section.cat{position:relative}
 .wdl{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:6px;border:1.5px dashed var(--brass);border-radius:4px;color:var(--bone);font:17px var(--fell)}
 .wdl span{flex:1;min-width:0}.wdl em{font:500 10.5px var(--mono);letter-spacing:.1em;font-style:normal;color:var(--brass-l)}
 .wplus{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(232,223,200,.35);background:none;display:flex;align-items:center;justify-content:center}
+
+.rw .bgl{position:absolute;left:0;top:0;bottom:0;width:140px;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding-left:16px;font:italic 16px var(--fell);color:var(--glow)}

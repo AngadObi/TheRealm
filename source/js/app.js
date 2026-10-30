@@ -309,7 +309,7 @@ function rowHTML(t,over){
   if(t.rep&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'repeats '+t.rep;
   if(t.steps&&t.steps.length){const sd=t.steps.filter(x=>x.done).length;rem=(rem?rem+' \u00b7 ':'')+sd+'/'+t.steps.length+' steps';}
   if(t.note&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'note';
-  return `<div class="rw" data-id="${t.id}"><div class="bgp">Tomorrow ${ico('chevr',18,'var(--glow)',2)}</div>
+  return `<div class="rw" data-id="${t.id}"><div class="bgl">${ico('chevr',18,'var(--glow)',2)} Tomorrow</div><div class="bgp">Drop ${ico('x',18,'var(--glow)',2)}</div>
   <div class="row g ${t.done?'done':''} ${dragon?'dragon':''}" data-id="${t.id}">
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
     <div class="nm" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${rem?`<em>${rem}</em>`:''}</div>
@@ -325,12 +325,14 @@ function listHTML(){
   if(c.over.length){
     h+=`<section class="cat ${S.shut.__over?'shut':''}">${banner('__over','Overdue',c.over.length,'#5A2B26','rest',S.shut.__over)}${c.over.sort(sortTasks).map(t=>rowHTML(t,true)).join('')}</section>`;
   }
-  for(const k of S.cats){
+  const openIn=k=>c.tt.filter(t=>t.cat===k.id&&!t.done).length;
+  const cats=S.cats.slice().sort((p,q)=>openIn(q)-openIn(p)||p.name.localeCompare(q.name));
+  for(const k of cats){
     const ts=c.tt.filter(t=>t.cat===k.id).sort(sortTasks);if(!ts.length)continue;
     h+=`<section class="cat ${S.shut[k.id]?'shut':''}">${banner(k.id,k.name,ts.length,PAL[k.pal%PAL.length][0],iconOf(k),S.shut[k.id])}${ts.map(t=>rowHTML(t,false)).join('')}</section>`;
   }
   if(!h)h='<div class="empty">Nothing on the scroll for today.<br>Tap the red button to add something.</div>';
-  if(S.sample)h+='<p class="note">These are sample tasks so you can try things. Swipe a task left to move it to tomorrow, tap it to edit. Clear them in the menu.</p>';
+  if(S.sample)h+='<p class="note">These are sample tasks so you can try things. Swipe a task right to move it to tomorrow, left to drop it, tap it to edit. Clear them in the menu.</p>';
   return h;
 }
 const HS=6,HE=24,PH=56;
@@ -545,13 +547,14 @@ document.addEventListener('pointerdown',e=>{
 document.addEventListener('pointermove',e=>{
   if(!sw||e.pointerId!==sw.pid)return;
   const dx=e.clientX-sw.x,dy=e.clientY-sw.y;
-  if(!sw.on){if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)*1.6&&dx<0){sw.on=true;try{sw.row.setPointerCapture(e.pointerId);}catch(x){}}else if(Math.abs(dy)>12){sw=null;return;}}
-  if(sw.on){sw.dx=Math.min(0,dx);sw.row.style.transform='translateX('+sw.dx+'px)';}
+  if(!sw.on){if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)*1.6){sw.on=true;try{sw.row.setPointerCapture(e.pointerId);}catch(x){}}else if(Math.abs(dy)>12){sw=null;return;}}
+  if(sw.on){sw.dx=dx;sw.row.style.transform='translateX('+sw.dx+'px)';}
 });
 function endSwipe(e){
   if(!sw)return;const s=sw;sw=null;
   if(!s.on)return;suppress=Date.now()+350;
-  if(s.dx<-90){s.row.style.transition='transform .15s';s.row.style.transform='translateX(-110%)';setTimeout(()=>postpone(s.id),120);}
+  if(s.dx<-90){s.row.style.transition='transform .15s';s.row.style.transform='translateX(-110%)';setTimeout(()=>{removeTask(s.id);render();},120);}
+  else if(s.dx>90){s.row.style.transition='transform .15s';s.row.style.transform='translateX(110%)';setTimeout(()=>postpone(s.id),120);}
   else{s.row.style.transition='transform .15s';s.row.style.transform='';}
 }
 document.addEventListener('pointerup',endSwipe);document.addEventListener('pointercancel',endSwipe);
