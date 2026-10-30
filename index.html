@@ -500,6 +500,42 @@ section.cat{position:relative}
 .pinb{width:100%;margin-top:14px}
 .prow small{font:500 11px var(--mono);letter-spacing:.06em;color:var(--dim)}
 
+/* ---------- campaign notes ---------- */
+.nwrap{flex:1;min-height:0;overflow-y:auto;padding:2px 0 24px;scrollbar-width:none}
+.nwrap::-webkit-scrollbar{display:none}
+.nwrap .arow .inp{min-height:48px}
+.chip small{font:500 11px var(--mono);color:var(--dim);margin-left:4px}
+.ncard{margin-top:8px;padding:12px 14px;border:1.5px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer}
+.ncard .nh{display:flex;align-items:center;gap:8px}
+.ncard .nh b{flex:1;min-width:0;font:400 20px/1.15 var(--fell);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ncard p{margin:4px 0 0;font:14.5px/1.35 var(--sans);color:var(--dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ncard .nm{display:flex;align-items:center;gap:8px;margin-top:8px}
+.ncard .nm em{margin-left:auto;font:500 10.5px var(--mono);letter-spacing:.06em;color:var(--dim);font-style:normal}
+.ncc{padding:2px 8px;border:1px solid var(--brass);border-radius:10px;font:500 11px var(--mono);color:var(--brass-l)}
+.ned{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.ned .mono{flex:1;font:500 11px var(--mono);letter-spacing:.1em;color:var(--dim);padding-left:6px}
+.ntitle{font-size:22px}
+.ntt{margin:6px 0 0;font:400 28px/1.15 var(--fell);text-wrap:balance;overflow-wrap:anywhere}
+.nbody{min-height:46vh;font:17px/1.4 var(--sans);resize:none}
+.nhint{margin:6px 0 0;font:italic 14px/1.3 var(--fell);color:var(--dim)}
+.nview{min-height:30vh;padding-bottom:12px}
+.nview p{margin:6px 0;font:16.5px/1.45 var(--sans);overflow-wrap:anywhere}
+.nview h3{margin:14px 0 4px;font:400 23px/1.2 var(--fell)}
+.nview .nsp{height:8px}
+.nview .nb{display:flex;gap:10px;margin:2px 0}
+.nview .nb span{color:var(--brass-l);flex:none;width:12px;text-align:center;line-height:1.45}
+.nview .nb p{margin:0}
+.nview .nt{display:flex;align-items:center;gap:10px;min-height:40px}
+.nview .nt span{flex:1;min-width:0;font:16.5px/1.35 var(--sans);overflow-wrap:anywhere}
+.nview .nt.dn span{color:var(--done);text-decoration:line-through}
+.nview .nt em{font:italic 14px var(--fell);color:var(--dim);font-style:italic}
+.nview .nt .mini{height:30px;padding:0 9px;font-size:11.5px}
+.lcard{display:flex;align-items:center;gap:12px;margin:8px 0;padding:10px 12px;border:1.5px solid var(--border);border-radius:4px;background:var(--card);color:var(--bone);text-decoration:none}
+.lcard .lk0{flex:none;width:38px;height:38px;border-radius:4px;display:grid;place-items:center;background:var(--ember-tint);border:1.5px solid var(--ember);color:var(--glow);font:400 20px var(--fell)}
+.lcard .lk1{flex:1;min-width:0;display:flex;flex-direction:column}
+.lcard b{font:500 15.5px/1.25 var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lcard small{font:500 11.5px var(--mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 </style>
 <div class="app" id="app"></div>
 <script src="firebase-config.js"></script>
@@ -1536,12 +1572,13 @@ function renderOverlay(){
   if(U.sheet==='add')h+=addSheetHTML();
   if(U.sheet==='newcat')h+=newCatHTML();
   if(U.sheet==='tray')h+=trayHTML();
-  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const kcs={};host.querySelectorAll('.kcol').forEach(k=>{kcs[k.dataset.col]=k.querySelector('.kcards').scrollTop;});const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;
+  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const kcs={};host.querySelectorAll('.kcol').forEach(k=>{kcs[k.dataset.col]=k.querySelector('.kcards').scrollTop;});const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;const keepW=host.querySelector('.nwrap');const kws=keepW?keepW.scrollTop:0;
   const sig=el=>el.className+'|'+(el.getAttribute('aria-label')||'');
   const prev=new Set([...host.children].map(sig));
   host.innerHTML=h;
   [...host.children].forEach(el=>{if(prev.has(sig(el)))el.style.animation='none';});
   const f=host.querySelector('.full');if(f)f.scrollTop=ks;
+  const nw=host.querySelector('.nwrap');if(nw&&kws)nw.scrollTop=kws;
   const nb=host.querySelector('.kboard');if(nb)nb.scrollLeft=kbs;host.querySelectorAll('.kcol').forEach(k=>{if(kcs[k.dataset.col])k.querySelector('.kcards').scrollTop=kcs[k.dataset.col];});
   if(typeof navSync==='function')navSync();
 }
@@ -1799,12 +1836,11 @@ function campHTML(){
   const tabs=`<div class="chips sm" style="margin:0 0 12px"><button type="button" class="chip ${(C.tab||'board')==='board'?'on':''}" data-act="campTab" data-v="board">Board</button><button type="button" class="chip ${C.tab==='brief'?'on':''}" data-act="campTab" data-v="brief">Brief</button><button type="button" class="chip ${C.tab==='notes'?'on':''}" data-act="campTab" data-v="notes">Notes</button>${(C.tab||'board')==='board'?`<button type="button" class="chip" data-act="colsOpen">Columns</button>`:''}</div>`;
   let body;
   if(C.tab==='brief')body=briefHTML(q);
-  else if(C.tab==='notes'){
-    body=q.note&&!C.noteEdit?`<div class="note" data-act="campNoteEdit">${linkify(q.note)}</div>`:`<textarea id="campNoteTx" class="note ta" rows="10" placeholder="Context, contacts, links, whatever this campaign needs" aria-label="Campaign notes">${esc(q.note||'')}</textarea>`;
-  }else{
+  else if(C.tab==='notes')body=notesTabHTML(q);
+  else{
     body=`<div class="kboard">${cs.map(c=>{const cards=cardsOf(q,c.id);return `<div class="kcol ${c.done?'dn':''}" data-col="${c.id}"><div class="kh"><b>${esc(c.name)}</b><span>${cards.length}</span></div><div class="kcards">${cards.map(cardHTML).join('')}</div><input class="kin" data-col="${c.id}" placeholder="+ Add a card" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" aria-label="Add a card to ${esc(c.name)}"></div>`;}).join('')}</div>`;
   }
-  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt"><b>${esc(q.title)}</b><i>${q.done?'DONE':due.toUpperCase()}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${tabs}${C.tab==='board'||!C.tab?journeyHTML(q,campStats(q)):''}${body}</div>`;
+  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt"><b>${esc(q.title)}</b><i>${q.done?'DONE':due.toUpperCase()}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${C.note&&C.tab==='notes'?'':tabs}${C.tab==='board'||!C.tab?journeyHTML(q,campStats(q)):''}${body}</div>`;
 }
 function colsSheetHTML(){
   const q=questOf(U.camp.id);if(!q)return '';const cs=colsOf(q);
@@ -1821,7 +1857,7 @@ document.addEventListener('click',e=>{
   const q=U.camp?questOf(U.camp.id):null;
   switch(a){
     case 'campBack':U.camp=null;renderOverlay();renderMain();break;
-    case 'campTab':U.camp.tab=el.dataset.v;U.camp.noteEdit=false;renderOverlay();if(el.dataset.v==='board')campFocusBoard();break;
+    case 'campTab':U.camp.tab=el.dataset.v;U.camp.noteEdit=false;U.camp.note=null;U.camp.nedit=false;renderOverlay();if(el.dataset.v==='board')campFocusBoard();break;
     case 'campNoteEdit':U.camp.noteEdit=true;renderOverlay();{const x=$('#campNoteTx');x&&x.focus();}break;
     case 'briefEdit':U.camp.edit=el.dataset.v;renderOverlay();{const x=$('#bf_'+el.dataset.v);x&&x.focus();}break;
     case 'kTick':tick(el.dataset.id);break;
@@ -2415,6 +2451,154 @@ function foundAct(act,v,id){
   return false;
 }
 
+/* ---------- campaign notes: many notes, your own categories, links, tick boxes ---------- */
+function notesOf(q){
+  if(!q.notes)q.notes=[];
+  if(q.note!==undefined){
+    if(String(q.note).trim())q.notes.push({id:uid(),title:'Notes',body:q.note,cat:'',pin:false,created:q.created||Date.now(),at:Date.now()});
+    delete q.note;save();
+  }
+  return q.notes;
+}
+const ncatsOf=q=>q.ncats=q.ncats||[];
+function agoStr(ms){
+  const m=Math.floor((Date.now()-ms)/6e4);
+  if(m<1)return 'just now';if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);if(h<24)return h+'h ago';
+  const d=Math.floor(h/24);if(d<7)return d+'d ago';
+  const x=new Date(ms);return x.getDate()+' '+MON[x.getMonth()];
+}
+function noteTitle(n){
+  if((n.title||'').trim())return n.title.trim();
+  const l=(n.body||'').split('\n').map(s=>s.trim()).find(Boolean);
+  return l?l.replace(/^[-*#\s]+|^\[[ xX>]\]\s*/g,'').slice(0,60)||'Untitled':'Untitled';
+}
+function noteSnip(n){
+  const ls=(n.body||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const t=(n.title||'').trim();
+  const body=(t?ls:ls.slice(1)).map(s=>s.replace(/^#{1,3}\s+/,'').replace(/^[-*]\s+/,'').replace(/^\[( |x|X|>)\]\s*/,(m,c)=>c.toLowerCase()==='x'?'✓ ':'□ ')).join('  ');
+  return body.slice(0,110);
+}
+function linkCard(u){
+  const href=u.startsWith('www.')?'https://'+u:u;let host='',path='';
+  try{const x=new URL(href);host=x.hostname.replace(/^www\./,'');path=x.pathname+(x.search?'':'');}catch(e){return linkify(u);}
+  let seg='';
+  try{seg=decodeURIComponent(path).split('/').filter(s=>s&&!/^\d+$/.test(s)&&!/^[0-9a-f-]{16,}$/i.test(s)&&!/^(view|jobs|in|p|watch|wiki|pub|company|www|index|home)$/i.test(s)).pop()||'';}catch(e){}
+  seg=seg.replace(/\.[a-z0-9]{2,4}$/i,'').replace(/[-_+]+/g,' ').trim();
+  const title=seg?seg[0].toUpperCase()+seg.slice(1):host;
+  const shown=host+(path.length>1?(path.length>34?path.slice(0,34)+'...':path):'');
+  return `<a class="lk lcard" href="${esc(href)}" target="_blank" rel="noopener"><span class="lk0">${esc((host[0]||'?').toUpperCase())}</span><span class="lk1"><b>${esc(title)}</b><small>${esc(shown)}</small></span>${ico('chevr',16,'var(--dim)',2)}</a>`;
+}
+function nBodyHTML(n){
+  const out=[];
+  (n.body||'').split('\n').forEach((ln,i)=>{
+    const t=ln.trim();let m;
+    if(!t){out.push('<div class="nsp"></div>');return;}
+    if((m=t.match(/^(?:[-*]\s+)?\[( |x|X|>)\]\s*(.*)$/))){
+      const st=m[1]===' '?' ':m[1].toLowerCase();
+      out.push(`<div class="nt ${st==='x'?'dn':''}"><button type="button" class="cb" data-act="nTick" data-id="${n.id}" data-v="${i}" aria-label="Toggle"><i class="${st==='x'?'on':''}">${st==='x'?ico('check',14,'currentColor',3.2):st==='>'?ico('chevr',14,'currentColor',3):''}</i></button><span>${linkify(m[2])}</span>${st===' '?`<button type="button" class="mini" data-act="nBoard" data-id="${n.id}" data-v="${i}">to board</button>`:st==='>'?'<em>on board</em>':''}</div>`);
+    }else if((m=t.match(/^#{1,3}\s+(.*)$/)))out.push(`<h3>${linkify(m[1])}</h3>`);
+    else if((m=t.match(/^[-*]\s+(.*)$/)))out.push(`<div class="nb"><span>•</span><p>${linkify(m[1])}</p></div>`);
+    else if(/^(https?:\/\/|www\.)\S+$/i.test(t))out.push(linkCard(t));
+    else out.push(`<p>${linkify(ln)}</p>`);
+  });
+  return out.join('')||'<p class="nhint">Empty. Tap to write.</p>';
+}
+function nListInner(q){
+  const C=U.camp,s=(C.ns||'').trim().toLowerCase(),f=C.nf||'',cats=ncatsOf(q);
+  let ns=notesOf(q).filter(n=>(!f||n.cat===f)&&(!s||((n.title||'')+' '+(n.body||'')).toLowerCase().includes(s)));
+  ns=ns.slice().sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||b.at-a.at);
+  if(!ns.length)return `<p class="note" style="margin:6px 0">${notesOf(q).length?'Nothing matches.':'No notes yet. Tap + to write the first one.'}</p>`;
+  return ns.map(n=>{const c=cats.find(x=>x.id===n.cat);return `<div class="ncard" data-act="nOpen" data-id="${n.id}"><div class="nh"><b>${esc(noteTitle(n))}</b>${n.pin?ico('flag',14,'var(--glow)',2):''}</div>${noteSnip(n)?`<p>${esc(noteSnip(n))}</p>`:''}<div class="nm">${c?`<span class="ncc">${esc(c.name)}</span>`:''}<em>${agoStr(n.at)}</em></div></div>`;}).join('');
+}
+function notesTabHTML(q){
+  const C=U.camp;
+  if(C.note)return noteEditorHTML(q);
+  const cats=ncatsOf(q),all=notesOf(q);
+  const chip=(id,l,n)=>`<button type="button" class="chip ${(C.nf||'')===id?'on':''}" data-act="nFilter" data-v="${id}">${esc(l)}${n!==undefined?` <small>${n}</small>`:''}</button>`;
+  return `<div class="nwrap"><div class="arow"><input id="nSearch" class="inp" type="search" value="${esc(C.ns||'')}" placeholder="Search notes" autocomplete="off" aria-label="Search notes"><button type="button" class="go" data-act="nNew" aria-label="New note">${ico('plus',22,'currentColor',2.6)}</button></div>
+  <div class="chips sm" style="margin:10px 0 4px">${chip('','All',all.length)}${cats.map(c=>chip(c.id,c.name,all.filter(n=>n.cat===c.id).length)).join('')}<button type="button" class="chip" data-act="nCatNew" aria-label="New category">${ico('plus',14,'currentColor',2.4)} Category</button>${cats.length?`<button type="button" class="chip" data-act="nCatSheet">Edit</button>`:''}</div>
+  ${C.ncNew?`<div class="arow" style="margin-bottom:8px"><input id="nCatIn" class="inp" type="text" placeholder="New category, e.g. Contacts" autocomplete="off" aria-label="New category name"><button type="button" class="go" data-act="nCatAdd" aria-label="Add category">${ico('check',22,'currentColor',2.6)}</button></div>`:''}
+  <div id="nList">${nListInner(q)}</div></div>`;
+}
+function noteEditorHTML(q){
+  const C=U.camp,n=notesOf(q).find(x=>x.id===C.note);if(!n){C.note=null;return notesTabHTML(q);}
+  const cats=ncatsOf(q),ed=C.nedit;
+  const cchips=`<button type="button" class="chip ${!n.cat?'on':''}" data-act="nCat" data-v="">None</button>${cats.map(c=>`<button type="button" class="chip ${n.cat===c.id?'on':''}" data-act="nCat" data-v="${c.id}">${esc(c.name)}</button>`).join('')}<button type="button" class="chip" data-act="nCatNew2">${ico('plus',14,'currentColor',2.4)} New</button>`;
+  return `<div class="nwrap"><div class="ned"><button type="button" class="cbk" style="width:40px;height:40px" data-act="nBack" aria-label="Back to notes">${ico('chevr',22,'var(--bone)',2)}</button><span class="mono">${agoStr(n.at).toUpperCase()}</span><button type="button" class="cbk" style="width:40px;height:40px" data-act="nPin" aria-label="${n.pin?'Unpin':'Pin'}">${ico('flag',20,n.pin?'var(--glow)':'var(--dim)',1.8)}</button><button type="button" class="cbk" style="width:40px;height:40px" data-act="nEdit" aria-label="${ed?'Done':'Edit'}">${ico(ed?'check':'pen',20,'var(--brass-l)',1.8)}</button></div>
+  ${ed?`<input id="nTitle" class="inp ntitle" type="text" value="${esc(n.title||'')}" placeholder="Title" autocomplete="off" aria-label="Note title">`:`<h2 class="ntt" data-act="nEdit">${esc(noteTitle(n))}</h2>`}
+  <div class="chips sm" style="margin:8px 0 10px">${cchips}</div>
+  ${C.ncNew2?`<div class="arow" style="margin-bottom:10px"><input id="nCatIn" class="inp" type="text" placeholder="New category" autocomplete="off" aria-label="New category name"><button type="button" class="go" data-act="nCatAdd2" aria-label="Add category">${ico('check',22,'currentColor',2.6)}</button></div>`:''}
+  ${ed?`<textarea id="nBody" class="tb nbody" placeholder="Write freely.&#10;- bullet&#10;[ ] tick box&#10;https://a-link-on-its-own-line" aria-label="Note body">${esc(n.body||'')}</textarea><p class="nhint">Lines starting with - are bullets, [ ] are tick boxes, # is a heading. A link on its own line becomes a card.</p>`:`<div class="nview" data-act="nEdit">${nBodyHTML(n)}</div>`}
+  ${C.ndel===n.id?`<button type="button" class="lnk" data-act="nDel" data-id="${n.id}">Tap again to delete this note</button>`:`<button type="button" class="lnk" data-act="nDel" data-id="${n.id}">Delete note</button>`}</div>`;
+}
+function ncatsSheetHTML(){
+  const q=questOf(U.camp.id);if(!q)return '';const cats=ncatsOf(q);
+  return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Note categories"><h2>Note categories</h2>${cats.map((c,i)=>`<div class="st"><input class="stin ncin" data-i="${i}" value="${esc(c.name)}" aria-label="Category name" autocomplete="off"><button type="button" class="stx" data-act="nCatDel" data-i="${i}" aria-label="Delete category">${ico('x',16,'currentColor',2)}</button></div>`).join('')||'<p class="note" style="margin:0">No categories yet.</p>'}<p class="note" style="margin:10px 0 0;border:0;background:none;padding:0">Deleting a category keeps its notes. They become uncategorised.</p></div>`;
+}
+function nOpenNote(id,edit){const C=U.camp;C.note=id;C.nedit=!!edit;C.ndel=null;C.ncNew2=false;renderOverlay();}
+function nBack(){
+  const C=U.camp,q=questOf(C.id);if(!q)return;
+  const n=notesOf(q).find(x=>x.id===C.note);
+  if(n&&!(n.title||'').trim()&&!(n.body||'').trim())q.notes=q.notes.filter(x=>x!==n);
+  C.note=null;C.nedit=false;C.ndel=null;save();renderOverlay();
+}
+function nLine(n,i,fn){const ls=(n.body||'').split('\n');ls[i]=fn(ls[i]);n.body=ls.join('\n');n.at=Date.now();}
+function notesAct(act,v,id){
+  const C=U.camp,q=C?questOf(C.id):null;
+  if(!q||!act.startsWith('n')||act==='noteEdit')return false;
+  const note=()=>notesOf(q).find(x=>x.id===(id||C.note));
+  switch(act){
+    case 'nNew':{const n={id:uid(),title:'',body:'',cat:C.nf||'',pin:false,created:Date.now(),at:Date.now()};notesOf(q).push(n);save();nOpenNote(n.id,true);setTimeout(()=>{const x=$('#nTitle');x&&x.focus();},60);return true;}
+    case 'nOpen':nOpenNote(id,false);return true;
+    case 'nBack':nBack();return true;
+    case 'nEdit':{const n=note();if(!n)return true;if(C.nedit){n.title=(n.title||'').trim();n.body=(n.body||'').replace(/\s+$/,'');save();}C.nedit=!C.nedit;renderOverlay();if(C.nedit)setTimeout(()=>{const x=$('#nBody');x&&x.focus();},60);return true;}
+    case 'nPin':{const n=note();if(n){n.pin=!n.pin;save();renderOverlay();}return true;}
+    case 'nDel':{const n=note();if(!n)return true;if(C.ndel===n.id){q.notes=q.notes.filter(x=>x!==n);C.note=null;C.nedit=false;C.ndel=null;save();renderOverlay();}else{C.ndel=n.id;renderOverlay();}return true;}
+    case 'nFilter':C.nf=v;renderOverlay();return true;
+    case 'nCat':{const n=note();if(n){n.cat=v;save();renderOverlay();}return true;}
+    case 'nCatNew':C.ncNew=!C.ncNew;renderOverlay();setTimeout(()=>{const x=$('#nCatIn');x&&x.focus();},60);return true;
+    case 'nCatNew2':C.ncNew2=!C.ncNew2;renderOverlay();setTimeout(()=>{const x=$('#nCatIn');x&&x.focus();},60);return true;
+    case 'nCatAdd':case 'nCatAdd2':{
+      const x=$('#nCatIn'),name=x?x.value.trim():'';if(!name)return true;
+      let c=ncatsOf(q).find(k=>k.name.toLowerCase()===name.toLowerCase());
+      if(!c){c={id:uid(),name};q.ncats.push(c);}
+      if(act==='nCatAdd2'){const n=note();if(n)n.cat=c.id;C.ncNew2=false;}else{C.ncNew=false;C.nf=c.id;}
+      save();renderOverlay();return true;}
+    case 'nCatSheet':U.sheet='ncats';renderOverlay();return true;
+    case 'nCatDel':return true;
+    case 'nTick':{const n=note();if(!n)return true;nLine(n,+v,l=>l.replace(/\[( |x|X)\]/,(m,c)=>c===' '?'[x]':'[ ]'));save();renderOverlay();return true;}
+    case 'nBoard':{
+      const n=note();if(!n)return true;const i=+v,ls=(n.body||'').split('\n'),m=(ls[i]||'').trim().match(/^(?:[-*]\s+)?\[ \]\s*(.*)$/);if(!m||!m[1].trim())return true;
+      const col=startCol(q),title=m[1].trim().replace(/^(.)/,s=>s.toUpperCase());
+      const t={id:uid(),title,cat:S.last||S.cats[0].id,date:'',time:'',dur:30,done:false,moves:0,createdAt:Date.now(),rep:'',q:q.id,col,ord:endOrd(q,col)};
+      S.tasks.push(t);assignCol(t,col);const old=ls[i];nLine(n,i,l=>l.replace('[ ]','[>]'));save();logEv('added',t,{raw:title,catManual:false,suggested:'',batch:false,viaNote:true});
+      const cn=(colsOf(q).find(c=>c.id===col)||{}).name||'the board';
+      renderOverlay();renderMain();
+      toast({face:5,text:'Sent to '+cn+'.'},()=>{S.tasks=S.tasks.filter(x=>x.id!==t.id);const nn=notesOf(q).find(x=>x.id===n.id);if(nn)nLine(nn,i,()=>old);save();renderOverlay();renderMain();});
+      return true;}
+  }
+  return false;
+}
+/* category delete reads data-i from the clicked element */
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('[data-act="nCatDel"]');if(!b||!U.camp)return;
+  const q=questOf(U.camp.id);if(!q)return;const i=+b.dataset.i,c=ncatsOf(q)[i];if(!c)return;
+  notesOf(q).forEach(n=>{if(n.cat===c.id)n.cat='';});q.ncats.splice(i,1);if(U.camp.nf===c.id)U.camp.nf='';save();renderOverlay();
+});
+document.addEventListener('input',e=>{
+  const t=e.target,C=U.camp;if(!C)return;const q=questOf(C.id);if(!q)return;
+  if(t.id==='nSearch'){C.ns=t.value;const l=$('#nList');if(l)l.innerHTML=nListInner(q);}
+  else if(t.id==='nTitle'){const n=notesOf(q).find(x=>x.id===C.note);if(n){n.title=t.value;n.at=Date.now();save();}}
+  else if(t.id==='nBody'){const n=notesOf(q).find(x=>x.id===C.note);if(n){n.body=t.value;n.at=Date.now();save();}}
+  else if(t.classList&&t.classList.contains('ncin')){const c=ncatsOf(q)[+t.dataset.i];if(c){c.name=t.value;save();}}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter'||!U.camp)return;
+  if(e.target.id==='nCatIn'){e.preventDefault();const b=document.querySelector('[data-act=nCatAdd],[data-act=nCatAdd2]');b&&b.click();}
+  else if(e.target.id==='nTitle'){e.preventDefault();const x=$('#nBody');x&&x.focus();}
+});
+
 /* ---------- extensions: quests, side quests, dragons, councils, sync, shortcuts ---------- */
 Object.assign(ICONS,{
   dice:'<path d="M12 2.5l8.5 5v9l-8.5 5-8.5-5v-9z"/><path d="M12 7.5l4.2 7.5H7.8z"/><path d="M12 2.5v5M3.5 7.5L7.8 15M20.5 7.5L16.2 15M7.8 15l-4.3 1.5M16.2 15l4.3 1.5M12 21.5V15"/>',
@@ -2566,6 +2750,7 @@ function extSheets(){
   if(U.sheet==='idea'&&U.is)return ideaSheetHTML();
   if(U.sheet==='roll'&&U.roll)return rollSheetHTML();
   if(U.sheet==='notes')return notesSheetHTML();
+  if(U.sheet==='ncats'&&U.camp)return ncatsSheetHTML();
   return '';
 }
 
@@ -2604,6 +2789,7 @@ function openCouncil(kind,force){
 }
 function candidates(){return S.tasks.filter(t=>!t.done&&t.date).sort((a,b)=>(b.moves||0)-(a.moves||0)||(a.date<b.date?-1:1)).slice(0,20);}
 function extAct(act,v,id,el){
+  if(notesAct(act,v,id))return;
   if(ritAct(act,v,id))return;
   switch(act){
     case 'goto':goto(v);break;
@@ -2871,7 +3057,7 @@ function pickLine(key,vars){
 
 /* ---------- phone back gesture: close the top layer, or go back to Today, before leaving the app ---------- */
 var navCur=0,navBusy=false,navTarget=0;
-function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+((U.sheet||U.council||U.menu)?1:0)+(ritCanBack()?1:0);}
+function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+((U.sheet||U.council||U.menu)?1:0)+(ritCanBack()?1:0)+((U.camp&&U.camp.note)?1:0);}
 function navSync(){
   if(navBusy)return;
   const d=navWant();
@@ -2886,6 +3072,7 @@ addEventListener('popstate',()=>{
   if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}
   else if(ritCanBack()&&!U.sheet&&!U.menu){ritBack();}
   else if(U.sheet||U.council||U.menu){ritPersist();U.sheet=null;U.council=null;U.menu=false;renderOverlay();}
+  else if(U.camp&&U.camp.note){nBack();}
   else if(U.camp){U.camp=null;renderOverlay();renderMain();}
   else if(U.view!=='list'){goto('list');}
   navSync();

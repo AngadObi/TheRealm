@@ -149,6 +149,7 @@ function extSheets(){
   if(U.sheet==='idea'&&U.is)return ideaSheetHTML();
   if(U.sheet==='roll'&&U.roll)return rollSheetHTML();
   if(U.sheet==='notes')return notesSheetHTML();
+  if(U.sheet==='ncats'&&U.camp)return ncatsSheetHTML();
   return '';
 }
 
@@ -187,6 +188,7 @@ function openCouncil(kind,force){
 }
 function candidates(){return S.tasks.filter(t=>!t.done&&t.date).sort((a,b)=>(b.moves||0)-(a.moves||0)||(a.date<b.date?-1:1)).slice(0,20);}
 function extAct(act,v,id,el){
+  if(notesAct(act,v,id))return;
   if(ritAct(act,v,id))return;
   switch(act){
     case 'goto':goto(v);break;
@@ -454,7 +456,7 @@ function pickLine(key,vars){
 
 /* ---------- phone back gesture: close the top layer, or go back to Today, before leaving the app ---------- */
 var navCur=0,navBusy=false,navTarget=0;
-function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+((U.sheet||U.council||U.menu)?1:0)+(ritCanBack()?1:0);}
+function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+((U.sheet||U.council||U.menu)?1:0)+(ritCanBack()?1:0)+((U.camp&&U.camp.note)?1:0);}
 function navSync(){
   if(navBusy)return;
   const d=navWant();
@@ -469,6 +471,7 @@ addEventListener('popstate',()=>{
   if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}
   else if(ritCanBack()&&!U.sheet&&!U.menu){ritBack();}
   else if(U.sheet||U.council||U.menu){ritPersist();U.sheet=null;U.council=null;U.menu=false;renderOverlay();}
+  else if(U.camp&&U.camp.note){nBack();}
   else if(U.camp){U.camp=null;renderOverlay();renderMain();}
   else if(U.view!=='list'){goto('list');}
   navSync();

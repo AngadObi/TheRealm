@@ -102,12 +102,11 @@ function campHTML(){
   const tabs=`<div class="chips sm" style="margin:0 0 12px"><button type="button" class="chip ${(C.tab||'board')==='board'?'on':''}" data-act="campTab" data-v="board">Board</button><button type="button" class="chip ${C.tab==='brief'?'on':''}" data-act="campTab" data-v="brief">Brief</button><button type="button" class="chip ${C.tab==='notes'?'on':''}" data-act="campTab" data-v="notes">Notes</button>${(C.tab||'board')==='board'?`<button type="button" class="chip" data-act="colsOpen">Columns</button>`:''}</div>`;
   let body;
   if(C.tab==='brief')body=briefHTML(q);
-  else if(C.tab==='notes'){
-    body=q.note&&!C.noteEdit?`<div class="note" data-act="campNoteEdit">${linkify(q.note)}</div>`:`<textarea id="campNoteTx" class="note ta" rows="10" placeholder="Context, contacts, links, whatever this campaign needs" aria-label="Campaign notes">${esc(q.note||'')}</textarea>`;
-  }else{
+  else if(C.tab==='notes')body=notesTabHTML(q);
+  else{
     body=`<div class="kboard">${cs.map(c=>{const cards=cardsOf(q,c.id);return `<div class="kcol ${c.done?'dn':''}" data-col="${c.id}"><div class="kh"><b>${esc(c.name)}</b><span>${cards.length}</span></div><div class="kcards">${cards.map(cardHTML).join('')}</div><input class="kin" data-col="${c.id}" placeholder="+ Add a card" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" aria-label="Add a card to ${esc(c.name)}"></div>`;}).join('')}</div>`;
   }
-  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt"><b>${esc(q.title)}</b><i>${q.done?'DONE':due.toUpperCase()}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${tabs}${C.tab==='board'||!C.tab?journeyHTML(q,campStats(q)):''}${body}</div>`;
+  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt"><b>${esc(q.title)}</b><i>${q.done?'DONE':due.toUpperCase()}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${C.note&&C.tab==='notes'?'':tabs}${C.tab==='board'||!C.tab?journeyHTML(q,campStats(q)):''}${body}</div>`;
 }
 function colsSheetHTML(){
   const q=questOf(U.camp.id);if(!q)return '';const cs=colsOf(q);
@@ -124,7 +123,7 @@ document.addEventListener('click',e=>{
   const q=U.camp?questOf(U.camp.id):null;
   switch(a){
     case 'campBack':U.camp=null;renderOverlay();renderMain();break;
-    case 'campTab':U.camp.tab=el.dataset.v;U.camp.noteEdit=false;renderOverlay();if(el.dataset.v==='board')campFocusBoard();break;
+    case 'campTab':U.camp.tab=el.dataset.v;U.camp.noteEdit=false;U.camp.note=null;U.camp.nedit=false;renderOverlay();if(el.dataset.v==='board')campFocusBoard();break;
     case 'campNoteEdit':U.camp.noteEdit=true;renderOverlay();{const x=$('#campNoteTx');x&&x.focus();}break;
     case 'briefEdit':U.camp.edit=el.dataset.v;renderOverlay();{const x=$('#bf_'+el.dataset.v);x&&x.focus();}break;
     case 'kTick':tick(el.dataset.id);break;
