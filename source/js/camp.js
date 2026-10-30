@@ -82,14 +82,16 @@ function dueHTML(q){
   return `<div class="bf"><label>Due</label>${rows?`<div class="dues">${rows}</div>${ts.length>8?`<p class="note" style="border:0;background:none;padding:4px 0 0;margin:0">and ${ts.length-8} more</p>`:''}`:'<p class="note" style="margin:0">Nothing dated. Give a card a date and it shows up here and on your days.</p>'}</div>`;
 }
 function briefHTML(q){
-  const s=campStats(q),rk=rankOf(s,q),L=campLine(q),C=U.camp;
+  const s=campStats(q),rk=rankOf(s,q),L=campLine(q),C=U.camp,ex=briefExtras(q);
   const fld=(k,label,ph)=>{const v=q[k]||'';return `<div class="bf"><label>${label}</label>${C.edit===k||!v?`<textarea id="bf_${k}" class="note ta" rows="2" placeholder="${ph}" data-k="${k}">${esc(v)}</textarea>`:`<div class="note" data-act="briefEdit" data-v="${k}">${linkify(v)}</div>`}</div>`;};
-  return `<div class="brief"><div class="bsr"><img src="${kn(L.face)}" alt=""><span>${esc(L.text)}</span></div>
+  const cryB=q.cry&&C.edit!=='cry'?`<p class="cry" data-act="briefEdit" data-v="cry">\u201c${esc(q.cry)}\u201d</p>`:'';
+  const enB=q.enemy&&C.edit!=='enemy'?ex.enemy.replace('class="etile"','class="etile" data-act="briefEdit" data-v="enemy"'):fld('enemy','The enemy','Who or what stands in your way?');
+  return `<div class="brief"><div class="bsr"><img src="${kn(L.face)}" alt=""><span>${esc(L.text)}</span></div>${cryB}
   <div class="rank"><span class="qtile">${ico(rk[1],26,'var(--glow)',1.5)}</span><div><b>${rk[0]}</b><i>${s.xp} XP \u00b7 ${s.pc}% OF THE CAMPAIGN</i></div></div>
-  ${dueHTML(q)}
-  ${fld('goal','The goal','What does victory look like?')}${fld('stakes','At stake','What happens if you do not finish?')}${fld('reward','The spoils','What do you get when you win?')}
+  ${enB}${dueHTML(q)}
+  ${fld('goal','The goal','What does victory look like?')}${fld('stakes','At stake','What happens if you do not finish?')}${fld('reward','The spoils','What do you get when you win?')}${q.cry&&C.edit!=='cry'?'':fld('cry','War cry','Optional, one line')}
   <div class="tiles"><div><b>${s.done}</b><i>SLAIN</i></div><div><b>${s.doing}</b><i>IN BATTLE</i></div><div><b>${s.blocked}</b><i>BLOCKED</i></div><div><b>${s.left===null?'-':Math.max(0,s.left)}</b><i>DAYS LEFT</i></div></div>
-  <div class="mil">${MILES.map(m=>`<div class="${s.pc>=m[0]?'on':''}"><span>${s.pc>=m[0]?ico('check',14,'currentColor',3):''}</span>${m[1]}<em>${m[0]}%</em></div>`).join('')}</div></div>`;
+  <div class="mil">${MILES.map(m=>`<div class="${s.pc>=m[0]?'on':''}"><span>${s.pc>=m[0]?ico('check',14,'currentColor',3):''}</span>${m[1]}<em>${m[0]}%</em></div>`).join('')}</div>${ex.journal}${ex.pin}</div>`;
 }
 function campHTML(){
   const C=U.camp,q=questOf(C.id);if(!q){U.camp=null;return '';}

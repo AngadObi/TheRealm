@@ -169,6 +169,7 @@ function tick(id){
   if(t.done&&t.rep&&!t.spawn){const nd=nextDate(t.date<today()?today():t.date,t.rep);spawned={id:uid(),title:t.title,cat:t.cat,date:nd,time:t.time||'',dur:t.dur,done:false,moves:0,createdAt:Date.now(),rep:t.rep,q:t.q};if(t.note)spawned.note=t.note;if(t.steps&&t.steps.length)spawned.steps=t.steps.map(s=>({id:uid(),t:s.t,done:false}));S.tasks.push(spawned);t.spawn=spawned.id;}
   else if(!t.done&&t.spawn){const sp=S.tasks.find(x=>x.id===t.spawn);if(sp&&!sp.done)S.tasks.splice(S.tasks.indexOf(sp),1);t.spawn=null;}
   save();
+  if(t.done)campProgress(t);
   if(t.done)logEv('done',t,{ageDays:diffDays(today(),t.date)});
   let line;
   if(t.done){
@@ -322,6 +323,8 @@ function banner(id,name,count,bg,icon,shut){
 }
 function listHTML(){
   const c=context();let h='';
+  const pq=S.settings.pin&&questOf(S.settings.pin);
+  if(pq&&!pq.done){const ps=campStats(pq);h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${ps.pc}%${ps.left!==null?' \u00b7 '+(ps.left<0?-ps.left+'d late':ps.left+'d left'):''}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
   const tn=(plan().notes||[]);
   if(tn.length)h+=`<button type="button" class="nrow" data-act="notesOpen">${ico('pen',18,'var(--brass-l)',1.7)}<span>Chamber note from ${z2(new Date(tn[tn.length-1].at).getHours())}:${z2(new Date(tn[tn.length-1].at).getMinutes())}</span>${ico('chevr',16,'var(--dim)',2)}</button>`;
   if(c.over.length){
@@ -444,11 +447,11 @@ let _mh='';function renderMain(){
 }
 let _dh='';function renderDock(){const h=dockHTML();if(h===_dh)return;_dh=h;$('#dockhost').innerHTML=h;}
 function renderOverlay(){
-  if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&!U.camp&&ritDraw()){[...$('#overlay').children].forEach(x=>{if(!x.classList.contains('rit'))x.remove();});if(typeof navSync==='function')navSync();return;}
+  if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&ritDraw()){[...$('#overlay').children].forEach(x=>{if(!x.classList.contains('rit')&&!x.classList.contains('camp'))x.remove();});if(typeof navSync==='function')navSync();return;}
   let h='';
   if(U.menu)h+=menuHTML();
-  if(U.council)h+=councilHTML();
   if(U.camp)h+=campHTML();
+  if(U.council)h+=councilHTML();
   h+=extSheets();
   if(U.sheet==='add')h+=addSheetHTML();
   if(U.sheet==='newcat')h+=newCatHTML();

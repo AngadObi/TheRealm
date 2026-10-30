@@ -462,6 +462,44 @@ section.cat{position:relative}
 .sheet .enote{align-items:flex-start}
 .full ~ .scrim{z-index:50}.full ~ .sheet{z-index:51}
 
+/* ---------- campaign founding, oath, victory ---------- */
+.banr{display:flex;align-items:center;gap:12px;margin:14px auto 0;max-width:340px;padding:12px 16px;background:linear-gradient(180deg,#8f3a22,#6c2616);border:1.5px solid var(--brass);border-radius:3px;clip-path:polygon(0 0,100% 0,100% 82%,50% 100%,0 82%);padding-bottom:22px;box-shadow:0 0 22px rgba(210,85,46,.25)}
+.banr .bi{flex:none;display:flex}
+.banr b{font:400 24px/1.1 var(--fell);color:#FFF3E3;text-wrap:balance;overflow-wrap:anywhere}
+.ricons{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.fd label{display:block;font:500 11px var(--mono);letter-spacing:.12em;color:var(--dim);margin:12px 0 4px}
+.fd .inp{min-height:48px}
+.shake{animation:shk .35s}
+@keyframes shk{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.osum{margin:12px auto 0;max-width:330px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.osum p{margin:0 0 6px;font:italic 18px/1.25 var(--fell);color:var(--bone)}
+.osum small{font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--dim);margin-top:6px}
+.osum b{font:500 15.5px var(--sans)}
+.oath{position:relative;width:160px;height:160px;margin:18px auto 0;display:grid;place-items:center;border-radius:50%;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:pointer;outline:none}
+.oath>svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.oath>svg circle{fill:none;stroke-width:5}
+.oath .o0{stroke:var(--border)}
+.oath .o1{stroke:var(--glow);stroke-linecap:round;stroke-dasharray:440;stroke-dashoffset:440;filter:drop-shadow(0 0 6px var(--ember))}
+.oath.hold .o1{stroke-dashoffset:0;transition:stroke-dashoffset 1.8s linear}
+.oath .od{width:116px;height:116px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#F0A35E,#D2552E 48%,#7A2E18);box-shadow:inset 0 -6px 12px rgba(0,0,0,.35),inset 0 4px 8px rgba(255,220,170,.35),0 6px 22px rgba(210,85,46,.5);transition:transform 1.8s ease-out}
+.oath.hold .od{transform:scale(.88)}
+.spoils{margin:16px auto 0;max-width:330px;padding:18px 16px;border:1.5px solid var(--brass);border-radius:4px;background:linear-gradient(110deg,var(--card) 30%,rgba(240,163,94,.16) 50%,var(--card) 70%);background-size:220% 100%;animation:shim 3.2s linear infinite;text-align:center;display:flex;flex-direction:column;gap:6px}
+.spoils i{font:500 11px var(--mono);letter-spacing:.14em;color:var(--dim);font-style:normal}
+.spoils b{font:400 26px/1.15 var(--fell);text-wrap:balance}
+@keyframes shim{0%{background-position:120% 0}100%{background-position:-120% 0}}
+.cry{margin:10px 0 0;text-align:center;font:italic 19px var(--fell);color:var(--glow)}
+.etile{display:flex;align-items:center;gap:12px;margin-top:14px;padding:10px 12px;border:1.5px solid var(--ember);border-radius:4px;background:var(--ember-tint)}
+.etile>div{flex:1;min-width:0}
+.etile i{display:block;font:500 10.5px var(--mono);letter-spacing:.12em;color:var(--dim);font-style:normal}
+.etile b{display:block;font:400 20px/1.15 var(--fell);overflow-wrap:anywhere}
+.etile em{font:500 10.5px var(--mono);letter-spacing:.1em;color:var(--glow);font-style:normal}
+.jlog{display:flex;flex-direction:column;gap:6px}
+.jlog>div{display:flex;gap:10px;padding:8px 10px;border-left:2px solid var(--brass);background:var(--card)}
+.jlog .mono{flex:none;font:500 11px var(--mono);color:var(--dim);padding-top:3px;width:52px}
+.jlog p{margin:0;font:15.5px/1.3 var(--fell)}
+.pinb{width:100%;margin-top:14px}
+.prow small{font:500 11px var(--mono);letter-spacing:.06em;color:var(--dim)}
+
 </style>
 <div class="app" id="app"></div>
 <script src="firebase-config.js"></script>
@@ -1211,6 +1249,7 @@ function tick(id){
   if(t.done&&t.rep&&!t.spawn){const nd=nextDate(t.date<today()?today():t.date,t.rep);spawned={id:uid(),title:t.title,cat:t.cat,date:nd,time:t.time||'',dur:t.dur,done:false,moves:0,createdAt:Date.now(),rep:t.rep,q:t.q};if(t.note)spawned.note=t.note;if(t.steps&&t.steps.length)spawned.steps=t.steps.map(s=>({id:uid(),t:s.t,done:false}));S.tasks.push(spawned);t.spawn=spawned.id;}
   else if(!t.done&&t.spawn){const sp=S.tasks.find(x=>x.id===t.spawn);if(sp&&!sp.done)S.tasks.splice(S.tasks.indexOf(sp),1);t.spawn=null;}
   save();
+  if(t.done)campProgress(t);
   if(t.done)logEv('done',t,{ageDays:diffDays(today(),t.date)});
   let line;
   if(t.done){
@@ -1364,6 +1403,8 @@ function banner(id,name,count,bg,icon,shut){
 }
 function listHTML(){
   const c=context();let h='';
+  const pq=S.settings.pin&&questOf(S.settings.pin);
+  if(pq&&!pq.done){const ps=campStats(pq);h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${ps.pc}%${ps.left!==null?' \u00b7 '+(ps.left<0?-ps.left+'d late':ps.left+'d left'):''}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
   const tn=(plan().notes||[]);
   if(tn.length)h+=`<button type="button" class="nrow" data-act="notesOpen">${ico('pen',18,'var(--brass-l)',1.7)}<span>Chamber note from ${z2(new Date(tn[tn.length-1].at).getHours())}:${z2(new Date(tn[tn.length-1].at).getMinutes())}</span>${ico('chevr',16,'var(--dim)',2)}</button>`;
   if(c.over.length){
@@ -1486,11 +1527,11 @@ let _mh='';function renderMain(){
 }
 let _dh='';function renderDock(){const h=dockHTML();if(h===_dh)return;_dh=h;$('#dockhost').innerHTML=h;}
 function renderOverlay(){
-  if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&!U.camp&&ritDraw()){[...$('#overlay').children].forEach(x=>{if(!x.classList.contains('rit'))x.remove();});if(typeof navSync==='function')navSync();return;}
+  if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&ritDraw()){[...$('#overlay').children].forEach(x=>{if(!x.classList.contains('rit')&&!x.classList.contains('camp'))x.remove();});if(typeof navSync==='function')navSync();return;}
   let h='';
   if(U.menu)h+=menuHTML();
-  if(U.council)h+=councilHTML();
   if(U.camp)h+=campHTML();
+  if(U.council)h+=councilHTML();
   h+=extSheets();
   if(U.sheet==='add')h+=addSheetHTML();
   if(U.sheet==='newcat')h+=newCatHTML();
@@ -1738,14 +1779,16 @@ function dueHTML(q){
   return `<div class="bf"><label>Due</label>${rows?`<div class="dues">${rows}</div>${ts.length>8?`<p class="note" style="border:0;background:none;padding:4px 0 0;margin:0">and ${ts.length-8} more</p>`:''}`:'<p class="note" style="margin:0">Nothing dated. Give a card a date and it shows up here and on your days.</p>'}</div>`;
 }
 function briefHTML(q){
-  const s=campStats(q),rk=rankOf(s,q),L=campLine(q),C=U.camp;
+  const s=campStats(q),rk=rankOf(s,q),L=campLine(q),C=U.camp,ex=briefExtras(q);
   const fld=(k,label,ph)=>{const v=q[k]||'';return `<div class="bf"><label>${label}</label>${C.edit===k||!v?`<textarea id="bf_${k}" class="note ta" rows="2" placeholder="${ph}" data-k="${k}">${esc(v)}</textarea>`:`<div class="note" data-act="briefEdit" data-v="${k}">${linkify(v)}</div>`}</div>`;};
-  return `<div class="brief"><div class="bsr"><img src="${kn(L.face)}" alt=""><span>${esc(L.text)}</span></div>
+  const cryB=q.cry&&C.edit!=='cry'?`<p class="cry" data-act="briefEdit" data-v="cry">\u201c${esc(q.cry)}\u201d</p>`:'';
+  const enB=q.enemy&&C.edit!=='enemy'?ex.enemy.replace('class="etile"','class="etile" data-act="briefEdit" data-v="enemy"'):fld('enemy','The enemy','Who or what stands in your way?');
+  return `<div class="brief"><div class="bsr"><img src="${kn(L.face)}" alt=""><span>${esc(L.text)}</span></div>${cryB}
   <div class="rank"><span class="qtile">${ico(rk[1],26,'var(--glow)',1.5)}</span><div><b>${rk[0]}</b><i>${s.xp} XP \u00b7 ${s.pc}% OF THE CAMPAIGN</i></div></div>
-  ${dueHTML(q)}
-  ${fld('goal','The goal','What does victory look like?')}${fld('stakes','At stake','What happens if you do not finish?')}${fld('reward','The spoils','What do you get when you win?')}
+  ${enB}${dueHTML(q)}
+  ${fld('goal','The goal','What does victory look like?')}${fld('stakes','At stake','What happens if you do not finish?')}${fld('reward','The spoils','What do you get when you win?')}${q.cry&&C.edit!=='cry'?'':fld('cry','War cry','Optional, one line')}
   <div class="tiles"><div><b>${s.done}</b><i>SLAIN</i></div><div><b>${s.doing}</b><i>IN BATTLE</i></div><div><b>${s.blocked}</b><i>BLOCKED</i></div><div><b>${s.left===null?'-':Math.max(0,s.left)}</b><i>DAYS LEFT</i></div></div>
-  <div class="mil">${MILES.map(m=>`<div class="${s.pc>=m[0]?'on':''}"><span>${s.pc>=m[0]?ico('check',14,'currentColor',3):''}</span>${m[1]}<em>${m[0]}%</em></div>`).join('')}</div></div>`;
+  <div class="mil">${MILES.map(m=>`<div class="${s.pc>=m[0]?'on':''}"><span>${s.pc>=m[0]?ico('check',14,'currentColor',3):''}</span>${m[1]}<em>${m[0]}%</em></div>`).join('')}</div>${ex.journal}${ex.pin}</div>`;
 }
 function campHTML(){
   const C=U.camp,q=questOf(C.id);if(!q){U.camp=null;return '';}
@@ -1917,9 +1960,9 @@ document.addEventListener('click',e=>{
 });
 
 /* ---------- the guided Council ritual (Day and Week) ---------- */
-const RIT_STEPS={emergency:['welcome','chamber','triage','dragon','exit'],day:['welcome','focus','goals','left','dragon','mood','seal'],week:['welcome','focus','goals','week','left','dragon','seal']};
+const RIT_STEPS={found:['summons','name','goal','stakes','enemy','terms','cry','moves','oath','sworn'],victory:['triumph','tally','spoils','seal'],emergency:['welcome','chamber','triage','dragon','exit'],day:['welcome','focus','goals','left','dragon','mood','seal'],week:['welcome','focus','goals','week','left','dragon','seal']};
 const RIT_FACE={welcome:1,focus:1,goals:5,week:4,left:2,dragon:8,mood:3,seal:6};
-function ritStore(kind){return (kind==='day'||kind==='emergency')?(S.plans[today()]||{}):(S.cplans[wkKey()]||{});}
+function ritStore(kind){if(kind==='found'||kind==='victory')return {};return (kind==='day'||kind==='emergency')?(S.plans[today()]||{}):(S.cplans[wkKey()]||{});}
 function ritWanted(kind){
   const p=ritStore(kind);
   if(p.saved)return false;
@@ -1930,6 +1973,7 @@ function ritWanted(kind){
 function ritWelcome(kind,c){
   const d=new Date(),h=d.getHours(),dow=d.getDay();
   const pick=a=>a[Math.floor(Math.random()*a.length)];
+  if(kind==='found')return pick(['Every great war begins with a name and a bad idea. Let us find both.','A campaign. Splendid. Nobody has ever regretted starting one, at least not at the start.','Sit. The map is blank and so is the enemy. We fix that first.','The scribes are ready. The enemy is not. Perfect.']);
   if(kind==='emergency'){
     if(h>=21||h<5)return 'It is late and everything looks bigger at night. Write it down and we shall shrink it.';
     return pick(['Breathe, my lord. The realm will wait. I have told it to.','Emergency council. Sit. Nothing here is on fire that cannot be put in a list.','Whatever it is, we will make it smaller. Sit down.','The doors are closed and the candles are lit. Nobody is coming in until you are ready.']);
@@ -1962,18 +2006,21 @@ function ritStart(kind,resume){
 function ritStep(){const R=U.council.rit;return R.steps[R.i];}
 function ritGo(i){
   const R=U.council.rit;ritRead();const dir=i>=R.i?1:-1;
+  if(R.kind==='found'&&ritStep()==='name'&&i>R.i&&!(R.f.name||'').trim()){const n=$('#fName');if(n){n.focus();n.classList.remove('shake');void n.offsetWidth;n.classList.add('shake');}return;}
   R.i=Math.max(0,Math.min(R.steps.length-1,i));R.fresh=true;
   if(ritStep()==='left'&&!context().over.length){R.i+=dir;}
   if(ritStep()==='seal')ritSeal();
   if(ritStep()==='exit')ritEmSave();
+  if(R.kind==='victory'&&ritStep()==='seal')ritClaim();
   renderOverlay();R.fresh=false;
-  setTimeout(()=>{const x=$('#goalIn')||$('#focusTxt');if(x&&ritStep()!=='seal'&&ritStep()!=='welcome')x.focus();},320);
+  setTimeout(()=>{const x=$('#goalIn')||$('#focusTxt')||$('#fName')||$('#fGoal')||$('#fStakes')||$('#fEnemy')||$('#fCry')||$('#fMoveIn');if(x&&!['seal','sworn','welcome'].includes(ritStep()))x.focus();},320);
 }
 function ritNext(){ritGo(U.council.rit.i+1);}
 function ritBack(){const R=U.council.rit;if(R.i>0)ritGo(R.i-1);}
-function ritCanBack(){const R=U.council&&U.council.rit;return !!R&&R.i>0&&ritStep()!=='seal';}
+function ritCanBack(){const R=U.council&&U.council.rit;return !!R&&R.i>0&&ritStep()!=='seal'&&ritStep()!=='sworn';}
 function ritRead(){
   const C=U.council,f=$('#focusTxt');if(f)C.focus=f.value;
+  if(C.rit.kind==='found')foundRead();
   if(C.rit.kind==='emergency'&&ritStep()==='chamber')ritChamber();
   const g=$('#goalIn');if(g&&g.value.trim())ritCommit(g.value);
 }
@@ -2005,18 +2052,20 @@ function ritSeal(){
 }
 function ritPersist(){
   const C=U.council;if(!C||!C.rit)return;
-  const R=C.rit;if(ritStep()==='seal'||ritStep()==='exit')return;
+  const R=C.rit;if(R.kind==='found'||R.kind==='victory')return;if(ritStep()==='seal'||ritStep()==='exit')return;
   if(R.kind==='emergency'){if(ritStep()==='chamber')ritChamber();ritEmSave();return;}
   const f=$('#focusTxt');if(f)C.focus=f.value;
   if(R.i>0||C.focus)ritSave(false);
 }
-function ritFinish(){U.council=null;LC.key='';render();renderHead();}
+function ritFinish(){const R=U.council&&U.council.rit,qid=R&&R.kind==='found'?R.qid:null;U.council=null;LC.key='';if(qid)U.camp={id:qid,tab:'brief'};render();renderHead();}
 function ritDots(){const R=U.council.rit;return R.steps.map((s,i)=>`<i class="${i===R.i?'on':i<R.i?'dn':''}"></i>`).join('');}
 function ritAgainBtn(kind){return (kind==='day'||kind==='week')?`<button type="button" class="rskip" data-act="ritAgain" data-v="${kind}">Hold the ceremony again</button>`:'';}
 function ritHero(face,cls){return `<div class="rk ${cls||''}"><img src="${kn(face)}" alt="Sir Reg"></div>`;}
 function ritSky(){let h='';for(let i=0;i<16;i++){const x=(i*37+11)%100,y=(i*53+7)%62,d=(i*0.6)%5;h+=`<i class="st" style="left:${x}%;top:${y}%;animation-delay:-${d}s"></i>`;}
   for(let i=0;i<9;i++){const x=(i*29+8)%100,d=(i*1.7)%9;h+=`<i class="em" style="left:${x}%;animation-delay:-${d}s;animation-duration:${8+(i%4)*2}s"></i>`;}return h;}
 function ritStepHTML(){
+  if(U.council.rit.kind==='found')return foundStepHTML();
+  if(U.council.rit.kind==='victory')return victStepHTML();
   const C=U.council,R=C.rit,s=ritStep(),c=context(),wk=R.kind==='week';
   const sh=(ic,col,t,sub)=>`<div class="rh"><span class="tl">${ico(ic,22,col,1.7)}</span><h2>${t}</h2><p>${sub}</p></div>`;
   const line=(RIT_LINES[s]||{})[R.kind];const say1=line?`<p class="rsay">${esc(line[0])}</p>`:'';
@@ -2087,6 +2136,8 @@ function ritStepHTML(){
   <div class="rsum">${C.focus?`<div><i>FOCUS</i><b>${esc(C.focus)}</b></div>`:''}<div><i>${wk?'THIS WEEK':'TODAY'}</i><b>${duties} ${duties===1?'duty':'duties'}</b></div>${dt?`<div><i>DRAGON</i><b>${esc(dt.title)}</b></div>`:''}${!wk&&mood?`<div><i>MOOD</i><b>${esc(mood)}</b></div>`:''}</div>`;
 }
 function ritFootHTML(){
+  if(U.council.rit.kind==='found')return foundFootHTML();
+  if(U.council.rit.kind==='victory')return victFootHTML();
   const R=U.council.rit,s=ritStep();
   if(s==='welcome')return `<button type="button" class="btn big" data-act="rNext">Begin</button><button type="button" class="rskip" data-act="closeCouncil">Not now</button>`;
   if(s==='seal')return `<button type="button" class="btn big" data-act="rFinish">To battle</button>`;
@@ -2117,6 +2168,7 @@ function ritDraw(){
   return true;
 }
 function ritAct(act,v,id){
+  if(foundAct(act,v,id))return true;
   const C=U.council;
   switch(act){
     case 'notesOpen':U.menu=false;U.sheet='notes';renderOverlay();return true;
@@ -2186,6 +2238,181 @@ function notesSheetHTML(){
   const days=Object.keys(S.plans).filter(k=>(S.plans[k].notes||[]).length).sort().reverse();
   const body=days.length?days.map(k=>`<p class="ndh">${fmtHead(k).toUpperCase()}</p>`+S.plans[k].notes.slice().sort((a,b)=>b.at-a.at).map(e=>{const d=new Date(e.at);return `<div class="enote"><span class="mono">${z2(d.getHours())}:${z2(d.getMinutes())}</span><p>${esc(e.text)}</p><button type="button" class="ib quiet" style="border:0;background:none;width:34px;height:34px;flex:none" data-act="notesDel" data-id="${e.at}" data-v="${k}" aria-label="Delete note">${ico('x',16,'currentColor',2)}</button></div>`;}).join('')).join(''):'<p class="note" style="margin:0">No notes yet. They are written in the Emergency Council.</p>';
   return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Chamber notes"><h2>Chamber notes</h2>${body}<div class="btns"><button type="button" class="btn ghost" data-act="closeSheet">Close</button></div></div>`;
+}
+
+/* ---------- campaigns: founding ceremony, journal, victory ---------- */
+const FOUND_ICONS=['flag','work','study','home','money','travel','family','fitness','health','creative','garden','tech'];
+function qlog(q,text){q.log=q.log||[];q.log.push({at:Date.now(),text});}
+function hashPick(a,key){let h=0;for(let i=0;i<key.length;i++)h=(h*31+key.charCodeAt(i))>>>0;return a[h%a.length];}
+function openFound(){
+  U.toast=null;renderToast();U.menu=false;U.sheet=null;
+  U.council={kind:'found',focus:'',dragonId:null,mood:'steady',pickOpen:false,line:''};
+  const R=ritStart('found',false);
+  R.f={name:'',icon:'flag',goal:'',stakes:'',enemy:'',due:'',reward:'',cry:'',moves:[]};
+  renderOverlay();
+}
+function openVictory(qid){
+  const q=questOf(qid);if(!q||q.done)return;
+  U.toast=null;renderToast();U.sheet=null;
+  U.council={kind:'victory',focus:'',dragonId:null,mood:'steady',pickOpen:false,line:''};
+  const R=ritStart('victory',false);R.qid=qid;renderOverlay();
+}
+const STAKE_R=['Noted. I will tell your descendants it was a close one.','Grim. Good. Stakes are what turn a list into a campaign.','I have written that in the margin, in small letters.','High stakes, low sleep. Classic.','Understood. I shall wince on your behalf.'];
+function reactEnemy(t){
+  t=(t||'').trim();if(!t)return '';const l=t.toLowerCase();
+  if(/job|hunt|interview|\bcv\b|resume|career|recruit/.test(l))return 'Recruiters. The oldest enemy. They ghost you, then ask for a call.';
+  if(/move|house|flat|apartment|boxes/.test(l))return 'Boxes. They multiply in the night. I have seen it.';
+  if(/exam|study|thesis|degree|course/.test(l))return 'Knowledge. A fearsome foe, mostly because it is boring.';
+  if(/procrast|lazy|motivation|sofa|phone/.test(l))return 'Procrastination. An old rival of ours, my lord.';
+  if(/run|marathon|weight|gym|fit/.test(l))return 'Your own legs, and a sofa that knows your weaknesses.';
+  if(/tax|admin|paper|bureau/.test(l))return 'Paperwork. It does not die. It is merely filed.';
+  return hashPick(['“'+t+'”. A worthy name for a villain. I shall draw it menacingly.','“'+t+'”. I have already begun to dislike it.','“'+t+'”. It does not know what is coming. Neither do I, but I am hopeful.'],t);
+}
+function foundStepHTML(){
+  const C=U.council,R=C.rit,f=R.f,s=ritStep();
+  const sh=(ic,col,t,sub)=>`<div class="rh"><span class="tl">${ico(ic,22,col,1.7)}</span><h2>${t}</h2><p>${sub}</p></div>`;
+  const ban=()=>`<div class="banr"><span class="bi">${ico(f.icon,28,'#FFF3E3',1.5)}</span><b id="fBannerT">${esc(f.name||'Unnamed campaign')}</b></div>`;
+  if(s==='summons')return ritHero(1)+`<p class="rcap">A NEW CAMPAIGN</p><h1>A new campaign, my lord.</h1><p class="rsay big">${esc(R.wline)}</p>`;
+  if(s==='name')return ritHero(3,'s')+sh('flag','var(--brass-l)','Name the campaign','Every great war has a title')+ban()+`<input id="fName" class="inp" type="text" value="${esc(f.name)}" placeholder="Operation Dream Job" autocomplete="off" aria-label="Campaign name" style="margin-top:12px"><div class="ricons">${FOUND_ICONS.map(k=>`<button type="button" class="chip ${f.icon===k?'on':''}" style="width:46px;padding:0;justify-content:center" data-act="fIcon" data-v="${k}" aria-label="${k}">${ico(k,22,'var(--brass-l)',1.5)}</button>`).join('')}</div>`;
+  if(s==='goal')return ritHero(1,'s')+sh('compass','var(--brass-l)','The goal','What does victory look like?')+`<textarea id="fGoal" class="tb big" rows="4" placeholder="One clear sentence" aria-label="The goal">${esc(f.goal)}</textarea>`;
+  if(s==='stakes')return ritHero(4,'s')+sh('flame','var(--glow)','The stakes','And if you fail?')+`<textarea id="fStakes" class="tb big" rows="4" placeholder="What is lost, and who notices" aria-label="The stakes">${esc(f.stakes)}</textarea><p class="rsay" id="fReact">${f.stakes.trim()?esc(hashPick(STAKE_R,f.stakes.trim().split(/\s+/)[0])):''}</p>`;
+  if(s==='enemy')return ritHero(10,'s')+sh('eye','var(--glow)','The enemy','Name the thing in your way')+`<input id="fEnemy" class="inp" type="text" value="${esc(f.enemy)}" placeholder="Recruiter ghosting, procrastination..." autocomplete="off" aria-label="The enemy" style="margin-top:12px"><p class="rsay" id="fReact">${esc(reactEnemy(f.enemy))}</p>`;
+  if(s==='terms'){
+    return ritHero(1,'s')+sh('week','var(--brass-l)','The terms','A deadline, and what you win')+`<div class="fd"><label for="fDue">DEADLINE</label><input id="fDue" class="inp" type="date" value="${esc(f.due)}" aria-label="Deadline"></div><div class="chips sm" style="margin:8px 0 0">${[['14','2 weeks'],['30','1 month'],['90','3 months'],['','No date']].map(([d,l])=>`<button type="button" class="chip" data-act="fDue" data-v="${d}">${l}</button>`).join('')}</div><div class="fd" style="margin-top:14px"><label for="fReward">THE SPOILS</label><textarea id="fReward" class="tb" rows="2" placeholder="What do you get when you win?" aria-label="The spoils">${esc(f.reward)}</textarea></div>`;
+  }
+  if(s==='cry')return ritHero(8,'s')+sh('bolt','var(--brass-l)','A war cry','Optional. Sir Reg will shout it at you')+`<input id="fCry" class="inp" type="text" value="${esc(f.cry)}" placeholder="Onward." autocomplete="off" aria-label="War cry" style="margin-top:12px"><div class="chips sm" style="margin:8px 0 0">${['Onward.','No retreat.','One card at a time.','Fortune favours the finished.'].map((x,i)=>`<button type="button" class="chip" data-act="fCry" data-v="${i}">${esc(x)}</button>`).join('')}</div>`;
+  if(s==='moves'){
+    const chips=f.moves.map((m,i)=>`<div class="rchip"><span class="tl2">${ico('plus',16,'var(--brass-l)',2)}</span><span class="rt">${esc(m)}</span><small>TO DO</small><button type="button" class="ib quiet" style="width:34px;height:34px;border:0;background:none" data-act="fMoveDel" data-v="${i}" aria-label="Remove">${ico('x',16,'currentColor',2)}</button></div>`).join('');
+    return ritHero(5,'s')+sh('path','var(--brass-l)','The first moves','Commas between them, each becomes a card')+`<div class="arow" style="margin-top:12px"><input id="fMoveIn" class="inp" type="text" placeholder="Update CV, list targets, call Max" autocomplete="off" enterkeyhint="done" aria-label="First moves"><button type="button" class="go" data-act="fMoveAdd" aria-label="Add">${ico('plus',22,'currentColor',2.6)}</button></div><div class="rchips">${chips}</div>`;
+  }
+  if(s==='oath'){
+    return ban()+`<div class="osum">${f.goal?`<p>${esc(f.goal)}</p>`:''}${f.enemy?`<small>ENEMY</small><b>${esc(f.enemy)}</b>`:''}${f.due?`<small>DEADLINE</small><b>${esc(shortDue(f.due))}</b>`:''}${f.moves.length?`<small>FIRST MOVES</small><b>${f.moves.length}</b>`:''}</div>
+    <div class="oath" data-oath role="button" tabindex="0" aria-label="Hold to swear the oath"><svg viewBox="0 0 160 160" aria-hidden="true"><circle cx="80" cy="80" r="70" class="o0"/><circle cx="80" cy="80" r="70" class="o1"/></svg><span class="od">${ico(f.icon,44,'#FFF3E3',1.5)}</span></div><p class="rsay">Hold the seal to swear the oath.</p>`;
+  }
+  /* sworn */
+  const q=questOf(R.qid),n=S.tasks.filter(t=>q&&t.q===q.id).length;
+  const sparks=Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg"></i>`).join('');
+  return `<div class="wax"><span class="ring"></span><span class="sparks">${sparks}</span><span class="disc">${ico(f.icon,54,'#FFF3E3',1.6)}</span></div><h1 class="sealh">The campaign is sworn.</h1><p class="rsay big">${esc(R.seal||'There is no refund.')}</p>
+  <div class="rsum"><div><i>CAMPAIGN</i><b>${esc(f.name)}</b></div>${f.cry?`<div><i>WAR CRY</i><b>${esc(f.cry)}</b></div>`:''}${n?`<div><i>CARDS</i><b>${n} on the board</b></div>`:''}${f.due?`<div><i>DEADLINE</i><b>${esc(shortDue(f.due))}</b></div>`:''}</div>`;
+}
+function foundFootHTML(){
+  const s=ritStep();
+  if(s==='summons')return `<button type="button" class="btn big" data-act="rNext">Unroll the map</button><button type="button" class="rskip" data-act="closeCouncil">Not now</button>`;
+  if(s==='name')return `<button type="button" class="btn big" data-act="rNext">Next</button>`;
+  if(s==='oath')return `<span class="rnote" style="text-align:center">Nothing is created until you swear.</span>`;
+  if(s==='sworn')return `<button type="button" class="btn big" data-act="rFinish">Open the war room</button>`;
+  return `<button type="button" class="btn big" data-act="rNext">Next</button><button type="button" class="rskip" data-act="rNext">Skip this step</button>`;
+}
+function foundRead(){
+  const R=U.council.rit;const g=$('#fMoveIn');if(g&&g.value.trim())foundMoves(g.value);
+}
+function foundMoves(raw){
+  const R=U.council.rit;String(raw).split(',').map(x=>x.trim()).filter(Boolean).forEach(x=>R.f.moves.push(x[0].toUpperCase()+x.slice(1)));
+  const g=$('#fMoveIn');if(g)g.value='';
+}
+function foundSetDue(d){const R=U.council.rit;if(!d)R.f.due='';else R.f.due=addDays(today(),+d);}
+const DAY1=['Day 1. The adventurer begins. Provisions: optimism.','Day 1. The map is unrolled. The enemy has not noticed us yet.','Day 1. A campaign is sworn. The quills are sharp and the coffee is hot.'];
+function ritOath(){
+  const C=U.council,R=C.rit,f=R.f;if(!f||!f.name.trim())return;
+  const g=$('#fMoveIn');if(g&&g.value.trim())foundMoves(g.value);
+  const q={id:uid(),title:f.name.trim(),icon:f.icon,due:f.due||'',created:Date.now(),cols:DEFCOLS(),log:[],ms:[]};
+  ['goal','stakes','reward','enemy','cry'].forEach(k=>{if((f[k]||'').trim())q[k]=f[k].trim();});
+  S.quests.push(q);
+  const col=startCol(q);
+  f.moves.forEach(m=>{const t={id:uid(),title:m,cat:S.last||S.cats[0].id,date:'',time:'',dur:30,done:false,moves:0,createdAt:Date.now(),rep:'',q:q.id,col,ord:endOrd(q,col)};S.tasks.push(t);assignCol(t,col);logEv('added',t,{raw:m,catManual:false,suggested:'',batch:false,viaCeremony:true});});
+  qlog(q,hashPick(DAY1,q.id)+(q.enemy?' Enemy sighted: '+q.enemy+'.':'')+(f.moves.length?' '+f.moves.length+(f.moves.length===1?' card':' cards')+' in the first muster.':''));
+  q.rank=rankOf(campStats(q),q)[0];
+  R.qid=q.id;R.seal=hashPick(['There is no refund.','The seal is dry. The die is cast.','Sworn. I have told the scribes.'],q.id);
+  R.i=R.steps.indexOf('sworn');R.fresh=true;
+  save();LC.key='';render(true);renderOverlay();R.fresh=false;
+  try{navigator.vibrate&&navigator.vibrate([20,40,60]);}catch(x){}
+}
+/* hold to swear */
+let oathT=0;
+function oathStop(){if(oathT){clearTimeout(oathT);oathT=0;}document.querySelectorAll('.oath.hold').forEach(b=>b.classList.remove('hold'));}
+document.addEventListener('pointerdown',e=>{
+  const b=e.target.closest&&e.target.closest('[data-oath]');if(!b||!U.council||!U.council.rit||U.council.rit.kind!=='found')return;
+  e.preventDefault();b.classList.add('hold');oathStop();b.classList.add('hold');
+  oathT=setTimeout(()=>{oathT=0;if(U.council&&U.council.rit&&ritStep()==='oath')ritOath();},1800);
+  try{navigator.vibrate&&navigator.vibrate(12);}catch(x){}
+});
+['pointerup','pointercancel'].forEach(ev=>document.addEventListener(ev,oathStop));
+document.addEventListener('contextmenu',e=>{if(e.target.closest&&e.target.closest('[data-oath]'))e.preventDefault();});
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[data-oath]')&&U.council&&U.council.rit&&U.council.rit.kind==='found'){e.preventDefault();ritOath();}});
+/* live inputs */
+document.addEventListener('input',e=>{
+  const t=e.target,R=U.council&&U.council.rit;if(!R||R.kind!=='found')return;
+  const map={fName:'name',fGoal:'goal',fStakes:'stakes',fEnemy:'enemy',fDue:'due',fReward:'reward',fCry:'cry'};
+  const k=map[t.id];if(!k)return;R.f[k]=t.value;
+  if(k==='name'){const b=$('#fBannerT');if(b)b.textContent=t.value||'Unnamed campaign';}
+  if(k==='stakes'||k==='enemy'){const r=$('#fReact');if(r)r.textContent=k==='enemy'?reactEnemy(t.value):(t.value.trim()?hashPick(STAKE_R,t.value.trim().split(/\s+/)[0]):'');}
+});
+document.addEventListener('keydown',e=>{
+  const R=U.council&&U.council.rit;if(!R||R.kind!=='found'||e.key!=='Enter')return;
+  if(e.target.id==='fName'||e.target.id==='fEnemy'||e.target.id==='fCry'){e.preventDefault();ritNext();}
+  else if(e.target.id==='fMoveIn'){e.preventDefault();foundAct('fMoveAdd');}
+});
+/* ---------- victory ---------- */
+function victStepHTML(){
+  const C=U.council,R=C.rit,q=questOf(R.qid),s=ritStep();if(!q)return '';
+  const st=campStats(q),days=Math.max(1,diffDays(today(),ymd(new Date(q.created||Date.now())))+1);
+  const sh=(ic,col,t,sub)=>`<div class="rh"><span class="tl">${ico(ic,22,col,1.7)}</span><h2>${t}</h2><p>${sub}</p></div>`;
+  if(s==='triumph')return ritHero(6)+`<p class="rcap">${esc(q.title.toUpperCase())}</p><h1>It is done, my lord.</h1><p class="rsay big">${esc(q.enemy?q.enemy+' has fallen. I will not say I doubted you.':'Every card cleared. The realm is yours.')}</p>`;
+  if(s==='tally')return ritHero(6,'s')+sh('crown','var(--brass-l)','The tally','What the war was made of')+`<div class="rsum" style="max-width:none"><div><i>DAYS</i><b>${days}</b></div><div><i>SLAIN</i><b>${st.done} cards</b></div><div><i>XP</i><b>${st.xp}</b></div>${q.enemy?`<div><i>ENEMY</i><b>${esc(q.enemy)}, defeated</b></div>`:''}${q.cry?`<div><i>WAR CRY</i><b>${esc(q.cry)}</b></div>`:''}</div>`;
+  if(s==='spoils')return ritHero(3,'s')+sh('flag','var(--glow)','The spoils','Claim what you swore to win')+`<div class="spoils"><i>THE SPOILS</i><b>${esc(q.reward||'Glory, and the right to say “I told you so”.')}</b></div><p class="rsay">You earned the smugness. Use it responsibly.</p>`;
+  const sparks=Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg"></i>`).join('');
+  return `<div class="wax"><span class="ring"></span><span class="sparks">${sparks}</span><span class="disc">${ico('crown',54,'#FFF3E3',1.6)}</span></div><h1 class="sealh">Campaign complete.</h1><p class="rsay big">${esc(R.seal||'Another one for the chronicles.')}</p><div class="rsum"><div><i>CAMPAIGN</i><b>${esc(q.title)}</b></div><div><i>DAYS</i><b>${days}</b></div></div>`;
+}
+function victFootHTML(){
+  const s=ritStep();
+  if(s==='triumph')return `<button type="button" class="btn big" data-act="rNext">Onward</button>`;
+  if(s==='spoils')return `<button type="button" class="btn big" data-act="rNext">Claim the spoils</button>`;
+  if(s==='seal')return `<button type="button" class="btn big" data-act="rFinish">Back to the realm</button>`;
+  return `<button type="button" class="btn big" data-act="rNext">Next</button>`;
+}
+function ritClaim(){
+  const R=U.council.rit,q=questOf(R.qid);if(!q||q.done)return;
+  q.done=true;q.doneAt=Date.now();qlog(q,'Victory. '+(q.reward?'Spoils claimed: '+q.reward:'Glory claimed.'));
+  R.seal=hashPick(['Another one for the chronicles.','The enemy sends its regrets.','Victory, sealed and filed.'],q.id);
+  save();LC.key='';render(true);
+}
+/* ---------- progress hook: milestones and rank ups ---------- */
+function campProgress(t){
+  if(!t||!t.q||!t.done)return;const q=questOf(t.q);if(!q||q.done)return;
+  const s=campStats(q);q.ms=q.ms||[];let line=null;
+  const add=(k,txt,short)=>{if(q.ms.includes(k))return;q.ms.push(k);qlog(q,txt);line=short;};
+  add('first','First blood. One card slain.','First blood.');
+  [[25,'The troops are mustered (25%).','Troops mustered.'],[50,'The border is crossed (50%).','Border crossed.'],[75,'The gates are in sight (75%).','At the gates.']].forEach(m=>{if(s.pc>=m[0])add('m'+m[0],m[1],m[2]);});
+  const rk=rankOf(s,q)[0];
+  if(q.rank&&q.rank!==rk&&rk!=='Victory'){qlog(q,'Promoted: '+rk+'.');line='Rank up: '+rk+'.';}
+  q.rank=rk;save();
+  if(s.n&&s.done===s.n){setTimeout(()=>{if(!U.council)openVictory(q.id);},600);return;}
+  if(line)setTimeout(()=>toast({face:6,text:line}),900);
+}
+/* ---------- brief extras ---------- */
+function briefExtras(q){
+  const s=campStats(q);
+  const st=q.done||(s.n&&s.done===s.n)?'Defeated':s.pc>=75?'Fleeing':s.pc>=50?'Wounded':s.pc>0?'Rattled':'Lurking';
+  const pinned=S.settings.pin===q.id;
+  const log=(q.log||[]).slice().reverse().slice(0,8);
+  return {
+    cry:q.cry?`<p class="cry">“${esc(q.cry)}”</p>`:'',
+    enemy:q.enemy?`<div class="etile"><span class="qtile">${ico('horned',24,'var(--glow)',1.5)}</span><div><i>THE ENEMY</i><b>${esc(q.enemy)}</b></div><em>${st.toUpperCase()}</em></div>`:'',
+    journal:log.length?`<div class="bf"><label>The journal</label><div class="jlog">${log.map(e=>{const d=new Date(e.at);return `<div><span class="mono">${d.getDate()} ${MON[d.getMonth()].toUpperCase()}</span><p>${esc(e.text)}</p></div>`;}).join('')}</div></div>`:'',
+    pin:`<button type="button" class="btn ghost pinb" data-act="campPin" data-id="${q.id}">${pinned?'Unpin from home':'Pin to home'}</button>`
+  };
+}
+function foundAct(act,v,id){
+  const C=U.council,R=C&&C.rit;
+  switch(act){
+    case 'fIcon':if(R){R.f.icon=v;renderOverlay();}return true;
+    case 'fDue':if(R){foundSetDue(v);renderOverlay();}return true;
+    case 'fCry':if(R){R.f.cry=['Onward.','No retreat.','One card at a time.','Fortune favours the finished.'][+v];renderOverlay();}return true;
+    case 'fMoveAdd':{if(!R)return true;const g=$('#fMoveIn');if(g&&g.value.trim()){foundMoves(g.value);renderOverlay();const x=$('#fMoveIn');x&&x.focus();}return true;}
+    case 'fMoveDel':if(R){R.f.moves.splice(+v,1);renderOverlay();}return true;
+    case 'campPin':{S.settings.pin=S.settings.pin===id?'':id;save();render(true);renderOverlay();return true;}
+  }
+  return false;
 }
 
 /* ---------- extensions: quests, side quests, dragons, councils, sync, shortcuts ---------- */
@@ -2390,7 +2617,7 @@ function extAct(act,v,id,el){
     case 'councilK':openCouncil(v);break;
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;
     /* quests */
-    case 'addQuest':U.qs={id:null,title:'',icon:'flag',due:'',open:null,confirmDel:false};U.sheet='quest';renderOverlay();setTimeout(()=>{const x=$('#qTitle');x&&x.focus();},60);break;
+    case 'addQuest':openFound();break;
     case 'openQuest':{const q=questOf(id);if(!q)break;U.camp={id:q.id,tab:'brief'};renderOverlay();break;}
     case 'qOpen':{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.open=U.qs.open===v?null:v;renderOverlay();break;}
     case 'qNoDate':U.qs.due='';U.qs.open=null;renderOverlay();break;
@@ -2403,7 +2630,7 @@ function extAct(act,v,id,el){
     case 'qTick':{tick(id);U.qs&&U.qs.id&&(U.sheet='quest');renderOverlay();break;}
     case 'qEditTask':U.sheet=null;openAdd(id);break;
     case 'qAddTask':{const qid=U.qs.id;U.sheet=null;openAdd(null);U.add.q=qid;refreshMeta();break;}
-    case 'qDone':{const o=questOf(U.qs.id);if(o){o.done=!o.done;save();if(o.done){const l=say('questDone');if(o.reward)l.text='Victory. Claim your spoils: '+o.reward;toast(l);}U.sheet=null;render();}break;}
+    case 'qDone':{const o=questOf(U.qs.id);if(o){if(o.done){o.done=false;save();U.sheet=null;render();}else{U.sheet=null;U.qs=null;renderOverlay();openVictory(o.id);}}break;}
     case 'qDel':if(U.qs.confirmDel){const qid=U.qs.id;S.tasks=S.tasks.filter(t=>!(t.q===qid&&!t.date));S.tasks.forEach(t=>{if(t.q===qid){t.q='';delete t.col;delete t.ord;}});S.quests=S.quests.filter(x=>x.id!==qid);save();U.sheet=null;U.camp=null;render();}else{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.confirmDel=true;renderOverlay();}break;
     /* ideas */
     case 'addIdea':U.is={id:null,text:'',hall:v||S.halls[0].id,confirmDel:false};U.sheet='idea';renderOverlay();setTimeout(()=>{const x=$('#iTitle');x&&x.focus();},60);break;

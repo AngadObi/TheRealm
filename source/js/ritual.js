@@ -1,7 +1,7 @@
 /* ---------- the guided Council ritual (Day and Week) ---------- */
-const RIT_STEPS={emergency:['welcome','chamber','triage','dragon','exit'],day:['welcome','focus','goals','left','dragon','mood','seal'],week:['welcome','focus','goals','week','left','dragon','seal']};
+const RIT_STEPS={found:['summons','name','goal','stakes','enemy','terms','cry','moves','oath','sworn'],victory:['triumph','tally','spoils','seal'],emergency:['welcome','chamber','triage','dragon','exit'],day:['welcome','focus','goals','left','dragon','mood','seal'],week:['welcome','focus','goals','week','left','dragon','seal']};
 const RIT_FACE={welcome:1,focus:1,goals:5,week:4,left:2,dragon:8,mood:3,seal:6};
-function ritStore(kind){return (kind==='day'||kind==='emergency')?(S.plans[today()]||{}):(S.cplans[wkKey()]||{});}
+function ritStore(kind){if(kind==='found'||kind==='victory')return {};return (kind==='day'||kind==='emergency')?(S.plans[today()]||{}):(S.cplans[wkKey()]||{});}
 function ritWanted(kind){
   const p=ritStore(kind);
   if(p.saved)return false;
@@ -12,6 +12,7 @@ function ritWanted(kind){
 function ritWelcome(kind,c){
   const d=new Date(),h=d.getHours(),dow=d.getDay();
   const pick=a=>a[Math.floor(Math.random()*a.length)];
+  if(kind==='found')return pick(['Every great war begins with a name and a bad idea. Let us find both.','A campaign. Splendid. Nobody has ever regretted starting one, at least not at the start.','Sit. The map is blank and so is the enemy. We fix that first.','The scribes are ready. The enemy is not. Perfect.']);
   if(kind==='emergency'){
     if(h>=21||h<5)return 'It is late and everything looks bigger at night. Write it down and we shall shrink it.';
     return pick(['Breathe, my lord. The realm will wait. I have told it to.','Emergency council. Sit. Nothing here is on fire that cannot be put in a list.','Whatever it is, we will make it smaller. Sit down.','The doors are closed and the candles are lit. Nobody is coming in until you are ready.']);
@@ -44,18 +45,21 @@ function ritStart(kind,resume){
 function ritStep(){const R=U.council.rit;return R.steps[R.i];}
 function ritGo(i){
   const R=U.council.rit;ritRead();const dir=i>=R.i?1:-1;
+  if(R.kind==='found'&&ritStep()==='name'&&i>R.i&&!(R.f.name||'').trim()){const n=$('#fName');if(n){n.focus();n.classList.remove('shake');void n.offsetWidth;n.classList.add('shake');}return;}
   R.i=Math.max(0,Math.min(R.steps.length-1,i));R.fresh=true;
   if(ritStep()==='left'&&!context().over.length){R.i+=dir;}
   if(ritStep()==='seal')ritSeal();
   if(ritStep()==='exit')ritEmSave();
+  if(R.kind==='victory'&&ritStep()==='seal')ritClaim();
   renderOverlay();R.fresh=false;
-  setTimeout(()=>{const x=$('#goalIn')||$('#focusTxt');if(x&&ritStep()!=='seal'&&ritStep()!=='welcome')x.focus();},320);
+  setTimeout(()=>{const x=$('#goalIn')||$('#focusTxt')||$('#fName')||$('#fGoal')||$('#fStakes')||$('#fEnemy')||$('#fCry')||$('#fMoveIn');if(x&&!['seal','sworn','welcome'].includes(ritStep()))x.focus();},320);
 }
 function ritNext(){ritGo(U.council.rit.i+1);}
 function ritBack(){const R=U.council.rit;if(R.i>0)ritGo(R.i-1);}
-function ritCanBack(){const R=U.council&&U.council.rit;return !!R&&R.i>0&&ritStep()!=='seal';}
+function ritCanBack(){const R=U.council&&U.council.rit;return !!R&&R.i>0&&ritStep()!=='seal'&&ritStep()!=='sworn';}
 function ritRead(){
   const C=U.council,f=$('#focusTxt');if(f)C.focus=f.value;
+  if(C.rit.kind==='found')foundRead();
   if(C.rit.kind==='emergency'&&ritStep()==='chamber')ritChamber();
   const g=$('#goalIn');if(g&&g.value.trim())ritCommit(g.value);
 }
@@ -87,18 +91,20 @@ function ritSeal(){
 }
 function ritPersist(){
   const C=U.council;if(!C||!C.rit)return;
-  const R=C.rit;if(ritStep()==='seal'||ritStep()==='exit')return;
+  const R=C.rit;if(R.kind==='found'||R.kind==='victory')return;if(ritStep()==='seal'||ritStep()==='exit')return;
   if(R.kind==='emergency'){if(ritStep()==='chamber')ritChamber();ritEmSave();return;}
   const f=$('#focusTxt');if(f)C.focus=f.value;
   if(R.i>0||C.focus)ritSave(false);
 }
-function ritFinish(){U.council=null;LC.key='';render();renderHead();}
+function ritFinish(){const R=U.council&&U.council.rit,qid=R&&R.kind==='found'?R.qid:null;U.council=null;LC.key='';if(qid)U.camp={id:qid,tab:'brief'};render();renderHead();}
 function ritDots(){const R=U.council.rit;return R.steps.map((s,i)=>`<i class="${i===R.i?'on':i<R.i?'dn':''}"></i>`).join('');}
 function ritAgainBtn(kind){return (kind==='day'||kind==='week')?`<button type="button" class="rskip" data-act="ritAgain" data-v="${kind}">Hold the ceremony again</button>`:'';}
 function ritHero(face,cls){return `<div class="rk ${cls||''}"><img src="${kn(face)}" alt="Sir Reg"></div>`;}
 function ritSky(){let h='';for(let i=0;i<16;i++){const x=(i*37+11)%100,y=(i*53+7)%62,d=(i*0.6)%5;h+=`<i class="st" style="left:${x}%;top:${y}%;animation-delay:-${d}s"></i>`;}
   for(let i=0;i<9;i++){const x=(i*29+8)%100,d=(i*1.7)%9;h+=`<i class="em" style="left:${x}%;animation-delay:-${d}s;animation-duration:${8+(i%4)*2}s"></i>`;}return h;}
 function ritStepHTML(){
+  if(U.council.rit.kind==='found')return foundStepHTML();
+  if(U.council.rit.kind==='victory')return victStepHTML();
   const C=U.council,R=C.rit,s=ritStep(),c=context(),wk=R.kind==='week';
   const sh=(ic,col,t,sub)=>`<div class="rh"><span class="tl">${ico(ic,22,col,1.7)}</span><h2>${t}</h2><p>${sub}</p></div>`;
   const line=(RIT_LINES[s]||{})[R.kind];const say1=line?`<p class="rsay">${esc(line[0])}</p>`:'';
@@ -169,6 +175,8 @@ function ritStepHTML(){
   <div class="rsum">${C.focus?`<div><i>FOCUS</i><b>${esc(C.focus)}</b></div>`:''}<div><i>${wk?'THIS WEEK':'TODAY'}</i><b>${duties} ${duties===1?'duty':'duties'}</b></div>${dt?`<div><i>DRAGON</i><b>${esc(dt.title)}</b></div>`:''}${!wk&&mood?`<div><i>MOOD</i><b>${esc(mood)}</b></div>`:''}</div>`;
 }
 function ritFootHTML(){
+  if(U.council.rit.kind==='found')return foundFootHTML();
+  if(U.council.rit.kind==='victory')return victFootHTML();
   const R=U.council.rit,s=ritStep();
   if(s==='welcome')return `<button type="button" class="btn big" data-act="rNext">Begin</button><button type="button" class="rskip" data-act="closeCouncil">Not now</button>`;
   if(s==='seal')return `<button type="button" class="btn big" data-act="rFinish">To battle</button>`;
@@ -199,6 +207,7 @@ function ritDraw(){
   return true;
 }
 function ritAct(act,v,id){
+  if(foundAct(act,v,id))return true;
   const C=U.council;
   switch(act){
     case 'notesOpen':U.menu=false;U.sheet='notes';renderOverlay();return true;
