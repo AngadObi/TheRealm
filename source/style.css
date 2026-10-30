@@ -609,3 +609,8 @@ section.cat{position:relative}
 .ncard{margin-top:12px;padding:16px;border-radius:6px}
 .nch{margin-top:28px}
 .full.camp .chd{min-height:76px;box-sizing:border-box}
+.full.camp .brief{overflow-x:hidden;overflow-y:auto;overscroll-behavior-x:none}
+.hero{overflow:hidden}
+.hero .hglow{width:100%;left:0;transform:none}
+.full *{scrollbar-width:none;-ms-overflow-style:none}
+.full *::-webkit-scrollbar{display:none;width:0;height:0}
