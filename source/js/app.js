@@ -456,13 +456,13 @@ function renderOverlay(){
   if(U.sheet==='add')h+=addSheetHTML();
   if(U.sheet==='newcat')h+=newCatHTML();
   if(U.sheet==='tray')h+=trayHTML();
-  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const kcs={};host.querySelectorAll('.kcol').forEach(k=>{kcs[k.dataset.col]=k.querySelector('.kcards').scrollTop;});const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;const keepW=host.querySelector('.nwrap');const kws=keepW?keepW.scrollTop:0;
+  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const kcs={};host.querySelectorAll('.kcol').forEach(k=>{kcs[k.dataset.col]=k.querySelector('.kcards').scrollTop;});const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;const keepW=host.querySelector('.nwrap,.brief');const kws=keepW?keepW.scrollTop:0;
   const sig=el=>el.className+'|'+(el.getAttribute('aria-label')||'');
   const prev=new Set([...host.children].map(sig));
   host.innerHTML=h;
   [...host.children].forEach(el=>{if(prev.has(sig(el)))el.style.animation='none';});
   const f=host.querySelector('.full');if(f)f.scrollTop=ks;
-  const nw=host.querySelector('.nwrap');if(nw&&kws)nw.scrollTop=kws;
+  const nw=host.querySelector('.nwrap,.brief');if(nw&&kws)nw.scrollTop=kws;
   const nb=host.querySelector('.kboard');if(nb)nb.scrollLeft=kbs;host.querySelectorAll('.kcol').forEach(k=>{if(kcs[k.dataset.col])k.querySelector('.kcards').scrollTop=kcs[k.dataset.col];});
   if(typeof navSync==='function')navSync();
 }

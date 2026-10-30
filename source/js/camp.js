@@ -71,42 +71,49 @@ function campLine(q){
 const MILES=[[25,'Muster the troops'],[50,'Cross the border'],[75,'Storm the gates'],[100,'Victory']];
 function journeyHTML(q,s){
   const rk=rankOf(s,q);
-  const cap=q.due?(s.left<0?-s.left+'d overdue':s.left===0?'battle today':s.left+'d left'):'no deadline set';
-  return `<div class="jr"><div class="jt"><i style="width:${s.pc}%"></i>${MILES.slice(0,3).map(m=>`<u style="left:${m[0]}%" class="${s.pc>=m[0]?'on':''}"></u>`).join('')}<span class="jm" style="left:${s.pc}%">${ico('family',16,'var(--page)',2)}</span></div><div class="jc"><b>${rk[0].toUpperCase()}</b><span>${s.done}/${s.n} \u00b7 ${cap}</span></div></div>`;
+  return `<div class="jr2"><div class="hbar"><i style="width:${Math.max(3,s.pc)}%"></i></div><b>${rk[0]}</b></div>`;
 }
 function dueHTML(q){
   const td=today();
   const ts=S.tasks.filter(t=>t.q===q.id&&!t.done&&t.date).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.time||'99')<(b.time||'99')?-1:1);
-  const rows=ts.slice(0,8).map(t=>{const d=diffDays(t.date,td);const w=d<0?`<b class="od">${-d}d overdue</b>`:d===0?'<b class="soon">today</b>':d===1?'tomorrow':shortDue(t.date).toLowerCase();
+  if(!ts.length)return '<p class="bempty">Nothing dated yet. Give a card a date and it shows up here.</p>';
+  const rows=ts.slice(0,5).map(t=>{const d=diffDays(t.date,td);const w=d<0?`<span class="od">${shortDue(t.date).toLowerCase()}</span>`:d===0?'<span class="soon">today</span>':d===1?'tomorrow':shortDue(t.date).toLowerCase();
     return `<div class="dr"><button type="button" class="cb" data-act="kTick" data-id="${t.id}" aria-label="Mark done: ${esc(t.title)}"><i></i></button><span class="kt" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b></span><em>${w}${t.time?' '+t.time:''}</em></div>`;}).join('');
-  return `<div class="bf"><label>Due</label>${rows?`<div class="dues">${rows}</div>${ts.length>8?`<p class="note" style="border:0;background:none;padding:4px 0 0;margin:0">and ${ts.length-8} more</p>`:''}`:'<p class="note" style="margin:0">Nothing dated. Give a card a date and it shows up here and on your days.</p>'}</div>`;
+  return `<div class="dues">${rows}</div>${ts.length>5?`<p class="bempty" style="margin-top:10px">and ${ts.length-5} more on the board</p>`:''}`;
 }
 function briefHTML(q){
   const s=campStats(q),rk=rankOf(s,q),L=campLine(q),C=U.camp,ex=briefExtras(q);
-  const fld=(k,label,ph)=>{const v=q[k]||'';return `<div class="bf"><label>${label}</label>${C.edit===k||!v?`<textarea id="bf_${k}" class="note ta" rows="2" placeholder="${ph}" data-k="${k}">${esc(v)}</textarea>`:`<div class="note" data-act="briefEdit" data-v="${k}">${linkify(v)}</div>`}</div>`;};
-  const cryB=q.cry&&C.edit!=='cry'?`<p class="cry" data-act="briefEdit" data-v="cry">\u201c${esc(q.cry)}\u201d</p>`:'';
-  const enB=q.enemy&&C.edit!=='enemy'?ex.enemy.replace('class="etile"','class="etile" data-act="briefEdit" data-v="enemy"'):fld('enemy','The enemy','Who or what stands in your way?');
-  return `<div class="brief"><div class="bsr"><img src="${kn(L.face)}" alt=""><span>${esc(L.text)}</span></div>${cryB}
-  <div class="rank"><span class="qtile">${ico(rk[1],26,'var(--glow)',1.5)}</span><div><b>${rk[0]}</b><i>${s.xp} XP \u00b7 ${s.pc}% OF THE CAMPAIGN</i></div></div>
-  ${enB}${dueHTML(q)}
-  ${fld('goal','The goal','What does victory look like?')}${fld('stakes','At stake','What happens if you do not finish?')}${fld('reward','The spoils','What do you get when you win?')}${q.cry&&C.edit!=='cry'?'':fld('cry','War cry','Optional, one line')}
-  <div class="tiles"><div><b>${s.done}</b><i>SLAIN</i></div><div><b>${s.doing}</b><i>IN BATTLE</i></div><div><b>${s.blocked}</b><i>BLOCKED</i></div><div><b>${s.left===null?'-':Math.max(0,s.left)}</b><i>DAYS LEFT</i></div></div>
-  <div class="mil">${MILES.map(m=>`<div class="${s.pc>=m[0]?'on':''}"><span>${s.pc>=m[0]?ico('check',14,'currentColor',3):''}</span>${m[1]}<em>${m[0]}%</em></div>`).join('')}</div>${ex.journal}${ex.pin}</div>`;
+  const ta=(k,ph)=>`<textarea id="bf_${k}" class="note ta" rows="3" placeholder="${ph}" data-k="${k}" aria-label="${ph}">${esc(q[k]||'')}</textarea>`;
+  const field=(k,cls,ph,add)=>C.edit===k?ta(k,ph):q[k]?`<div class="${cls}" data-act="briefEdit" data-v="${k}">${linkify(q[k])}</div>`:`<button type="button" class="badd" data-act="briefEdit" data-v="${k}">+ ${add}</button>`;
+  const cry=C.edit==='cry'?ta('cry','A war cry, one line'):q.cry?`<p class="cry" data-act="briefEdit" data-v="cry">“${esc(q.cry)}”</p>`:`<button type="button" class="badd quiet" data-act="briefEdit" data-v="cry">+ War cry</button>`;
+  const done=q.done||(s.n&&s.done===s.n);
+  const st=done?'Defeated':s.pc>=75?'Fleeing':s.pc>=50?'Wounded':s.pc>0?'Rattled':'Lurking';
+  const enemy=C.edit==='enemy'?ta('enemy','Who or what stands in your way?'):q.enemy?`<div class="etile" data-act="briefEdit" data-v="enemy"><span class="qtile">${ico('horned',26,'var(--glow)',1.5)}</span><div><b>${esc(q.enemy)}</b><i>${st.toUpperCase()}</i></div></div><div class="ehp" aria-hidden="true"><i style="width:${done?0:Math.max(4,100-s.pc)}%"></i></div>`:`<button type="button" class="badd" data-act="briefEdit" data-v="enemy">+ Name the enemy</button>`;
+  const road=`<ol class="road">${MILES.map((m,i)=>{const on=s.pc>=m[0],now=!on&&(i===0||s.pc>=MILES[i-1][0]);return `<li class="${on?'on':''} ${now?'now':''}"><span>${on?ico('check',14,'currentColor',3):''}</span><b>${m[1]}</b></li>`;}).join('')}</ol>`;
+  const sec=(t,inner)=>`<section class="bsec"><h4>${t}</h4>${inner}</section>`;
+  return `<div class="brief"><section class="hero"><div class="hglow"></div><span class="crest">${ico(q.icon,34,'#FFF3E3',1.5)}</span><h1>${esc(q.title)}</h1>${cry}
+  <div class="hgoal">${field('goal','goal','What does victory look like?','State the goal')}</div>
+  <div class="prog"><div class="hbar"><i style="width:${Math.max(3,s.pc)}%"></i></div><b class="rk">${rk[0]}</b></div>
+  <div class="sirl"><img src="${kn(L.face)}" alt=""><p>${esc(L.text)}</p></div></section>
+  ${sec('The stakes and the spoils',`<div class="duo"><div class="mc stake"><i>AT STAKE</i>${field('stakes','mv','What is lost if you fail?','State the stakes')}</div><div class="mc spoil"><i>THE SPOILS</i>${field('reward','mv','What do you win?','Name the spoils')}</div></div>`)}
+  ${sec('The enemy',enemy)}
+  ${sec('Next up',dueHTML(q))}
+  ${sec('The road',road)}
+  ${ex.journal?sec('The journal',ex.journal):''}
+  <button type="button" class="lnk pinl" data-act="campPin" data-id="${q.id}">${S.settings.pin===q.id?'Unpin from home':'Pin to home'}</button></div>`;
 }
 function campHTML(){
   const C=U.camp,q=questOf(C.id);if(!q){U.camp=null;return '';}
   const cs=colsOf(q);
-  let due='';
-  if(q.due){const n=diffDays(q.due,today());due=`${shortDue(q.due)} · ${n<0?-n+(n===-1?' day':' days')+' overdue':n===0?'today':n===1?'tomorrow':'in '+n+' days'}`;}
-  else due='NO DEADLINE';
-  const tabs=`<div class="chips sm" style="margin:0 0 12px"><button type="button" class="chip ${(C.tab||'board')==='board'?'on':''}" data-act="campTab" data-v="board">Board</button><button type="button" class="chip ${C.tab==='brief'?'on':''}" data-act="campTab" data-v="brief">Brief</button><button type="button" class="chip ${C.tab==='notes'?'on':''}" data-act="campTab" data-v="notes">Notes</button>${(C.tab||'board')==='board'?`<button type="button" class="chip" data-act="colsOpen">Columns</button>`:''}</div>`;
+  const due=q.done?'COMPLETE':q.due?'DUE '+shortDue(q.due):'NO DEADLINE';
+  const tabs=`<div class="trow"><div class="seg" role="tablist">${[['board','Board'],['brief','Brief'],['notes','Notes']].map(([k,l])=>`<button type="button" role="tab" aria-selected="${(C.tab||'board')===k}" class="${(C.tab||'board')===k?'on':''}" data-act="campTab" data-v="${k}">${l}</button>`).join('')}</div>${(C.tab||'board')==='board'?`<button type="button" class="cbk colb" data-act="colsOpen" aria-label="Columns">${ico('gear',20,'var(--brass-l)',1.6)}</button>`:''}</div>`;
   let body;
   if(C.tab==='brief')body=briefHTML(q);
   else if(C.tab==='notes')body=notesTabHTML(q);
   else{
     body=`<div class="kboard">${cs.map(c=>{const cards=cardsOf(q,c.id);return `<div class="kcol ${c.done?'dn':''}" data-col="${c.id}"><div class="kh"><b>${esc(c.name)}</b><span>${cards.length}</span></div><div class="kcards">${cards.map(cardHTML).join('')}</div><input class="kin" data-col="${c.id}" placeholder="+ Add a card" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" aria-label="Add a card to ${esc(c.name)}"></div>`;}).join('')}</div>`;
   }
-  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt"><b>${esc(q.title)}</b><i>${q.done?'DONE':due.toUpperCase()}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${C.note&&C.tab==='notes'?'':tabs}${C.tab==='board'||!C.tab?journeyHTML(q,campStats(q)):''}${body}</div>`;
+  return `<div class="full camp" role="dialog" aria-label="${esc(q.title)}"><div class="chd"><button type="button" class="cbk" data-act="campBack" aria-label="Back">${ico('chevr',22,'var(--bone)',2)}</button><div class="ctt ${C.tab==='brief'?'solo':''}">${C.tab==='brief'?'':`<b>${esc(q.title)}</b>`}<i>${due}</i></div><button type="button" class="cbk ed" data-act="qEdit" aria-label="Edit campaign">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>${C.note&&C.tab==='notes'?'':tabs}${C.tab==='board'||!C.tab?journeyHTML(q,campStats(q)):''}${body}</div>`;
 }
 function colsSheetHTML(){
   const q=questOf(U.camp.id);if(!q)return '';const cs=colsOf(q);

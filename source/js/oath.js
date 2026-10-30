@@ -156,7 +156,7 @@ function briefExtras(q){
   return {
     cry:q.cry?`<p class="cry">“${esc(q.cry)}”</p>`:'',
     enemy:q.enemy?`<div class="etile"><span class="qtile">${ico('horned',24,'var(--glow)',1.5)}</span><div><i>THE ENEMY</i><b>${esc(q.enemy)}</b></div><em>${st.toUpperCase()}</em></div>`:'',
-    journal:log.length?`<div class="bf"><label>The journal</label><div class="jlog">${log.map(e=>{const d=new Date(e.at);return `<div><span class="mono">${d.getDate()} ${MON[d.getMonth()].toUpperCase()}</span><p>${esc(e.text)}</p></div>`;}).join('')}</div></div>`:'',
+    journal:log.length?`<div class="jlog">${log.map(e=>{const d=new Date(e.at);return `<div><span class="mono">${d.getDate()} ${MON[d.getMonth()].toUpperCase()}</span><p>${esc(e.text)}</p></div>`;}).join('')}</div>`:'',
     pin:`<button type="button" class="btn ghost pinb" data-act="campPin" data-id="${q.id}">${pinned?'Unpin from home':'Pin to home'}</button>`
   };
 }
