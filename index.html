@@ -625,6 +625,10 @@ section.cat{position:relative}
 .hero .hglow{width:100%;left:0;transform:none}
 .full *{scrollbar-width:none;-ms-overflow-style:none}
 .full *::-webkit-scrollbar{display:none;width:0;height:0}
+.hbar i.held{background:linear-gradient(90deg,rgba(160,67,39,.45),rgba(240,163,94,.4));box-shadow:none}
+.hbar i{z-index:1}.hbar i.held{z-index:0}
+.full.camp .brief>*{flex:none}
+.ehp{position:relative}
 
 </style>
 <div class="app" id="app"></div>
@@ -1868,13 +1872,15 @@ function campStats(q){
   const ts=S.tasks.filter(t=>t.q===q.id),n=ts.length,done=ts.filter(t=>t.done).length;
   const inCol=id=>ts.filter(t=>colOfTask(t,q)===id&&!t.done).length;
   const left=q.due?diffDays(q.due,today()):null;
-  return {n,done,pc:n?Math.round(done/n*100):0,doing:inCol('doing'),blocked:inCol('blocked'),left,xp:done*10};
+  const pc=n?Math.round(done/n*100):0;
+  if(pc>(q.peak||0))q.peak=pc;
+  return {n,done,pc,hold:Math.max(q.peak||0,pc),doing:inCol('doing'),blocked:inCol('blocked'),left,xp:done*10};
 }
 function rankOf(s,q){
   if(q.done||(s.n&&s.done===s.n))return ['Victory','crown'];
   if(!s.n)return ['Mustering','flag'];
-  if(s.pc<40)return ['On the march','path'];
-  if(s.pc<75)return ['Deep in enemy lands','compass'];
+  if(s.hold<40)return ['On the march','path'];
+  if(s.hold<75)return ['Deep in enemy lands','compass'];
   return ['At the gates','focus'];
 }
 const CL={
@@ -1893,9 +1899,11 @@ function campLine(q){
   return {face,text:ls[h%ls.length]};
 }
 const MILES=[[25,'Muster the troops'],[50,'Cross the border'],[75,'Storm the gates'],[100,'Victory']];
+function barHTML(s){return `<div class="hbar"><i class="held" style="width:${Math.max(3,s.hold)}%"></i><i style="width:${Math.max(3,s.pc)}%"></i></div>`;}
+function scopeNote(q){const n=S.tasks.filter(t=>t.q===q.id).length;if(q.n0===undefined){q.n0=n;return;}if(n>q.n0){const d=n-q.n0;qlog(q,'Reinforcements: '+d+(d===1?' more card joins':' more cards join')+' the fight.');}if(n!==q.n0){q.n0=n;save();}}
 function journeyHTML(q,s){
   const rk=rankOf(s,q);
-  return `<div class="jr2"><div class="hbar"><i style="width:${Math.max(3,s.pc)}%"></i></div><b>${rk[0]}</b></div>`;
+  return `<div class="jr2">${barHTML(s)}<b>${rk[0]}</b></div>`;
 }
 function dueHTML(q){
   const td=today();
@@ -1906,18 +1914,19 @@ function dueHTML(q){
   return `<div class="dues">${rows}</div>${ts.length>5?`<p class="bempty" style="margin-top:10px">and ${ts.length-5} more on the board</p>`:''}`;
 }
 function briefHTML(q){
+  scopeNote(q);
   const s=campStats(q),rk=rankOf(s,q),L=campLine(q),C=U.camp,ex=briefExtras(q);
   const ta=(k,ph)=>`<textarea id="bf_${k}" class="note ta" rows="3" placeholder="${ph}" data-k="${k}" aria-label="${ph}">${esc(q[k]||'')}</textarea>`;
   const field=(k,cls,ph,add)=>C.edit===k?ta(k,ph):q[k]?`<div class="${cls}" data-act="briefEdit" data-v="${k}">${linkify(q[k])}</div>`:`<button type="button" class="badd" data-act="briefEdit" data-v="${k}">+ ${add}</button>`;
   const cry=C.edit==='cry'?ta('cry','A war cry, one line'):q.cry?`<p class="cry" data-act="briefEdit" data-v="cry">“${esc(q.cry)}”</p>`:`<button type="button" class="badd quiet" data-act="briefEdit" data-v="cry">+ War cry</button>`;
   const done=q.done||(s.n&&s.done===s.n);
-  const st=done?'Defeated':s.pc>=75?'Fleeing':s.pc>=50?'Wounded':s.pc>0?'Rattled':'Lurking';
-  const enemy=C.edit==='enemy'?ta('enemy','Who or what stands in your way?'):q.enemy?`<div class="etile" data-act="briefEdit" data-v="enemy"><span class="qtile">${ico('horned',26,'var(--glow)',1.5)}</span><div><b>${esc(q.enemy)}</b><i>${st.toUpperCase()}</i></div></div><div class="ehp" aria-hidden="true"><i style="width:${done?0:Math.max(4,100-s.pc)}%"></i></div>`:`<button type="button" class="badd" data-act="briefEdit" data-v="enemy">+ Name the enemy</button>`;
-  const road=`<ol class="road">${MILES.map((m,i)=>{const on=s.pc>=m[0],now=!on&&(i===0||s.pc>=MILES[i-1][0]);return `<li class="${on?'on':''} ${now?'now':''}"><span>${on?ico('check',14,'currentColor',3):''}</span><b>${m[1]}</b></li>`;}).join('')}</ol>`;
+  const st=done?'Defeated':s.hold>=75?'Fleeing':s.hold>=50?'Wounded':s.hold>0?'Rattled':'Lurking';
+  const enemy=C.edit==='enemy'?ta('enemy','Who or what stands in your way?'):q.enemy?`<div class="etile" data-act="briefEdit" data-v="enemy"><span class="qtile">${ico('horned',26,'var(--glow)',1.5)}</span><div><b>${esc(q.enemy)}</b><i>${st.toUpperCase()}</i></div></div><div class="ehp" aria-hidden="true"><i style="width:${done?0:Math.max(4,100-s.hold)}%"></i></div>`:`<button type="button" class="badd" data-act="briefEdit" data-v="enemy">+ Name the enemy</button>`;
+  const road=`<ol class="road">${MILES.map((m,i)=>{const on=s.hold>=m[0],now=!on&&(i===0||s.hold>=MILES[i-1][0]);return `<li class="${on?'on':''} ${now?'now':''}"><span>${on?ico('check',14,'currentColor',3):''}</span><b>${m[1]}</b></li>`;}).join('')}</ol>`;
   const sec=(t,inner)=>`<section class="bsec"><h4>${t}</h4>${inner}</section>`;
   return `<div class="brief"><section class="hero"><div class="hglow"></div><span class="crest">${ico(q.icon,34,'#FFF3E3',1.5)}</span><h1>${esc(q.title)}</h1>${cry}
   <div class="hgoal">${field('goal','goal','What does victory look like?','State the goal')}</div>
-  <div class="prog"><div class="hbar"><i style="width:${Math.max(3,s.pc)}%"></i></div><b class="rk">${rk[0]}</b></div>
+  <div class="prog">${barHTML(s)}<b class="rk">${rk[0]}</b></div>
   <div class="sirl"><img src="${kn(L.face)}" alt=""><p>${esc(L.text)}</p></div></section>
   ${sec('The stakes and the spoils',`<div class="duo"><div class="mc stake"><i>AT STAKE</i>${field('stakes','mv','What is lost if you fail?','State the stakes')}</div><div class="mc spoil"><i>THE SPOILS</i>${field('reward','mv','What do you win?','Name the spoils')}</div></div>`)}
   ${sec('The enemy',enemy)}
@@ -2525,7 +2534,7 @@ function campProgress(t){
 /* ---------- brief extras ---------- */
 function briefExtras(q){
   const s=campStats(q);
-  const st=q.done||(s.n&&s.done===s.n)?'Defeated':s.pc>=75?'Fleeing':s.pc>=50?'Wounded':s.pc>0?'Rattled':'Lurking';
+  const st=q.done||(s.n&&s.done===s.n)?'Defeated':s.hold>=75?'Fleeing':s.hold>=50?'Wounded':s.hold>0?'Rattled':'Lurking';
   const pinned=S.settings.pin===q.id;
   const log=(q.log||[]).slice().reverse().slice(0,8);
   return {

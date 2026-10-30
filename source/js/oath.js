@@ -150,7 +150,7 @@ function campProgress(t){
 /* ---------- brief extras ---------- */
 function briefExtras(q){
   const s=campStats(q);
-  const st=q.done||(s.n&&s.done===s.n)?'Defeated':s.pc>=75?'Fleeing':s.pc>=50?'Wounded':s.pc>0?'Rattled':'Lurking';
+  const st=q.done||(s.n&&s.done===s.n)?'Defeated':s.hold>=75?'Fleeing':s.hold>=50?'Wounded':s.hold>0?'Rattled':'Lurking';
   const pinned=S.settings.pin===q.id;
   const log=(q.log||[]).slice().reverse().slice(0,8);
   return {

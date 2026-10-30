@@ -614,3 +614,7 @@ section.cat{position:relative}
 .hero .hglow{width:100%;left:0;transform:none}
 .full *{scrollbar-width:none;-ms-overflow-style:none}
 .full *::-webkit-scrollbar{display:none;width:0;height:0}
+.hbar i.held{background:linear-gradient(90deg,rgba(160,67,39,.45),rgba(240,163,94,.4));box-shadow:none}
+.hbar i{z-index:1}.hbar i.held{z-index:0}
+.full.camp .brief>*{flex:none}
+.ehp{position:relative}
