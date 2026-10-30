@@ -1,7 +1,7 @@
 /* ---------- the guided Council ritual (Day and Week) ---------- */
-const RIT_STEPS={day:['welcome','focus','goals','left','dragon','mood','seal'],week:['welcome','focus','goals','week','left','dragon','seal']};
+const RIT_STEPS={emergency:['welcome','chamber','triage','dragon','exit'],day:['welcome','focus','goals','left','dragon','mood','seal'],week:['welcome','focus','goals','week','left','dragon','seal']};
 const RIT_FACE={welcome:1,focus:1,goals:5,week:4,left:2,dragon:8,mood:3,seal:6};
-function ritStore(kind){return kind==='day'?(S.plans[today()]||{}):(S.cplans[wkKey()]||{});}
+function ritStore(kind){return (kind==='day'||kind==='emergency')?(S.plans[today()]||{}):(S.cplans[wkKey()]||{});}
 function ritWanted(kind){
   const p=ritStore(kind);
   if(p.saved)return false;
@@ -12,6 +12,10 @@ function ritWanted(kind){
 function ritWelcome(kind,c){
   const d=new Date(),h=d.getHours(),dow=d.getDay();
   const pick=a=>a[Math.floor(Math.random()*a.length)];
+  if(kind==='emergency'){
+    if(h>=21||h<5)return 'It is late and everything looks bigger at night. Write it down and we shall shrink it.';
+    return pick(['Breathe, my lord. The realm will wait. I have told it to.','Emergency council. Sit. Nothing here is on fire that cannot be put in a list.','Whatever it is, we will make it smaller. Sit down.','The doors are closed and the candles are lit. Nobody is coming in until you are ready.']);
+  }
   if(kind==='week'){
     if(dow===1)return pick(['A new week, my lord. It has not done anything wrong yet.','Monday. The week is blank and full of promise. Mostly blank.']);
     if(dow===0)return pick(['Sunday planning. The wise, or the anxious. Possibly both.','Planning on a Sunday. The realm salutes you and worries slightly.']);
@@ -33,7 +37,7 @@ const RIT_LINES={
 function ritStart(kind,resume){
   const c=context(),p=ritStore(kind),steps=RIT_STEPS[kind].filter(s=>s!=='left'||c.over.length>0);
   let i=resume&&p.step>0?Math.min(p.step,steps.length-2):0;
-  U.council.rit={kind,steps,i,fresh:true,goals:[],wline:ritWelcome(kind,c),dline:'',seal:null};
+  U.council.rit={kind,steps,i,fresh:true,goals:[],wline:ritWelcome(kind,c),dline:'',seal:null,text:'',made:{},noteAt:0,moved:0};
   const R=U.council.rit;if(kind==='day'){U.council.mood=U.council.mood||'steady';}
   return R;
 }
@@ -43,6 +47,7 @@ function ritGo(i){
   R.i=Math.max(0,Math.min(R.steps.length-1,i));R.fresh=true;
   if(ritStep()==='left'&&!context().over.length){R.i+=dir;}
   if(ritStep()==='seal')ritSeal();
+  if(ritStep()==='exit')ritEmSave();
   renderOverlay();R.fresh=false;
   setTimeout(()=>{const x=$('#goalIn')||$('#focusTxt');if(x&&ritStep()!=='seal'&&ritStep()!=='welcome')x.focus();},320);
 }
@@ -51,6 +56,7 @@ function ritBack(){const R=U.council.rit;if(R.i>0)ritGo(R.i-1);}
 function ritCanBack(){const R=U.council&&U.council.rit;return !!R&&R.i>0&&ritStep()!=='seal';}
 function ritRead(){
   const C=U.council,f=$('#focusTxt');if(f)C.focus=f.value;
+  if(C.rit.kind==='emergency'&&ritStep()==='chamber')ritChamber();
   const g=$('#goalIn');if(g&&g.value.trim())ritCommit(g.value);
 }
 function ritTask(raw){
@@ -68,6 +74,7 @@ function ritCommit(raw){
 }
 function ritSave(done){
   const C=U.council,R=C.rit,p=ritStore(R.kind);
+  if(R.kind==='emergency'){ritEmSave();return;}
   const next=Object.assign({},p,{focus:C.focus||'',dragonId:C.dragonId||null});
   if(R.kind==='day')next.mood=C.mood||'steady';else next.quests=C.quests||p.quests||[];
   if(done){next.saved=Date.now();delete next.step;}else{next.step=R.i;}
@@ -80,7 +87,8 @@ function ritSeal(){
 }
 function ritPersist(){
   const C=U.council;if(!C||!C.rit)return;
-  const R=C.rit;if(ritStep()==='seal')return;
+  const R=C.rit;if(ritStep()==='seal'||ritStep()==='exit')return;
+  if(R.kind==='emergency'){if(ritStep()==='chamber')ritChamber();ritEmSave();return;}
   const f=$('#focusTxt');if(f)C.focus=f.value;
   if(R.i>0||C.focus)ritSave(false);
 }
@@ -95,8 +103,8 @@ function ritStepHTML(){
   const sh=(ic,col,t,sub)=>`<div class="rh"><span class="tl">${ico(ic,22,col,1.7)}</span><h2>${t}</h2><p>${sub}</p></div>`;
   const line=(RIT_LINES[s]||{})[R.kind];const say1=line?`<p class="rsay">${esc(line[0])}</p>`:'';
   if(s==='welcome'){
-    const d=new Date(),head=wk?`WEEK ${isoWeek(today()).w}`:fmtHead(today()).toUpperCase();
-    return ritHero(c.over.length>=4&&!wk?2:1)+`<p class="rcap">THE ${wk?'WEEKLY':'DAILY'} COUNCIL · ${head}</p><h1>Welcome, my lord.</h1><p class="rsay big">${esc(R.wline)}</p>`;
+    const em=R.kind==='emergency',head=wk?`WEEK ${isoWeek(today()).w}`:fmtHead(today()).toUpperCase();
+    return ritHero(em?3:c.over.length>=4&&!wk?2:1)+`<p class="rcap">THE ${em?'EMERGENCY':wk?'WEEKLY':'DAILY'} COUNCIL · ${head}</p><h1>${em?'Sit down, my lord.':'Welcome, my lord.'}</h1><p class="rsay big">${esc(R.wline)}</p>`;
   }
   if(s==='focus'){
     return ritHero(RIT_FACE.focus,'s')+sh('flag','var(--brass-l)',wk?'Focus of the week':'Focus of the day',wk?'What is this week for?':'What is today for?')+say1+`<textarea id="focusTxt" class="tb big" rows="3" placeholder="One sentence, for yourself" aria-label="Focus">${esc(C.focus||'')}</textarea>`;
@@ -126,17 +134,31 @@ function ritStepHTML(){
   if(s==='dragon'){
     const dt=S.tasks.find(t=>t.id===C.dragonId&&!t.done);
     const pool=(wk?candidates():c.open.slice().sort((a,b)=>(b.moves||0)-(a.moves||0)));
-    const name=wk?'Slay the Elder Dragon':'Slay the Dragon';
+    const em=R.kind==='emergency',name=em?'Your dragon':wk?'Slay the Elder Dragon':'Slay the Dragon';
     let body;
     if(dt)body=`<div class="dcard"><div style="flex:1;line-height:1.2"><div style="font-size:17px;font-weight:600">${esc(dt.title)}</div><div class="mono" style="font-size:12px;color:var(--dim)">${esc(cat(dt.cat).name)}${dt.moves?' · moved '+dt.moves+' times':''}</div></div><button type="button" class="ib quiet" style="border:0;background:none" data-act="dragonClear" aria-label="Clear the dragon">${ico('x',20,'currentColor',2)}</button></div><div class="rg"><img src="${kn(8)}" alt=""><span>${esc(C.line||'A brave choice. I would have picked the easier dread.')}</span></div>`;
     else{
       const sug=pool.find(t=>t.moves>0);
       body=(pool.length?`<div class="pick">${pool.slice(0,8).map(t=>`<button type="button" data-act="dragonPick" data-id="${t.id}">${ico(iconOf(cat(t.cat)),18,'var(--brass-l)',1.6)}${esc(t.title)}${t.moves?`<small>moved ${t.moves}x</small>`:''}</button>`).join('')}</div>`:'<p class="rsay">Nothing to slay yet. Name a dragon below.</p>')+(sug?`<p class="rnote">Sir Reg suggests ${esc(sug.title)}. It has been moved ${sug.moves} times.</p>`:'')+newDragonHTML();
     }
-    return ritHero(RIT_FACE.dragon,'s')+sh('flame','var(--glow)',name,'The one you dread most '+(wk?'this week':'today'))+body;
+    return ritHero(RIT_FACE.dragon,'s')+sh('flame','var(--glow)',name,(em?'Keep it, change it, or let it rest today':'The one you dread most '+(wk?'this week':'today')))+(em&&!dt?'<p class="rsay">A smaller dragon is allowed.</p>':'')+body;
   }
   if(s==='mood'){
     return ritHero(RIT_FACE.mood,'s')+sh('compass','var(--brass-l)','Mood and mindset','How shall we approach today?')+say1+`<div class="rmoods" role="radiogroup" aria-label="Mood">${MOODS.map(([k,n,sub,i])=>`<button type="button" class="mood g ${C.mood===k?'on':''}" data-act="mood" data-v="${k}" role="radio" aria-checked="${C.mood===k}">${ico(i,36,C.mood===k?'var(--glow)':'var(--brass-l)',1.5)}<b>${n}</b><span>${sub}</span></button>`).join('')}</div>`;
+  }
+  if(s==='chamber'){
+    return ritHero(RIT_FACE.focus,'s')+sh('pen','var(--brass-l)','The agenda','What is on your mind?')+`<textarea id="chamberTx" class="tb big" rows="8" placeholder="Write freely. Nobody is judging. Sir Reg is, but quietly." aria-label="Your thoughts">${esc(R.text||'')}</textarea><p class="rnote">Start a line with #task and end it with a comma or a new line to make it a task.</p><div class="rchips" id="chamberChips">${ritChips(R.text||'')}</div>`;
+  }
+  if(s==='triage'){
+    const dg=C.dragonId,items=context().over.concat(context().open).filter(t=>!t.done);
+    const rows=items.map(t=>`<div class="left"><span>${esc(t.title)}${t.date<today()?' <small class="rtag">OVERDUE</small>':''}${t.id===dg?' <small class="rtag hot">DRAGON</small>':''}</span>${t.id===dg?'':`<button class="mini" data-act="rTri" data-id="${t.id}" data-v="tomorrow">Tomorrow</button><button class="mini" data-act="rTri" data-id="${t.id}" data-v="drop">Drop</button>`}</div>`).join('');
+    const movable=items.filter(t=>t.id!==dg).length;
+    return ritHero(RIT_FACE.left,'s')+sh('list','var(--brass-l)','What is on your plate?',items.length?items.length+(items.length===1?' duty':' duties')+', no moves counted':'A clear plate')+(items.length?'':'<p class="rsay">Nothing on your plate. The overwhelm is imaginary, or at least unscheduled.</p>')+(movable>1?`<button type="button" class="btn ghost" style="width:100%;margin-top:12px" data-act="rClear">Clear the decks: everything but the dragon to tomorrow</button>`:'')+`<div style="margin-top:8px">${rows}</div>`;
+  }
+  if(s==='exit'){
+    const n=R.goals.length,dt=S.tasks.find(t=>t.id===C.dragonId&&!t.done);
+    const lines=['Better. Not solved, but smaller. That is what councils are for.','The realm stands. So do you. Go gently.','Smaller. That is the whole trick.'];
+    return ritHero(6)+`<h1 class="sealh" style="margin-top:6px">Council adjourned.</h1><p class="rsay big">${esc(lines[(Date.now()>>10)%lines.length])}</p><div class="rsum">${R.text&&R.text.trim()?'<div><i>NOTE</i><b>Saved on today</b></div>':''}${n?`<div><i>TASKS</i><b>${n} added</b></div>`:''}${dt?`<div><i>DRAGON</i><b>${esc(dt.title)}</b></div>`:''}</div>`;
   }
   /* seal */
   const dt=S.tasks.find(t=>t.id===C.dragonId),mood=(MOODS.find(m=>m[0]===C.mood)||[])[1];
@@ -150,9 +172,10 @@ function ritFootHTML(){
   const R=U.council.rit,s=ritStep();
   if(s==='welcome')return `<button type="button" class="btn big" data-act="rNext">Begin</button><button type="button" class="rskip" data-act="closeCouncil">Not now</button>`;
   if(s==='seal')return `<button type="button" class="btn big" data-act="rFinish">To battle</button>`;
+  if(s==='exit')return `<button type="button" class="btn big" data-act="rFinish">Back to the realm</button>`;
   if(s==='left')return `<button type="button" class="rskip" data-act="rNext">Skip the leftovers</button>`;
-  const last=R.steps[R.i+1]==='seal';
-  const label=last?'Seal the plan':s==='goals'?'Next':'Next';
+  const last=R.steps[R.i+1]==='seal'||R.steps[R.i+1]==='exit';
+  const label=R.kind==='emergency'?(last?'Done':'Next'):last?'Seal the plan':'Next';
   return `<button type="button" class="btn big" data-act="rNext">${label}</button><button type="button" class="rskip" data-act="rNext">Skip this step</button>`;
 }
 function ritHTML(){
@@ -178,6 +201,14 @@ function ritDraw(){
 function ritAct(act,v,id){
   const C=U.council;
   switch(act){
+    case 'rTri':{const t=S.tasks.find(x=>x.id===id);if(!t)return true;
+      if(v==='tomorrow')t.date=addDays(today(),1);
+      else{const snap=JSON.parse(JSON.stringify(t));S.tasks=S.tasks.filter(x=>x.id!==id);toast({face:2,text:'Dropped. Gone from the realm.'},()=>{S.tasks.push(snap);save();render(true);renderOverlay();});}
+      save();render(true);renderOverlay();return true;}
+    case 'rClear':{
+      const dg=C.dragonId,items=context().over.concat(context().open).filter(t=>!t.done&&t.id!==dg),old=items.map(t=>[t.id,t.date]);
+      items.forEach(t=>{t.date=addDays(today(),1);});save();render(true);renderOverlay();
+      toast({face:6,text:'The decks are clear. '+items.length+' moved to tomorrow.'},()=>{old.forEach(([i,d])=>{const t=S.tasks.find(x=>x.id===i);if(t)t.date=d;});save();render(true);renderOverlay();});return true;}
     case 'rNext':ritNext();return true;
     case 'rBack':ritBack();return true;
     case 'rFinish':ritFinish();return true;
@@ -198,3 +229,35 @@ function ritAct(act,v,id){
   return false;
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='goalIn'){e.preventDefault();ritAct('rGoalAdd');}});
+
+function ritChips(tx){
+  const out=[],re=/#task[ \t]*([^,\n]*)/gi;let m;
+  while((m=re.exec(tx))){const raw=m[1].trim();if(raw)out.push(raw);}
+  return out.map(x=>`<div class="rchip"><span class="tl2">${ico('plus',16,'var(--brass-l)',2)}</span><span class="rt">${esc(x[0].toUpperCase()+x.slice(1))}</span><small>TASK</small></div>`).join('');
+}
+function ritChamber(){
+  const R=U.council.rit,tx=R.text||'';let n=0;
+  const re=/#task[ \t]*([^,\n]*)/gi;let m;
+  while((m=re.exec(tx))){const raw=m[1].trim();if(!raw||R.made[raw])continue;const t=ritTask(raw);if(t){R.made[raw]=t.id;R.goals.push(t.id);n++;}}
+  if(n){save();render(true);}
+  if(tx.trim()){
+    const k=today(),p=S.plans[k]||(S.plans[k]={});p.notes=p.notes||[];
+    let e=R.noteAt&&p.notes.find(x=>x.at===R.noteAt);
+    if(!e){R.noteAt=Date.now();e={at:R.noteAt,text:''};p.notes.push(e);}
+    e.text=tx.trim();save();
+  }
+}
+function ritEmSave(){
+  const C=U.council,R=C.rit;
+  if(R.text&&R.text.trim())ritChamber();
+  const p=S.plans[today()]||(S.plans[today()]={});
+  if((p.dragonId||null)!==(C.dragonId||null)){p.dragonId=C.dragonId||null;}
+  save();
+}
+function ritNotesHTML(){
+  const n=(plan().notes||[]);if(!n.length)return '';
+  return `<div class="sh"><span class="tl">${ico('pen',20,'var(--brass-l)',1.7)}</span><div><b>Emergency notes</b><i>Written in the chamber today</i></div></div>`+n.map(e=>{const d=new Date(e.at);return `<div class="enote"><span class="mono">${z2(d.getHours())}:${z2(d.getMinutes())}</span><p>${esc(e.text)}</p></div>`;}).join('');
+}
+document.addEventListener('input',e=>{
+  if(e.target.id==='chamberTx'&&U.council&&U.council.rit){U.council.rit.text=e.target.value;const c=$('#chamberChips');if(c)c.innerHTML=ritChips(e.target.value);}
+});

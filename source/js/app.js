@@ -387,6 +387,7 @@ ${bn('Quests','#4A4128','flag')}
   <div style="height:12px"></div>${bn('The Council','#2B4542','crown')}
   ${row('sun','The Day','plan today, now','councilK','', false,'day')}
   ${row('week','The Week','look ahead','councilK','',false,'week')}
+  ${row('bolt','Emergency','overwhelmed? start here','councilK','',false,'emergency')}
   <div style="height:12px"></div><button type="button" class="ban g sbtn" data-act="setToggle" style="background-color:#3D2E3F;border-radius:3px 3px 0 0;width:100%;border:0;text-align:left" aria-expanded="${!!U.setOpen}">${ico('gear',22,'var(--brass-l)',1.6)}<b>Settings</b><span style="margin-left:auto">${ico('chev',18,'var(--brass-l)',2)}</span></button>
   ${U.setOpen?`  ${row('sun','Theme',{dark:'dark',light:'light',system:'follows your phone'}[S.settings.theme||'dark'],null,'<span></span>')}
   <div class="themes">${['dark','light','system'].map(v=>`<button type="button" class="chip ${(S.settings.theme||'dark')===v?'on':''}" data-act="theme" data-v="${v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div>
@@ -422,7 +423,7 @@ function councilHTML(){
   ${sh('flag','var(--brass-l)','Focus of the day','What is today for?')}<textarea id="focusTxt" class="tb" rows="2" placeholder="One sentence, for yourself" aria-label="Focus of the day">${esc(C.focus||'')}</textarea>
   ${sh('flame','var(--glow)','Slay the Dragon','The one you dread most today')}${dr}${picker}${dt?'':newDragonHTML()}
   ${sh('compass','var(--brass-l)','Mood and mindset','How shall we approach today?')}<div class="moods" role="radiogroup" aria-label="Mood">${moods}</div>
-  <div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncil">Save Plan</button></div>${ritAgainBtn('day')}</div>`;
+  ${ritNotesHTML()}<div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncil">Save Plan</button></div>${ritAgainBtn('day')}</div>`;
 }
 function trayHTML(){
   const u=unplaced();

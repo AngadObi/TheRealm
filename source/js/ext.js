@@ -175,6 +175,7 @@ function rollIdea(){
 }
 function openCouncil(kind,force){
   U.toast=null;renderToast();U.menu=false;
+  if(kind==='emergency'){const p=plan();U.council={kind:'emergency',focus:'',dragonId:p.dragonId||null,mood:p.mood||'steady',pickOpen:false,line:''};ritStart('emergency',false);renderOverlay();return;}
   if(kind==='day'){const p=plan();U.council={kind:'day',focus:p.focus||'',dragonId:p.dragonId||null,mood:p.mood||'steady',pickOpen:false,line:''};}
   else{
     const key=kind==='week'?wkKey():kind==='month'?moKey():yrKey(),p=S.cplans[key]||{};
