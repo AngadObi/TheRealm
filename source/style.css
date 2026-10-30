@@ -360,3 +360,76 @@ section.cat{position:relative}
 .wplus{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(232,223,200,.35);background:none;display:flex;align-items:center;justify-content:center}
 
 .rw .bgl{position:absolute;left:0;top:0;bottom:0;width:140px;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding-left:16px;font:italic 16px var(--fell);color:var(--glow)}
+
+/* ---------- the guided Council ---------- */
+.full.rit{display:flex;flex-direction:column;overflow:hidden;padding:0 24px max(18px,env(safe-area-inset-bottom,0px))}
+.rit .rglow{position:absolute;left:50%;top:-8%;width:130%;height:62%;transform:translateX(-50%);background:radial-gradient(ellipse at 50% 30%,rgba(240,163,94,.22),rgba(210,85,46,.08) 45%,transparent 70%);pointer-events:none;animation:flick 4.2s ease-in-out infinite}
+.rit .rsky{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.rit .st{min-height:0;min-width:0;position:absolute;width:2px;height:2px;border-radius:50%;background:var(--glow);opacity:0;animation:twink 5s ease-in-out infinite}
+.rit .em{min-height:0;min-width:0;position:absolute;bottom:-10px;width:3px;height:3px;border-radius:50%;background:var(--glow);box-shadow:0 0 6px 1px var(--ember);opacity:0;animation:rise 10s linear infinite}
+@keyframes twink{0%,100%{opacity:0;transform:scale(.6)}50%{opacity:.85;transform:scale(1.4)}}
+@keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.8}100%{transform:translate(18px,-105vh);opacity:0}}
+@keyframes flick{0%,100%{opacity:.85}30%{opacity:1}55%{opacity:.7}75%{opacity:.95}}
+.rit .rtop{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;height:64px;padding-top:16px;flex:none}
+.rit .rdots{display:flex;gap:6px;align-items:center}
+.rit .rdots i{min-height:0;min-width:0;width:7px;height:7px;border-radius:50%;background:var(--border);transition:all .3s}
+.rit .rdots i.dn{background:var(--brass)}
+.rit .rdots i.on{width:22px;border-radius:4px;background:var(--ember);box-shadow:0 0 8px rgba(240,163,94,.6)}
+.rit .rbody{position:relative;z-index:2;flex:1;min-height:0;overflow-y:auto;padding:4px 0 16px;text-align:center;scrollbar-width:none}
+.rit .rbody::-webkit-scrollbar{display:none}
+.rit .rbody>*{text-align:left}
+.rit .rbody[data-step=welcome],.rit .rbody[data-step=seal]{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.rit .rbody[data-step=welcome]>*,.rit .rbody[data-step=seal]>*{text-align:center}
+.rit .rbody.enter>*{animation:rin .55s cubic-bezier(.2,.8,.2,1) both}
+.rit .rbody.enter>*:nth-child(2){animation-delay:.08s}.rit .rbody.enter>*:nth-child(3){animation-delay:.16s}.rit .rbody.enter>*:nth-child(4){animation-delay:.24s}.rit .rbody.enter>*:nth-child(5){animation-delay:.32s}
+@keyframes rin{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.rit .rk{position:relative;width:190px;height:190px;margin:0 auto;display:grid;place-items:center;flex:none}
+.rit .rk::before{content:'';position:absolute;inset:6%;border-radius:50%;background:radial-gradient(circle,rgba(240,163,94,.35),transparent 68%);animation:flick 3.4s ease-in-out infinite}
+.rit .rk img{position:relative;width:168px;height:168px;-webkit-mask-image:radial-gradient(circle,#000 52%,transparent 71%);mask-image:radial-gradient(circle,#000 52%,transparent 71%);animation:bob 4.5s ease-in-out infinite}
+.rit .rk.s{width:104px;height:104px}.rit .rk.s img{width:92px;height:92px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+:root[data-rt="light"] .rit .rk img{-webkit-mask-image:none;mask-image:none}
+.rit h1{margin:6px 0 0;font:400 42px/1.05 var(--fell);text-align:center;text-wrap:balance}
+.rit h1.sealh{margin-top:22px}
+.rit .rcap{margin:10px 0 0;font:500 12px var(--mono);letter-spacing:.14em;color:var(--dim)}
+.rit .rsay{margin:10px 0 0;font:italic 17px/1.3 var(--fell);color:var(--bone)}
+.rit .rsay.big{font-size:20px;max-width:300px;color:var(--dim)}
+.rit .rnote{margin:10px 0 0;font:italic 15px/1.3 var(--fell);color:var(--dim)}
+.rit .rh{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:2px;text-align:center}
+.rit .rh>*{text-align:center}
+.rit .rh .tl{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);border-radius:4px;background:var(--card)}
+.rit .rh h2{margin:6px 0 0;font:400 30px/1.1 var(--fell);text-wrap:balance}
+.rit .rh p{margin:0;font:15.5px var(--fell);color:var(--dim)}
+.rit .rsay{text-align:center}
+.rit .tb.big{min-height:104px;font-size:21px;margin-top:14px}
+.rit .rchips{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.rit .rchip{display:flex;align-items:center;gap:8px;min-height:46px;padding:2px 4px 2px 10px;border:1.5px solid var(--border);border-radius:4px;background:var(--card);animation:rin .35s both}
+.rit .rchip .rt{flex:1;min-width:0;font:500 15.5px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rit .rchip small{font:500 11px var(--mono);letter-spacing:.08em;color:var(--dim)}
+.rit .rchip .tl2{display:flex}
+.rit .rcard{margin-top:14px;padding:16px;border:1.5px solid var(--brass);border-radius:4px;background:var(--card);display:flex;flex-direction:column;gap:6px;box-shadow:0 0 22px rgba(240,163,94,.08)}
+.rit .rcard b{font:400 26px/1.15 var(--fell);text-wrap:balance}
+.rit .rcard .mono{font:12px var(--mono);color:var(--dim)}
+.rit .rverd{display:flex;gap:8px;margin-top:12px}
+.rit .rverd .btn{flex:1;height:48px;padding:0 6px;font-size:19px}
+.rit .rall{display:flex;flex-direction:column;align-items:center;margin-top:8px}
+.rit .rmoods{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.rit .rmoods .mood{width:auto;height:auto;min-height:112px}
+.rit .rfoot{position:relative;z-index:2;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding-top:6px}
+.rit .btn.big{width:100%;height:54px;font-size:23px;box-shadow:0 0 22px rgba(210,85,46,.35)}
+.rskip{border:0;background:none;color:var(--dim);font:italic 16px var(--fell);min-height:40px;padding:0 12px}
+.rit .wax{position:relative;width:132px;height:132px;display:grid;place-items:center;flex:none}
+.rit .wax .disc{position:relative;width:120px;height:120px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#F0A35E,#D2552E 48%,#7A2E18);box-shadow:inset 0 -6px 12px rgba(0,0,0,.35),inset 0 4px 8px rgba(255,220,170,.35),0 6px 22px rgba(210,85,46,.5);animation:stamp .75s cubic-bezier(.2,1.5,.4,1) both}
+.rit .wax .disc::after{content:'';position:absolute;inset:9px;border-radius:50%;border:2px dashed rgba(255,243,227,.45)}
+@keyframes stamp{0%{transform:scale(2.4) rotate(-14deg);opacity:0}55%{transform:scale(.9) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+.rit .wax .ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--glow);animation:burst 1.1s .4s ease-out both}
+@keyframes burst{0%{transform:scale(.9);opacity:.9}100%{transform:scale(2.3);opacity:0}}
+.rit .wax .sparks{position:absolute;left:50%;top:50%;width:0;height:0}
+.rit .wax .sparks i{min-height:0;min-width:0;position:absolute;left:-2px;top:-2px;width:5px;height:5px;border-radius:50%;background:var(--glow);box-shadow:0 0 8px 2px var(--ember);transform:rotate(var(--a)) translateY(0);opacity:0;animation:spark 1s .4s ease-out both}
+@keyframes spark{0%{opacity:1;transform:rotate(var(--a)) translateY(0)}100%{opacity:0;transform:rotate(var(--a)) translateY(-104px)}}
+.rit .rsum{margin-top:18px;width:100%;max-width:320px;display:flex;flex-direction:column;gap:8px;animation:rin .6s .9s both}
+.rit .rsum div{display:flex;align-items:baseline;gap:10px;padding:8px 12px;border:1.5px solid var(--border);border-radius:4px;background:var(--card);text-align:left}
+.rit .rsum i{font:500 11px var(--mono);letter-spacing:.12em;color:var(--dim);flex:none;width:68px;font-style:normal}
+.rit .rsum b{font:500 15.5px/1.25 var(--sans);min-width:0;overflow-wrap:anywhere}
+.rit .rsay.big{animation:rin .6s .6s both}
+.full .rskip[data-act=ritAgain]{display:block;margin:10px auto 0}

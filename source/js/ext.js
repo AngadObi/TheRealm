@@ -173,17 +173,19 @@ function rollIdea(){
   if(pool.length>1&&U.roll&&U.roll.id===pick.id)pick=pool[(pool.indexOf(pick)+1)%pool.length];
   U.roll={id:pick.id,line:pickLine('rolled').text};
 }
-function openCouncil(kind){
+function openCouncil(kind,force){
   U.toast=null;renderToast();U.menu=false;
   if(kind==='day'){const p=plan();U.council={kind:'day',focus:p.focus||'',dragonId:p.dragonId||null,mood:p.mood||'steady',pickOpen:false,line:''};}
   else{
     const key=kind==='week'?wkKey():kind==='month'?moKey():yrKey(),p=S.cplans[key]||{};
     U.council={kind,key,focus:p.focus||'',dragonId:p.dragonId||null,quests:(p.quests||[]).slice(),pickOpen:false,qOpen:false,line:''};
   }
+  if((kind==='day'||kind==='week')&&(force||ritWanted(kind)))ritStart(kind,!force);
   renderOverlay();
 }
 function candidates(){return S.tasks.filter(t=>!t.done&&t.date).sort((a,b)=>(b.moves||0)-(a.moves||0)||(a.date<b.date?-1:1)).slice(0,20);}
 function extAct(act,v,id,el){
+  if(ritAct(act,v,id))return;
   switch(act){
     case 'goto':goto(v);break;
     case 'dragonNew':{
@@ -227,9 +229,9 @@ function extAct(act,v,id,el){
     case 'rollAgain':rollIdea();renderOverlay();break;
     case 'rollToday':{const i=S.ideas.find(x=>x.id===U.roll.id);if(!i)break;ideaToTask(i);S.ideas=S.ideas.filter(x=>x.id!==i.id);save();U.sheet=null;toast(say('added'));render();break;}
     /* week / month / year councils */
-    case 'yqOpen':U.council.focus=($('#focusTxt')||{}).value||'';U.council.qOpen=!U.council.qOpen;renderOverlay();break;
-    case 'yqPick':U.council.focus=($('#focusTxt')||{}).value||'';if(U.council.quests.length<3)U.council.quests.push(id);U.council.qOpen=false;renderOverlay();break;
-    case 'yqDel':U.council.focus=($('#focusTxt')||{}).value||'';U.council.quests=U.council.quests.filter(x=>x!==id);renderOverlay();break;
+    case 'yqOpen':{const _f=$('#focusTxt');if(_f)U.council.focus=_f.value;}U.council.qOpen=!U.council.qOpen;renderOverlay();break;
+    case 'yqPick':{const _f=$('#focusTxt');if(_f)U.council.focus=_f.value;}if(U.council.quests.length<3)U.council.quests.push(id);U.council.qOpen=false;renderOverlay();break;
+    case 'yqDel':{const _f=$('#focusTxt');if(_f)U.council.focus=_f.value;}U.council.quests=U.council.quests.filter(x=>x!==id);renderOverlay();break;
     case 'saveCouncilK':{const C=U.council;C.focus=($('#focusTxt')||{}).value||'';S.cplans[C.key]={focus:C.focus,dragonId:C.dragonId,quests:C.quests||[],saved:Date.now()};save();U.council=null;LC.key='';render();const l=say('saved');renderHead();toast(l);break;}
   }
 }
@@ -326,7 +328,7 @@ function extCouncilHTML(){
   ${sections('flag','var(--brass-l)',focusLbl,focusQ)}<textarea id="focusTxt" class="tb" rows="2" placeholder="One sentence, for yourself" aria-label="${focusLbl}">${esc(C.focus||'')}</textarea>
   ${mid}
   ${sections('flame','var(--glow)','Slay the '+dragonName,'The one you dread most '+scope,TAGS[tier])}${dr}${picker}${dt?'':newDragonHTML()}
-  <div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncilK">Save Plan</button></div></div>`;
+  <div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncilK">Save Plan</button></div>${ritAgainBtn(kind)}</div>`;
 }
 
 /* ---------- sync across devices through the artifact database ---------- */
@@ -450,7 +452,7 @@ function pickLine(key,vars){
 
 /* ---------- phone back gesture: close the top layer, or go back to Today, before leaving the app ---------- */
 var navCur=0,navBusy=false,navTarget=0;
-function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+((U.sheet||U.council||U.menu)?1:0);}
+function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+((U.sheet||U.council||U.menu)?1:0)+(ritCanBack()?1:0);}
 function navSync(){
   if(navBusy)return;
   const d=navWant();
@@ -463,7 +465,8 @@ addEventListener('popstate',()=>{
   if(navBusy){navBusy=false;navCur=navTarget;navSync();return;}
   navCur=(history.state&&history.state.d)||0;
   if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}
-  else if(U.sheet||U.council||U.menu){U.sheet=null;U.council=null;U.menu=false;renderOverlay();}
+  else if(ritCanBack()&&!U.sheet&&!U.menu){ritBack();}
+  else if(U.sheet||U.council||U.menu){ritPersist();U.sheet=null;U.council=null;U.menu=false;renderOverlay();}
   else if(U.camp){U.camp=null;renderOverlay();renderMain();}
   else if(U.view!=='list'){goto('list');}
   navSync();

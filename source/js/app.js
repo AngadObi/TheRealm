@@ -401,6 +401,7 @@ ${bn('Quests','#4A4128','flag')}
 const MOODS=[['steady','Steady','Calm and consistent.','steady'],['focus','Focused','One task at a time.','focus'],['bolt','Relentless','No mercy today.','bolt'],['easy','Easy going','We do what we can.','easy'],['eye','Wary','Trust nothing, tick everything.','eye'],['flame','Bold','Do the scary thing first.','flame']];
 const newDragonHTML=()=>`<div class="arow" style="margin-top:10px"><input id="dragonNew" class="inp" type="text" placeholder="Or name a new dragon" autocomplete="off" aria-label="New dragon"><button type="button" class="go" data-act="dragonNew" aria-label="Add as dragon">${ico('plus',22,'currentColor',2.6)}</button></div>`;
 function councilHTML(){
+  if(U.council.rit)return ritHTML();
   if(U.council.kind&&U.council.kind!=='day')return extCouncilHTML();
   const C=U.council,c=context();
   const sh=(ic,col,t,sub)=>`<div class="sh"><span class="tl">${ico(ic,20,col,1.7)}</span><div><b>${t}</b><i>${sub}</i></div></div>`;
@@ -421,7 +422,7 @@ function councilHTML(){
   ${sh('flag','var(--brass-l)','Focus of the day','What is today for?')}<textarea id="focusTxt" class="tb" rows="2" placeholder="One sentence, for yourself" aria-label="Focus of the day">${esc(C.focus||'')}</textarea>
   ${sh('flame','var(--glow)','Slay the Dragon','The one you dread most today')}${dr}${picker}${dt?'':newDragonHTML()}
   ${sh('compass','var(--brass-l)','Mood and mindset','How shall we approach today?')}<div class="moods" role="radiogroup" aria-label="Mood">${moods}</div>
-  <div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncil">Save Plan</button></div></div>`;
+  <div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncil">Save Plan</button></div>${ritAgainBtn('day')}</div>`;
 }
 function trayHTML(){
   const u=unplaced();
@@ -439,6 +440,7 @@ let _mh='';function renderMain(){
 }
 let _dh='';function renderDock(){const h=dockHTML();if(h===_dh)return;_dh=h;$('#dockhost').innerHTML=h;}
 function renderOverlay(){
+  if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&!U.camp&&ritDraw()){if(typeof navSync==='function')navSync();return;}
   let h='';
   if(U.menu)h+=menuHTML();
   if(U.council)h+=councilHTML();
@@ -503,14 +505,14 @@ document.addEventListener('click',e=>{
     case 'reset':if(U.confirm==='reset'){{const q=S.logq;S=seed();S.logq=q;}save();U.confirm=null;U.menu=false;LC.key='';render();}else{U.confirm='reset';renderOverlay();}break;
     case 'clear':if(U.confirm==='clear'){S.tasks=[];S.plans={};S.quests=[];S.ideas=[];S.cplans={};S.sample=false;save();U.confirm=null;U.menu=false;LC.key='';render();}else{U.confirm='clear';renderOverlay();}break;
     case 'setToggle':U.setOpen=!U.setOpen;renderOverlay();break;
-    case 'council':{U.toast=null;renderToast();const p=plan();U.menu=false;U.council={focus:p.focus||'',dragonId:p.dragonId||null,mood:p.mood||'steady',pickOpen:false,line:''};renderOverlay();break;}
-    case 'closeCouncil':U.council=null;renderOverlay();renderToast();break;
-    case 'dragonOpen':U.council.focus=($('#focusTxt')||{}).value||'';U.council.pickOpen=!U.council.pickOpen;renderOverlay();break;
-    case 'dragonPick':U.council.focus=($('#focusTxt')||{}).value||'';U.council.dragonId=id;U.council.pickOpen=false;U.council.line=pickLine('dragonPicked').text;renderOverlay();break;
-    case 'dragonClear':U.council.focus=($('#focusTxt')||{}).value||'';U.council.dragonId=null;renderOverlay();break;
-    case 'mood':U.council.focus=($('#focusTxt')||{}).value||'';U.council.mood=v;renderOverlay();break;
-    case 'lf':{U.council.focus=($('#focusTxt')||{}).value||'';const t=S.tasks.find(x=>x.id===id);if(!t)break;if(v==='today'){t.date=today();}else if(v==='tomorrow'){t.date=addDays(today(),1);t.moves=(t.moves||0)+1;}else{S.tasks=S.tasks.filter(x=>x.id!==id);}save();renderOverlay();renderMain();renderHead();break;}
-    case 'saveCouncil':{const C=U.council;C.focus=($('#focusTxt')||{}).value||'';S.plans[today()]={focus:C.focus,dragonId:C.dragonId,mood:C.mood};save();U.council=null;LC.key='';render();const line=say('saved');renderHead();toast(line);break;}
+    case 'council':openCouncil('day');break;
+    case 'closeCouncil':ritPersist();U.council=null;renderOverlay();renderToast();break;
+    case 'dragonOpen':{const _f=$('#focusTxt');if(_f)U.council.focus=_f.value;}U.council.pickOpen=!U.council.pickOpen;renderOverlay();break;
+    case 'dragonPick':{const _f=$('#focusTxt');if(_f)U.council.focus=_f.value;}U.council.dragonId=id;U.council.pickOpen=false;U.council.line=pickLine('dragonPicked').text;renderOverlay();break;
+    case 'dragonClear':{const _f=$('#focusTxt');if(_f)U.council.focus=_f.value;}U.council.dragonId=null;renderOverlay();break;
+    case 'mood':{const _f=$('#focusTxt');if(_f)U.council.focus=_f.value;}U.council.mood=v;renderOverlay();break;
+    case 'lf':{{const _f=$('#focusTxt');if(_f)U.council.focus=_f.value;}const t=S.tasks.find(x=>x.id===id);if(!t)break;if(v==='today'){t.date=today();}else if(v==='tomorrow'){t.date=addDays(today(),1);t.moves=(t.moves||0)+1;}else{S.tasks=S.tasks.filter(x=>x.id!==id);}save();renderOverlay();renderMain();renderHead();break;}
+    case 'saveCouncil':{const C=U.council;C.focus=($('#focusTxt')||{}).value||'';S.plans[today()]={focus:C.focus,dragonId:C.dragonId,mood:C.mood,saved:plan().saved||Date.now()};save();U.council=null;LC.key='';render();const line=say('saved');renderHead();toast(line);break;}
     case 'tray':U.sheet='tray';renderOverlay();break;
     case 'place':U.placing=id;U.sheet=null;U.view='road';render();break;
     case 'cancelPlace':U.placing=null;renderMain();break;
@@ -539,7 +541,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='Enter'&&e.target.classList.contains('stin')){e.preventDefault();e.target.blur();}
   else if(e.key==='Enter'&&e.target.id==='addInput'){e.preventDefault();submitAdd();}
   else if(e.key==='Enter'&&e.target.id==='ncName'){e.preventDefault();const b=document.querySelector('[data-act=ncSave]');b&&b.click();}
-  else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.camp){U.camp=null;renderOverlay();renderMain();}else if(U.council){U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
+  else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.camp){U.camp=null;renderOverlay();renderMain();}else if(U.council){ritPersist();U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
   else if(extKey(e)){e.preventDefault();}
 });
 
