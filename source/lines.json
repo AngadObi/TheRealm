@@ -1884,5 +1884,87 @@
 "Double-take: one eye wide, one flat, alert marks",
 "Suspicion"
 ]
+],
+"pile": [
+[
+1,
+"{overdue} overdue. A siege is easier when you pick one wall.",
+"Any"
+],
+[
+2,
+"The pile is {overdue} tall. Do the smallest one and watch morale improve.",
+"Any"
+],
+[
+3,
+"{overdue} things are late. None of them is a dragon. Together they are a nuisance.",
+"Any"
+],
+[
+4,
+"A backlog is only a to-do list that has been kept waiting. Start with the oldest.",
+"Any"
+],
+[
+5,
+"{overdue} overdue. Pick three. The rest can wait one more day without consequence.",
+"Any"
+],
+[
+6,
+"Nothing here is on fire. It is merely smouldering, in {overdue} places.",
+"5 or more overdue tasks"
+],
+[
+7,
+"{overdue} overdue. I have seen smaller armies make better progress. Begin anywhere.",
+"10 or more overdue tasks"
+],
+[
+8,
+"{overdue} overdue is not a failure. It is a queue with a long memory.",
+"Any"
+],
+[
+9,
+"Move the ones that do not matter to tomorrow and keep the ones that do. That is the whole art.",
+"Any"
+],
+[
+10,
+"{overdue} overdue and the day has barely begun. Excellent odds, if you start now.",
+"App opened before 12:00, 1 or more overdue"
+],
+[
+11,
+"Clear two before lunch and the pile loses its nerve.",
+"App opened before 12:00, 1 or more overdue"
+],
+[
+12,
+"I counted {overdue} overdue. I have also stopped counting how often I count.",
+"10 or more overdue tasks"
+],
+[
+13,
+"A tidy half hour would take a real bite out of {overdue} overdue tasks.",
+"3 or more overdue tasks"
+],
+[
+14,
+"Drop the ones that no longer matter. The rest deserve a fair chance.",
+"3 or more overdue tasks"
+],
+[
+15,
+"It is {overdue} now. By tomorrow it could be fewer. That part is up to you.",
+"Any"
+],
+[
+16,
+"The backlog grows quietly. Today it learns to fear you.",
+"Any"
+]
 ]
 }

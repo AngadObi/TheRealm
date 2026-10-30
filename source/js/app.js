@@ -119,23 +119,25 @@ const REPS=[['','Once'],['daily','Daily'],['weekdays','Weekdays'],['weekly','Wee
 /* ---------- Sir Reg ---------- */
 function context(){
   const td=today(),all=S.tasks,tt=all.filter(t=>t.date===td),open=tt.filter(t=>!t.done),over=all.filter(t=>!t.done&&t.date&&t.date<td);
-  return {td,tt,open,over,done:tt.length-open.length};
+  const cl=all.filter(t=>t.done&&t.doneAt&&t.date&&t.date<td&&ymd(new Date(t.doneAt))===td).length;
+  return {td,tt,open,over,done:tt.length-open.length+cl,total:tt.length+over.length+cl};
 }
 function scenario(c){
   if(S.settings.mute)return ['muted',{n:c.open.length}];
   const h=new Date().getHours(),n=c.open.length;
   if(c.tt.length===0&&c.over.length===0)return ['empty',{}];
   if(n===0&&c.over.length===0)return ['allDone',{}];
+  if(c.over.length>=4)return ['pile',{overdue:c.over.length}];
   const old=c.over.slice().sort((a,b)=>a.date<b.date?-1:1)[0];
   if(old&&diffDays(c.td,old.date)>=3)return ['overdue',{task:old.title,days:diffDays(c.td,old.date)}];
-  if(n>=10)return ['overloaded',{n}];
+  if(n+c.over.length>=10)return ['overloaded',{n:n+c.over.length}];
   const dr=c.open.find(t=>/\b(dentist|doctor|dr\.?|arzt|tax|bill)\b/i.test(t.title));
   if(dr)return ['dread',{task:dr.title}];
   const mv=c.open.filter(t=>t.moves>=3).sort((a,b)=>b.moves-a.moves)[0];
   if(mv)return ['postponed',{task:mv.title,moves:mv.moves}];
-  if(h>=22||h<5)return ['late',{n}];
+  if(h>=22||h<5)return ['late',{n:n+c.over.length}];
   if(n===1)return ['one',{}];
-  return ['briefing',{n}];
+  return ['briefing',{n:n+c.over.length}];
 }
 let LC={key:'',line:null};
 function currentLine(c){
@@ -359,7 +361,7 @@ function unplaced(){const c=context();return c.tt.filter(t=>!t.time&&!t.done);}
 function headHTML(){
   const c=context(),eh=(U.view==='list'||U.view==='road')?null:extHead(),line=eh?eh.line:currentLine(c);
   return `<img class="bust" src="${kn(line.face)}" alt="Sir Reg" width="134" height="134"><div class="shelf"></div>
-  <h1 class="ttl">${eh?eh.title:fmtHead(c.td)}</h1><span class="cnt">${eh?eh.sub:c.done+' of '+c.tt.length+' done'}</span>
+  <h1 class="ttl">${eh?eh.title:fmtHead(c.td)}</h1><span class="cnt">${eh?eh.sub:c.done+' of '+c.total+' done'}</span>
   <div class="top">${(U.view==='list'||U.view==='road')?`<button type="button" class="ib" data-act="goto" data-v="main" aria-label="Campaigns">${ico('flag',22,'currentColor',1.7)}</button><button type="button" class="ib" data-act="council" aria-label="The Council: plan your day">${ico('crown',22,'currentColor',1.7)}</button>`:`<button type="button" class="ib" data-act="goto" data-v="list" aria-label="Back to Today">${ico('home',22,'currentColor',1.7)}</button>`}<button type="button" class="ib" data-act="menu" aria-label="Open menu">${ico('menu',22,'currentColor',2)}</button></div>
   <div class="bub g ${line.text.length>105?'s4':line.text.length>80?'s3':line.text.length>55?'s2':''}" role="status">${esc(line.text)}</div>`;
 }

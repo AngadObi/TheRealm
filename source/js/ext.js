@@ -413,7 +413,7 @@ function libCtx(kind,vars){
     has(re){return !!tk&&re.test(tk.title);}};
   return {x,tk};
 }
-const MOMENT={briefing:['briefing'],one:['briefing'],empty:['empty'],allDone:['allDone'],overdue:['overdue'],overloaded:['overloaded'],late:['late'],postponed:['postponed'],postpone:['postponed'],added:['added'],dragonPicked:['frogPicked','frog'],dread:[]};
+const MOMENT={pile:['pile'],briefing:['briefing'],one:['briefing'],empty:['empty'],allDone:['allDone'],overdue:['overdue'],overloaded:['overloaded'],late:['late'],postponed:['postponed'],postpone:['postponed'],added:['added'],dragonPicked:['frogPicked','frog'],dread:[]};
 const FILL=(s,v)=>s.replace(/\{(\w+)\}/g,(m,k)=>v[k]!=null?v[k]:'');
 function libPick(key,vars){
   const moments=MOMENT[key];if(!moments||typeof LIB==='undefined')return null;
@@ -437,7 +437,7 @@ function libPick(key,vars){
   (LREC[m]=LREC[m]||[]).push(i);if(LREC[m].length>12)LREC[m].shift();
   const now=new Date(),DAYN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const dayDate=tk?new Date(tk.date+'T12:00:00'):now;
-  const v={n:x.n,task:tk?tk.title:(vars&&vars.task)||'',time:tk&&tk.time?tk.time:z2(now.getHours())+':'+z2(now.getMinutes()),day:DAYN[dayDate.getDay()],days:(vars&&vars.days)||(x.t&&x.t.od)||'',times:tk?(tk.moves||0):'',emails:x.emails,overdue:x.over};
+  const v={n:x.n+x.over,task:tk?tk.title:(vars&&vars.task)||'',time:tk&&tk.time?tk.time:z2(now.getHours())+':'+z2(now.getMinutes()),day:DAYN[dayDate.getDay()],days:(vars&&vars.days)||(x.t&&x.t.od)||'',times:tk?(tk.moves||0):'',emails:x.emails,overdue:x.over};
   let text=FILL(LIB[m][i][0],v);text=text.charAt(0).toUpperCase()+text.slice(1);
   const base=LINES[key]||LINES.briefing;
   return {face:LIB[m][i][2]||base.face||5,text};

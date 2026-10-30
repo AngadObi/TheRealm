@@ -859,7 +859,23 @@ const LIB={
     ["Meeting a friend. Ask questions. People love it when you appear to listen.",x=>!!(x.has(/\b(?:friend|meet)/i)),5],
     ["An RSVP. It is not a commitment, merely the first step of one.",x=>!!(x.has(/\b(?:RSVP|invite)/i)),5],
     ["Cancelling the plans. The scroll accepts it, the friend will accept it, and nobody will remember.",x=>!!(false),5],
-    ["You did the social. Now recharge. I will guard the sofa.",x=>!!(x.kind==='tick'),5]]
+    ["You did the social. Now recharge. I will guard the sofa.",x=>!!(x.kind==='tick'),5]],
+  pile:[["{overdue} overdue. A siege is easier when you pick one wall.",x=>!!(true),4],
+    ["The pile is {overdue} tall. Do the smallest one and watch morale improve.",x=>!!(true),2],
+    ["{overdue} things are late. None of them is a dragon. Together they are a nuisance.",x=>!!(true),2],
+    ["A backlog is only a to-do list that has been kept waiting. Start with the oldest.",x=>!!(true),2],
+    ["{overdue} overdue. Pick three. The rest can wait one more day without consequence.",x=>!!(true),2],
+    ["Nothing here is on fire. It is merely smouldering, in {overdue} places.",x=>!!(x.over>=5),4],
+    ["{overdue} overdue. I have seen smaller armies make better progress. Begin anywhere.",x=>!!(x.over>=10),4],
+    ["{overdue} overdue is not a failure. It is a queue with a long memory.",x=>!!(true),2],
+    ["Move the ones that do not matter to tomorrow and keep the ones that do. That is the whole art.",x=>!!(true),2],
+    ["{overdue} overdue and the day has barely begun. Excellent odds, if you start now.",x=>!!(x.hr<12.0&&x.over>=1),2],
+    ["Clear two before lunch and the pile loses its nerve.",x=>!!(x.hr<12.0&&x.over>=1),8],
+    ["I counted {overdue} overdue. I have also stopped counting how often I count.",x=>!!(x.over>=10),2],
+    ["A tidy half hour would take a real bite out of {overdue} overdue tasks.",x=>!!(x.over>=3),2],
+    ["Drop the ones that no longer matter. The rest deserve a fair chance.",x=>!!(x.over>=3),2],
+    ["It is {overdue} now. By tomorrow it could be fewer. That part is up to you.",x=>!!(true),2],
+    ["The backlog grows quietly. Today it learns to fear you.",x=>!!(true),8]]
 };
 
 // Quick add: "dentist fri 3pm", "call Lena tomorrow 14:30 for 45m", "pay rent 5 nov".
@@ -1053,23 +1069,25 @@ const REPS=[['','Once'],['daily','Daily'],['weekdays','Weekdays'],['weekly','Wee
 /* ---------- Sir Reg ---------- */
 function context(){
   const td=today(),all=S.tasks,tt=all.filter(t=>t.date===td),open=tt.filter(t=>!t.done),over=all.filter(t=>!t.done&&t.date&&t.date<td);
-  return {td,tt,open,over,done:tt.length-open.length};
+  const cl=all.filter(t=>t.done&&t.doneAt&&t.date&&t.date<td&&ymd(new Date(t.doneAt))===td).length;
+  return {td,tt,open,over,done:tt.length-open.length+cl,total:tt.length+over.length+cl};
 }
 function scenario(c){
   if(S.settings.mute)return ['muted',{n:c.open.length}];
   const h=new Date().getHours(),n=c.open.length;
   if(c.tt.length===0&&c.over.length===0)return ['empty',{}];
   if(n===0&&c.over.length===0)return ['allDone',{}];
+  if(c.over.length>=4)return ['pile',{overdue:c.over.length}];
   const old=c.over.slice().sort((a,b)=>a.date<b.date?-1:1)[0];
   if(old&&diffDays(c.td,old.date)>=3)return ['overdue',{task:old.title,days:diffDays(c.td,old.date)}];
-  if(n>=10)return ['overloaded',{n}];
+  if(n+c.over.length>=10)return ['overloaded',{n:n+c.over.length}];
   const dr=c.open.find(t=>/\b(dentist|doctor|dr\.?|arzt|tax|bill)\b/i.test(t.title));
   if(dr)return ['dread',{task:dr.title}];
   const mv=c.open.filter(t=>t.moves>=3).sort((a,b)=>b.moves-a.moves)[0];
   if(mv)return ['postponed',{task:mv.title,moves:mv.moves}];
-  if(h>=22||h<5)return ['late',{n}];
+  if(h>=22||h<5)return ['late',{n:n+c.over.length}];
   if(n===1)return ['one',{}];
-  return ['briefing',{n}];
+  return ['briefing',{n:n+c.over.length}];
 }
 let LC={key:'',line:null};
 function currentLine(c){
@@ -1293,7 +1311,7 @@ function unplaced(){const c=context();return c.tt.filter(t=>!t.time&&!t.done);}
 function headHTML(){
   const c=context(),eh=(U.view==='list'||U.view==='road')?null:extHead(),line=eh?eh.line:currentLine(c);
   return `<img class="bust" src="${kn(line.face)}" alt="Sir Reg" width="134" height="134"><div class="shelf"></div>
-  <h1 class="ttl">${eh?eh.title:fmtHead(c.td)}</h1><span class="cnt">${eh?eh.sub:c.done+' of '+c.tt.length+' done'}</span>
+  <h1 class="ttl">${eh?eh.title:fmtHead(c.td)}</h1><span class="cnt">${eh?eh.sub:c.done+' of '+c.total+' done'}</span>
   <div class="top">${(U.view==='list'||U.view==='road')?`<button type="button" class="ib" data-act="goto" data-v="main" aria-label="Campaigns">${ico('flag',22,'currentColor',1.7)}</button><button type="button" class="ib" data-act="council" aria-label="The Council: plan your day">${ico('crown',22,'currentColor',1.7)}</button>`:`<button type="button" class="ib" data-act="goto" data-v="list" aria-label="Back to Today">${ico('home',22,'currentColor',1.7)}</button>`}<button type="button" class="ib" data-act="menu" aria-label="Open menu">${ico('menu',22,'currentColor',2)}</button></div>
   <div class="bub g ${line.text.length>105?'s4':line.text.length>80?'s3':line.text.length>55?'s2':''}" role="status">${esc(line.text)}</div>`;
 }
@@ -2207,7 +2225,7 @@ function libCtx(kind,vars){
     has(re){return !!tk&&re.test(tk.title);}};
   return {x,tk};
 }
-const MOMENT={briefing:['briefing'],one:['briefing'],empty:['empty'],allDone:['allDone'],overdue:['overdue'],overloaded:['overloaded'],late:['late'],postponed:['postponed'],postpone:['postponed'],added:['added'],dragonPicked:['frogPicked','frog'],dread:[]};
+const MOMENT={pile:['pile'],briefing:['briefing'],one:['briefing'],empty:['empty'],allDone:['allDone'],overdue:['overdue'],overloaded:['overloaded'],late:['late'],postponed:['postponed'],postpone:['postponed'],added:['added'],dragonPicked:['frogPicked','frog'],dread:[]};
 const FILL=(s,v)=>s.replace(/\{(\w+)\}/g,(m,k)=>v[k]!=null?v[k]:'');
 function libPick(key,vars){
   const moments=MOMENT[key];if(!moments||typeof LIB==='undefined')return null;
@@ -2231,7 +2249,7 @@ function libPick(key,vars){
   (LREC[m]=LREC[m]||[]).push(i);if(LREC[m].length>12)LREC[m].shift();
   const now=new Date(),DAYN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const dayDate=tk?new Date(tk.date+'T12:00:00'):now;
-  const v={n:x.n,task:tk?tk.title:(vars&&vars.task)||'',time:tk&&tk.time?tk.time:z2(now.getHours())+':'+z2(now.getMinutes()),day:DAYN[dayDate.getDay()],days:(vars&&vars.days)||(x.t&&x.t.od)||'',times:tk?(tk.moves||0):'',emails:x.emails,overdue:x.over};
+  const v={n:x.n+x.over,task:tk?tk.title:(vars&&vars.task)||'',time:tk&&tk.time?tk.time:z2(now.getHours())+':'+z2(now.getMinutes()),day:DAYN[dayDate.getDay()],days:(vars&&vars.days)||(x.t&&x.t.od)||'',times:tk?(tk.moves||0):'',emails:x.emails,overdue:x.over};
   let text=FILL(LIB[m][i][0],v);text=text.charAt(0).toUpperCase()+text.slice(1);
   const base=LINES[key]||LINES.briefing;
   return {face:LIB[m][i][2]||base.face||5,text};

@@ -230,7 +230,7 @@ def comp(s):
         out.append('('+c+')')
     return '&&'.join(out)
 
-DEFAULT={'briefing':1,'empty':3,'allDone':3,'overdue':2,'postponed':8,'late':1,'added':5,'overloaded':4,'frogPicked':8,'frog':8,'doctor':7,'emails':5,'calls':5,'paper':1,'chores':5,'exercise':3,'social':5,'done':3}
+DEFAULT={'pile':2,'briefing':1,'empty':3,'allDone':3,'overdue':2,'postponed':8,'late':1,'added':5,'overloaded':4,'frogPicked':8,'frog':8,'doctor':7,'emails':5,'calls':5,'paper':1,'chores':5,'exercise':3,'social':5,'done':3}
 def facefor(m,t):
     l=t.lower();f=DEFAULT.get(m,5)
     happy=r"peace|enjoy|rest\b|free\b|holiday|treasure|rare|miracle|celebrat|ale\b|nap\b|sun\b|cake|dance|party|birthday|wedding|drinks|cheers|toast|proud|bards|victory|well done|splendid|glorious|go outside|be seen|every task|scroll is clear|garden|sunshine|lovely|delight"
@@ -249,6 +249,10 @@ def facefor(m,t):
         return 2
     if m=='overloaded':
         return 4
+    if m=='pile':
+        if re.search(r'smouldering|siege|armies|fire',l):return 4
+        if re.search(r'fear|nerve|learns',l):return 8
+        return 2
     if m in('postponed','frog','frogPicked'):
         if re.search(sus,l):return 10
         if re.search(flus,l):return 9

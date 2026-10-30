@@ -358,5 +358,21 @@ const LIB={
     ["Meeting a friend. Ask questions. People love it when you appear to listen.",x=>!!(x.has(/\b(?:friend|meet)/i)),5],
     ["An RSVP. It is not a commitment, merely the first step of one.",x=>!!(x.has(/\b(?:RSVP|invite)/i)),5],
     ["Cancelling the plans. The scroll accepts it, the friend will accept it, and nobody will remember.",x=>!!(false),5],
-    ["You did the social. Now recharge. I will guard the sofa.",x=>!!(x.kind==='tick'),5]]
+    ["You did the social. Now recharge. I will guard the sofa.",x=>!!(x.kind==='tick'),5]],
+  pile:[["{overdue} overdue. A siege is easier when you pick one wall.",x=>!!(true),4],
+    ["The pile is {overdue} tall. Do the smallest one and watch morale improve.",x=>!!(true),2],
+    ["{overdue} things are late. None of them is a dragon. Together they are a nuisance.",x=>!!(true),2],
+    ["A backlog is only a to-do list that has been kept waiting. Start with the oldest.",x=>!!(true),2],
+    ["{overdue} overdue. Pick three. The rest can wait one more day without consequence.",x=>!!(true),2],
+    ["Nothing here is on fire. It is merely smouldering, in {overdue} places.",x=>!!(x.over>=5),4],
+    ["{overdue} overdue. I have seen smaller armies make better progress. Begin anywhere.",x=>!!(x.over>=10),4],
+    ["{overdue} overdue is not a failure. It is a queue with a long memory.",x=>!!(true),2],
+    ["Move the ones that do not matter to tomorrow and keep the ones that do. That is the whole art.",x=>!!(true),2],
+    ["{overdue} overdue and the day has barely begun. Excellent odds, if you start now.",x=>!!(x.hr<12.0&&x.over>=1),2],
+    ["Clear two before lunch and the pile loses its nerve.",x=>!!(x.hr<12.0&&x.over>=1),8],
+    ["I counted {overdue} overdue. I have also stopped counting how often I count.",x=>!!(x.over>=10),2],
+    ["A tidy half hour would take a real bite out of {overdue} overdue tasks.",x=>!!(x.over>=3),2],
+    ["Drop the ones that no longer matter. The rest deserve a fair chance.",x=>!!(x.over>=3),2],
+    ["It is {overdue} now. By tomorrow it could be fewer. That part is up to you.",x=>!!(true),2],
+    ["The backlog grows quietly. Today it learns to fear you.",x=>!!(true),8]]
 };
