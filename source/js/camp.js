@@ -257,7 +257,7 @@ function weekHTML(){
     const d=addDays(s,i),ts=S.tasks.filter(t=>t.date===d).sort((x,y)=>x.done!==y.done?(x.done?1:-1):(x.time||'99')<(y.time||'99')?-1:(x.time||'99')>(y.time||'99')?1:0);
     const dl=S.quests.filter(q=>!q.done&&q.due===d);
     const open=ts.filter(t=>!t.done).length;
-    h+=`<section class="wd ${d===td?'now':''} ${d<td?'past':''}"><div class="wh"><b>${fmtHead(d)}</b><span>${d===td?'TODAY':d===addDays(td,1)?'TOMORROW':''}${open?(d===td||d===addDays(td,1)?' \u00b7 ':'')+open+' OPEN':''}</span><button type="button" class="wplus" data-act="calAdd" data-v="${d}" aria-label="Add a task on ${fmtHead(d)}">${ico('plus',18,'var(--bone)',2.2)}</button></div>`+
+    h+=`<section data-d="${d}" class="wd ${d===td?'now':''} ${d<td?'past':''}"><div class="wh"><b>${fmtHead(d)}</b><span>${d===td?'TODAY':d===addDays(td,1)?'TOMORROW':''}${open?(d===td||d===addDays(td,1)?' \u00b7 ':'')+open+' OPEN':''}</span><button type="button" class="wplus" data-act="calAdd" data-v="${d}" aria-label="Add a task on ${fmtHead(d)}">${ico('plus',18,'var(--bone)',2.2)}</button></div>`+
       dl.map(q=>`<div class="wdl" data-act="openQuest" data-id="${q.id}">${ico('flag',16,'var(--brass-l)',1.8)}<span>${esc(q.title)}</span><em>DEADLINE</em></div>`).join('')+
       (ts.length?ts.map(t=>rowHTML(t,false)).join(''):dl.length?'':'<p class="wfree">Free.</p>')+'</section>';
   }
@@ -272,3 +272,59 @@ document.addEventListener('click',e=>{
   else if(a==='calAdd'){openAdd(null);U.add.date=el.dataset.v;U.add.over.date=true;U.add.time='';refreshMeta();}
   else if(a==='goto'&&el.dataset.v==='cal'){U.calStart=monOf(today());}
 });
+
+/* ---------- calendar: long-press a task, drag it to another day ---------- */
+let cd=null;
+function cdClear(){document.querySelectorAll('.wd.drop,.wnav .chip.hov').forEach(e=>e.classList.remove('drop','hov'));}
+function cdLoop(){
+  if(!cd||!cd.lifted)return;
+  const m=$('#main');if(m){const r=m.getBoundingClientRect();let v=0;
+    if(cd.cy<r.top+80)v=-Math.min(14,(r.top+80-cd.cy)/5);else if(cd.cy>r.bottom-100)v=Math.min(14,(cd.cy-(r.bottom-100))/5);
+    if(v)m.scrollTop+=v;}
+  cdTarget();cd.raf=requestAnimationFrame(cdLoop);
+}
+function cdTarget(){
+  const el=document.elementFromPoint(cd.cx,cd.cy);cdClear();
+  const nav=el&&el.closest('[data-act="calPrev"],[data-act="calNext"]');
+  if(nav){nav.classList.add('hov');const a=nav.dataset.act;
+    if(cd.nav!==a){cd.nav=a;clearTimeout(cd.nt);cd.nt=setTimeout(()=>{U.calStart=addDays(calStart(),a==='calPrev'?-7:7);renderHead();renderMain();cd.nav=null;},650);}
+    cd.tgt=null;return;
+  }
+  if(cd.nav){cd.nav=null;clearTimeout(cd.nt);}
+  const sec=el&&el.closest('.wd');
+  if(sec){sec.classList.add('drop');cd.tgt=sec.dataset.d;}else cd.tgt=null;
+}
+document.addEventListener('pointerdown',e=>{
+  if(U.view!=='cal'||U.sheet||U.council||U.camp)return;
+  const row=e.target.closest('.row');if(!row||e.target.closest('.cb')||!row.dataset.id)return;
+  cd={row,id:row.dataset.id,x:e.clientX,y:e.clientY,cx:e.clientX,cy:e.clientY,pid:e.pointerId,lifted:false,tgt:null};
+  cd.t=setTimeout(()=>{
+    if(!cd)return;cd.lifted=true;
+    const r=row.getBoundingClientRect();cd.ox=cd.x-r.left;cd.oy=cd.y-r.top;
+    const g=row.cloneNode(true);g.classList.add('cdghost');g.style.width=r.width+'px';g.style.left='0';g.style.top='0';
+    document.body.appendChild(g);cd.g=g;g.style.transform='translate('+(cd.cx-cd.ox)+'px,'+(cd.cy-cd.oy)+'px) rotate(-1.5deg)';
+    row.classList.add('cdlift');document.body.classList.add('cdon');
+    if(navigator.vibrate)try{navigator.vibrate(14);}catch(x){}
+    cd.raf=requestAnimationFrame(cdLoop);
+  },280);
+});
+document.addEventListener('pointermove',e=>{
+  if(!cd||e.pointerId!==cd.pid)return;
+  cd.cx=e.clientX;cd.cy=e.clientY;
+  if(!cd.lifted){if(Math.abs(cd.cx-cd.x)>9||Math.abs(cd.cy-cd.y)>9){clearTimeout(cd.t);cd=null;}return;}
+  cd.g.style.transform='translate('+(cd.cx-cd.ox)+'px,'+(cd.cy-cd.oy)+'px) rotate(-1.5deg)';
+});
+document.addEventListener('touchmove',e=>{if(cd&&cd.lifted)e.preventDefault();},{passive:false});
+function cdEnd(cancel){
+  if(!cd)return;const d=cd;cd=null;clearTimeout(d.t);clearTimeout(d.nt);cancelAnimationFrame(d.raf);
+  if(!d.lifted)return;
+  suppress=Date.now()+400;cdClear();document.body.classList.remove('cdon');if(d.g)d.g.remove();
+  const t=S.tasks.find(x=>x.id===d.id);
+  if(!cancel&&t&&d.tgt&&d.tgt!==t.date){
+    const prev={date:t.date,moves:t.moves},later=d.tgt>t.date;
+    t.date=d.tgt;if(later){t.moves=(t.moves||0)+1;}save();if(later)logEv('postponed',t);
+    toast({face:5,text:'Moved to '+fmtHead(d.tgt)+'.'},()=>{t.date=prev.date;t.moves=prev.moves;save();U.bubble=null;render();});
+  }
+  renderHead();renderMain();
+}
+document.addEventListener('pointerup',()=>cdEnd(false));document.addEventListener('pointercancel',()=>cdEnd(true));
