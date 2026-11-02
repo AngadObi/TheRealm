@@ -304,7 +304,7 @@ function newCatHTML(){
 /* ---------- views ---------- */
 function sortTasks(a,b){if(a.done!==b.done)return a.done?1:-1;const ta=a.time||'99:99',tb=b.time||'99:99';return ta<tb?-1:ta>tb?1:a.createdAt-b.createdAt;}
 function rowHTML(t,over,showCat){
-  const tier=tierOf(t),dragon=!!tier;
+  const tier0=tierOf(t),tier=(tier0==='dragon'&&t.tags&&t.tags.length)?null:tier0,dragon=!!tier;
   let rem='';
   if(over)rem=`due ${diffDays(today(),t.date)} ${diffDays(today(),t.date)===1?'day':'days'} ago`;
   else if(t.moves>=2&&!t.done)rem=`moved ${t.moves} times`;
@@ -318,7 +318,7 @@ function rowHTML(t,over,showCat){
   <div class="row g ${t.done?'done':''} ${dragon?'dragon':''} ${tg?'tagged':''}" data-id="${t.id}" ${tg?`style="--tc:${tg.col}"`:''}>
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
     <div class="nm" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${rem?`<em>${rem}</em>`:''}</div>
-    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${tagPills(t)}${ap}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
+    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${showCat?ap:tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
   </div></div>`;
 }
 function banner(id,name,count,bg,icon,shut){
