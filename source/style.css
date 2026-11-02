@@ -681,3 +681,7 @@ body.cdon{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .wbn{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-bottom:2px solid var(--tc);background:var(--tile)}
 .wbn b{font:400 21px var(--fell);color:var(--bone)}
 .wbn i{margin-left:auto;font:italic 15px var(--fell);color:var(--dim);font-style:italic;min-height:0}
+.lsw{display:flex;justify-content:flex-end;padding:0 0 4px}
+.lsb{display:flex;align-items:center;gap:6px;min-height:32px;padding:0 4px;background:none;border:0;color:var(--dim);font:500 11px var(--mono);letter-spacing:.16em;cursor:pointer}
+.lsb:active{color:var(--bone)}
+.tgs i.ar{--tc:var(--dim);border-color:var(--border);color:var(--dim)}

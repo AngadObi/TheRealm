@@ -312,13 +312,13 @@ function rowHTML(t,over,showCat){
   if(t.rep&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'repeats '+t.rep;
   if(t.steps&&t.steps.length){const sd=t.steps.filter(x=>x.done).length;rem=(rem?rem+' \u00b7 ':'')+sd+'/'+t.steps.length+' steps';}
   if(t.note&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'note';
-  if(showCat)rem=esc(cat(t.cat).name)+(rem?' \u00b7 '+rem:'');
+  const ap=showCat?`<span class="tgs"><i class="ar">${esc(cat(t.cat).name.toUpperCase())}</i></span>`:'';
   const tg=!t.done&&TAGDEF.find(d=>hasTag(t,d.id));
   return `<div class="rw" data-id="${t.id}"><div class="bgl">${ico('chevr',18,'var(--glow)',2)} Tomorrow</div><div class="bgp">Drop ${ico('x',18,'var(--glow)',2)}</div>
   <div class="row g ${t.done?'done':''} ${dragon?'dragon':''} ${tg?'tagged':''}" data-id="${t.id}" ${tg?`style="--tc:${tg.col}"`:''}>
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
     <div class="nm" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${rem?`<em>${rem}</em>`:''}</div>
-    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
+    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${tagPills(t)}${ap}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
   </div></div>`;
 }
 function banner(id,name,count,bg,icon,shut){
@@ -331,8 +331,8 @@ function listHTML(){
   if(pq&&!pq.done){const ps=campStats(pq);h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${rankOf(ps,pq)[0]}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
   const tn=(plan().notes||[]);
   if(tn.length)h+=`<button type="button" class="nrow" data-act="notesOpen">${ico('pen',18,'var(--brass-l)',1.7)}<span>Chamber note from ${z2(new Date(tn[tn.length-1].at).getHours())}:${z2(new Date(tn[tn.length-1].at).getMinutes())}</span>${ico('chevr',16,'var(--dim)',2)}</button>`;
-  const lv=S.settings.lview==='weight'?'weight':'area';
-  const sw=`<div class="lsw"><div class="seg" role="tablist"><button type="button" role="tab" aria-selected="${lv==='area'}" class="${lv==='area'?'on':''}" data-act="lview" data-v="area">By area</button><button type="button" role="tab" aria-selected="${lv==='weight'}" class="${lv==='weight'?'on':''}" data-act="lview" data-v="weight">By weight</button></div></div>`;
+  const lv=S.settings.lview==='area'?'area':'weight';
+  const sw=`<div class="lsw"><button type="button" class="lsb" data-act="lview" data-v="${lv==='weight'?'area':'weight'}" aria-label="Switch list view. Now grouped by ${lv}">${lv==='weight'?'BY WEIGHT':'BY AREA'}${ico('chev',12,'currentColor',2.2)}</button></div>`;
   if(lv==='weight'){
     const all=c.over.concat(c.tt);
     const wg=t=>t.done?'done':hasTag(t,'shadow')?'shadow':hasTag(t,'sworn')?'sworn':(hasTag(t,'cobweb')||hasTag(t,'nibble'))?'sweep':'plain';
