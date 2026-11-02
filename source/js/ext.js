@@ -198,6 +198,10 @@ function extAct(act,v,id,el){
       const t={id:uid(),title:title[0].toUpperCase()+title.slice(1),cat:p.cat||S.last||S.cats[0].id,date:p.date||today(),time:p.time||'',dur:p.dur||p.guess||60,done:false,moves:0,createdAt:Date.now(),rep:'',q:''};
       S.tasks.push(t);learn(t.title,t.cat);save();logEv('added',t,{raw,catManual:false,suggested:p.cat?cat(p.cat).name:'',batch:false,viaCouncil:true});
       U.council.focus=($('#focusTxt')||{}).value||U.council.focus;U.council.dragonId=t.id;U.council.pickOpen=false;U.council.line=pickLine('dragonPicked',{id:t.id,task:t.title}).text;renderOverlay();render(true);break;}
+    case 'lview':S.settings.lview=v;save();renderMain();break;
+    case 'copyLog':{const tx=sortingLogText();U.menu=false;renderOverlay();
+      const done=()=>toast({face:6,text:'Sorting log copied. Paste it to Claude.'});
+      try{navigator.clipboard.writeText(tx).then(done,()=>{window.prompt&&0;toast({face:2,text:'Could not copy. Try again.'});});}catch(e){toast({face:2,text:'Could not copy. Try again.'});}break;}
     case 'sync':if(window.realmSync){realmSync.user()?realmSync.signOut():realmSync.signIn();}break;
     case 'councilK':openCouncil(v);break;
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;

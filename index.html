@@ -687,6 +687,11 @@ body.cdon{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .kws{display:flex;flex-wrap:wrap;gap:8px}
 .kw{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 12px;border:1.5px solid var(--border);border-radius:16px;font:500 13px var(--mono);color:var(--bone)}
 .kw button{display:grid;place-items:center;width:28px;height:28px;background:none;border:0;color:var(--dim);cursor:pointer;min-height:0;min-width:0}
+.row.tagged{box-shadow:inset 4px 0 0 var(--tc)}
+.lsw{padding:2px 0 14px}.lsw .seg{width:100%}
+.wbn{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-bottom:2px solid var(--tc);background:var(--tile)}
+.wbn b{font:400 21px var(--fell);color:var(--bone)}
+.wbn i{margin-left:auto;font:italic 15px var(--fell);color:var(--dim);font-style:italic;min-height:0}
 
 </style>
 <div class="app" id="app"></div>
@@ -1571,7 +1576,7 @@ function newCatHTML(){
 
 /* ---------- views ---------- */
 function sortTasks(a,b){if(a.done!==b.done)return a.done?1:-1;const ta=a.time||'99:99',tb=b.time||'99:99';return ta<tb?-1:ta>tb?1:a.createdAt-b.createdAt;}
-function rowHTML(t,over){
+function rowHTML(t,over,showCat){
   const tier=tierOf(t),dragon=!!tier;
   let rem='';
   if(over)rem=`due ${diffDays(today(),t.date)} ${diffDays(today(),t.date)===1?'day':'days'} ago`;
@@ -1580,8 +1585,10 @@ function rowHTML(t,over){
   if(t.rep&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'repeats '+t.rep;
   if(t.steps&&t.steps.length){const sd=t.steps.filter(x=>x.done).length;rem=(rem?rem+' \u00b7 ':'')+sd+'/'+t.steps.length+' steps';}
   if(t.note&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'note';
+  if(showCat)rem=esc(cat(t.cat).name)+(rem?' \u00b7 '+rem:'');
+  const tg=!t.done&&TAGDEF.find(d=>hasTag(t,d.id));
   return `<div class="rw" data-id="${t.id}"><div class="bgl">${ico('chevr',18,'var(--glow)',2)} Tomorrow</div><div class="bgp">Drop ${ico('x',18,'var(--glow)',2)}</div>
-  <div class="row g ${t.done?'done':''} ${dragon?'dragon':''}" data-id="${t.id}">
+  <div class="row g ${t.done?'done':''} ${dragon?'dragon':''} ${tg?'tagged':''}" data-id="${t.id}" ${tg?`style="--tc:${tg.col}"`:''}>
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
     <div class="nm" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${rem?`<em>${rem}</em>`:''}</div>
     ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
@@ -1594,9 +1601,22 @@ function banner(id,name,count,bg,icon,shut){
 function listHTML(){
   const c=context();let h='';
   const pq=S.settings.pin&&questOf(S.settings.pin);
-  if(pq&&!pq.done){const ps=campStats(pq);h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${ps.pc}%${ps.left!==null?' \u00b7 '+(ps.left<0?-ps.left+'d late':ps.left+'d left'):''}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
+  if(pq&&!pq.done){const ps=campStats(pq);h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${rankOf(ps,pq)[0]}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
   const tn=(plan().notes||[]);
   if(tn.length)h+=`<button type="button" class="nrow" data-act="notesOpen">${ico('pen',18,'var(--brass-l)',1.7)}<span>Chamber note from ${z2(new Date(tn[tn.length-1].at).getHours())}:${z2(new Date(tn[tn.length-1].at).getMinutes())}</span>${ico('chevr',16,'var(--dim)',2)}</button>`;
+  const lv=S.settings.lview==='weight'?'weight':'area';
+  const sw=`<div class="lsw"><div class="seg" role="tablist"><button type="button" role="tab" aria-selected="${lv==='area'}" class="${lv==='area'?'on':''}" data-act="lview" data-v="area">By area</button><button type="button" role="tab" aria-selected="${lv==='weight'}" class="${lv==='weight'?'on':''}" data-act="lview" data-v="weight">By weight</button></div></div>`;
+  if(lv==='weight'){
+    const all=c.over.concat(c.tt);
+    const wg=t=>t.done?'done':hasTag(t,'shadow')?'shadow':hasTag(t,'sworn')?'sworn':(hasTag(t,'cobweb')||hasTag(t,'nibble'))?'sweep':'plain';
+    const G=[['shadow','Shadows','Face these first','moon','#B39BE0'],['sworn','Sworn Dates','Must be done by a date','flag','#F0803F'],['plain','The rest','','list','#B79A63'],['sweep','Cobwebs and Nibbles','One sweep','easy','#9DB6C8'],['done','Done','','check','#7C7A6E']];
+    let w=sw;
+    G.forEach(([g,nm,sub,ic,col])=>{const ts=all.filter(t=>wg(t)===g).sort(sortTasks);if(!ts.length)return;
+      w+=`<section class="cat"><div class="wbn" style="--tc:${col}">${ico(ic,20,col,1.7)}<b>${nm}</b>${sub?`<i>${sub}</i>`:''}</div>${ts.map(t=>rowHTML(t,t.date<c.td&&!t.done,true)).join('')}</section>`;});
+    if(w===sw)w+='<div class="empty">Nothing on the scroll for today.<br>Tap the red button to add something.</div>';
+    return h+w+(S.sample?'<p class="note">These are sample tasks so you can try things. Swipe a task right to move it to tomorrow, left to drop it, tap it to edit. Clear them in the menu.</p>':'');
+  }
+  h+=sw;
   if(c.over.length){
     h+=`<section class="cat ${S.shut.__over?'shut':''}">${banner('__over','Overdue',c.over.length,'#5A2B26','rest',S.shut.__over)}${c.over.sort(sortTasks).map(t=>rowHTML(t,true)).join('')}</section>`;
   }
@@ -1663,6 +1683,7 @@ ${bn('Quests','#4A4128','flag')}
   ${row('sun','The Day','plan today, now','councilK','', false,'day')}
   ${row('week','The Week','look ahead','councilK','',false,'week')}
   ${row('bolt','Emergency','overwhelmed? start here','councilK','',false,'emergency')}
+  ${row('pen','Sorting log','copy what the Council heard, to share with Claude','copyLog','',false,'')}
   ${row('pen','Chamber notes',(()=>{const n=Object.values(S.plans).reduce((a,p)=>a+((p.notes||[]).length),0);return n?n+(n===1?' note saved':' notes saved'):'written in the Emergency Council';})(),'notesOpen','',false,'')}
   <div style="height:12px"></div><button type="button" class="ban g sbtn" data-act="setToggle" style="background-color:#3D2E3F;border-radius:3px 3px 0 0;width:100%;border:0;text-align:left" aria-expanded="${!!U.setOpen}">${ico('gear',22,'var(--brass-l)',1.6)}<b>Settings</b><span style="margin-left:auto">${ico('chev',18,'var(--brass-l)',2)}</span></button>
   ${U.setOpen?`  ${row('sun','Theme',{dark:'dark',light:'light',system:'follows your phone'}[S.settings.theme||'dark'],null,'<span></span>')}
@@ -2243,31 +2264,40 @@ const TAG_WORDS={
   sworn:['deadline','due ','must be done','has to be done','have to be done','coming over','is coming','are coming','arrives','arriving','visiting','guests','tonight','before they','last day','expires','no later than','by end of','end of day','cutoff','cut-off']
 };
 const SWORN_RE=/\b(?:by|before|until|till)\s+(?:the\s+)?(?:tomorrow|tonight|today|mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday|next|end of|the \d|\d)/i;
+const TFILL=new Set(['really','also','today','tomorrow','would','like','just','still','need','needs','want','going','think','thing','things','some','something','very','much','more','than','been','being','make','take','done','doing','getting','anything','everything']);
 const reEsc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function tagGuess(sent){
   const s=String(sent).toLowerCase().replace(/[\u2019]/g,"'"),ids=[],why={};
   TAGDEF.forEach(d=>{
     for(const w of TAG_WORDS[d.id]){
       const tr=w.trim(),re=new RegExp('(^|[^a-z])'+reEsc(tr)+((w.endsWith(' ')||tr.length<5)?'($|[^a-z])':''));
-      if(re.test(s)){ids.push(d.id);why[d.id]=tr;break;}
+      if(re.test(s)&&!(((S.tmute||{})[d.id]||{})[tr.toLowerCase()]>=2)){ids.push(d.id);why[d.id]={w:tr};break;}
     }
   });
-  if(!ids.includes('sworn')&&SWORN_RE.test(sent)){ids.push('sworn');why.sworn=(SWORN_RE.exec(sent)||[''])[0].trim();}
+  const tl=S.tlearn||{};
+  TAGDEF.forEach(d=>{
+    if(ids.includes(d.id)||!tl[d.id])return;
+    for(const w of wordsOf(s)){if((tl[d.id][w]||0)>=2&&!TFILL.has(w)){ids.push(d.id);why[d.id]={w,l:true};break;}}
+  });
+  if(!ids.includes('sworn')&&SWORN_RE.test(sent)){ids.push('sworn');why.sworn={w:(SWORN_RE.exec(sent)||[''])[0].trim()};}
   return {ids,why};
 }
 
 /* ----- splitting a ramble into thoughts ----- */
-const TRIG=/\b(?:need to|needs to|have to|has to|got to|gotta|must|should|want to|wanna|going to|gonna|supposed to|ought to|remember to|don'?t forget to|forgot to)\s+/i;
-const ACTV=/^(?:call|email|e-mail|book|pay|buy|send|clean|scan|write|finish|submit|schedule|prepare|ask|talk|order|cancel|renew|fix|update|check|plan|set up|organi[sz]e|read|reply|text|ring|sort|tidy|wash|cook|pack|print|sign|upload|apply|review|draft|look for|find)\b/i;
+const TRIG=/\b(?:need to|needs to|have to|has to|got to|gotta|must|should|want to|wanna|going to|gonna|supposed to|ought to|remember to|don'?t forget to|forgot to|(?:would|'d)\s+(?:also\s+)?like to|plan to|planning to|hope to|hoping to|better)\s+/i;
+const SPLITV='call|email|e-mail|book|pay|buy|send|clean|scan|write|finish|submit|schedule|prepare|ask|talk|order|cancel|renew|fix|update|check|plan|set up|organi[sz]e|read|reply|text|ring|sort|tidy|wash|cook|pack|print|sign|upload|apply|review|draft|look for|find|take|give|return|pick up|drop off|go|clear|empty|water|feed|shower|visit|cut|iron|vacuum|fold|bring|research|meet|get|make|do';
+const ACTV=/^(?:take|give|return|pick up|drop off|go|clear|empty|water|feed|shower|visit|cut|iron|vacuum|fold|bring|research|meet|call|email|e-mail|book|pay|buy|send|clean|scan|write|finish|submit|schedule|prepare|ask|talk|order|cancel|renew|fix|update|check|plan|set up|organi[sz]e|read|reply|text|ring|sort|tidy|wash|cook|pack|print|sign|upload|apply|review|draft|look for|find)\b/i;
 function dumpClean(s){
   s=String(s).replace(/^[\s,;:\-–]+/,'');let prev;
   do{prev=s;s=s.replace(/^(?:and|also|so|oh|then|plus|but|okay|ok|well|first|lastly|finally|anyway|um|uh|honestly|basically|right now|now)\b[\s,]*/i,'');}while(s!==prev);
   return s.trim();
 }
 function dumpSplit(text){
+  const need="need|have|should|must|want|got|gotta|would|'d|plan|hope|better|going|gonna|wanna";
   const t=String(text).replace(/\r/g,'')
     .replace(/([.!?;])\s+/g,'$1\u0001')
-    .replace(/\s+(?:and|plus|then)\s+(?:also\s+)?(?=(?:i|we)\s+(?:also\s+|really\s+|still\s+|just\s+)*(?:need|have|should|must|want|got|gotta))/gi,'\u0001')
+    .replace(new RegExp("\\s+(?:and|plus|then)\\s+(?:also\\s+)?(?=(?:i|we)\\s+(?:also\\s+|really\\s+|still\\s+|just\\s+)*(?:"+need+"))","gi"),'\u0001')
+    .replace(new RegExp("(?:,\\s*(?:and\\s+|then\\s+|also\\s+)?|\\s+(?:and|then|plus)\\s+(?:also\\s+)?)(?=(?:"+SPLITV+")\\b)","gi"),'\u0001')
     .replace(/\n+/g,'\u0001');
   return t.split('\u0001').map(x=>x.trim().replace(/[.!?;]+$/,'')).filter(x=>x.length>2);
 }
@@ -2327,7 +2357,7 @@ function dumpParse(text){
     const g=tagGuess(sent),clean=dumpClean(sent);
     const isTask=TRIG.test(clean)||ACTV.test(clean);
     const k=uid();
-    if(!isTask){out.push({k,thought:true,asTask:false,orig:sent,title:clean[0].toUpperCase()+clean.slice(1),tags:[],why:{}});return;}
+    if(!isTask){out.push({k,thought:true,asTask:false,orig:sent,title:clean[0].toUpperCase()+clean.slice(1),tags:[],why:{},g:{thought:true,tags:[]}});return;}
     const dt=dumpTitle(sent);
     const p=parseQuick(dt.title,pctx());let p2=null;
     const title=(p.title||dt.title).trim();
@@ -2338,6 +2368,7 @@ function dumpParse(text){
     if(tags.includes('sworn')&&!tags.includes('shadow')){}
     const dup=dupMatch(title),q=dup?dup.q:campMatch(title);
     const it={k,thought:false,orig:sent,title:title[0].toUpperCase()+title.slice(1),fix:dt.fix,cat:cid,date,time:p.time||'',dur:tags.includes('nibble')?15:(p.dur||p.guess||30),tags,why:g.why,q:q&&q.id||(dup&&dup.q)||'',sid:dup?dup.id:'',dupTitle:dup?dup.title:''};
+    it.g={title:it.title,tags:tags.slice(),cat:cid,q:it.q};
     if(dup){(dup.tags||[]).forEach(x=>{if(!it.tags.includes(x))it.tags.push(x);});it.date=dup.date<today()?today():dup.date;it.cat=dup.cat;}
     out.push(it);
   });
@@ -2377,6 +2408,11 @@ function dayCommit(){
   });
   const txt=(R.text||'').trim();
   if(txt)dayNote(R,txt);
+  try{
+    const ent={at:Date.now(),text:txt,items:(R.items||[]).map(it=>({s:it.orig,g:it.g,f:it.thought&&!it.asTask?{kept:'note'}:{t:it.title,tags:it.tags,c:it.cat,q:it.q,d:it.date,conv:it.conv?1:0,dup:it.dupTitle||''}})).concat(R.dropped||[])};
+    if(txt){S.dlog=(S.dlog||[]).concat([ent]).slice(-30);}
+  }catch(e){}
+  U.council.dragonId=null;
   save();render(true);
 }
 function dayList(){
@@ -2429,7 +2465,7 @@ function dayStepHTML(s){
 function whyLine(it){
   const ks=Object.keys(it.why||{}).filter(k=>it.tags.includes(k));
   if(!ks.length)return '';
-  return `<p class="swhy">${ks.map(k=>`${tagDef(k).name}: you said “${esc(it.why[k])}”`).join(' · ')}</p>`;
+  return `<p class="swhy">${ks.map(k=>{const y=it.why[k];return `${tagDef(k).name}: ${y.l?'learned from':'you said'} “${esc(y.w)}”`;}).join(' · ')}</p>`;
 }
 function sortCardHTML(it){
   if(it.thought&&!it.asTask){
@@ -2444,7 +2480,7 @@ function sortCardHTML(it){
     <div class="tchips">${chips}</div>${whyLine(it)}
     <div class="smeta"><select class="ssel" data-dsel="cat" data-k="${it.k}" aria-label="Area">${S.cats.map(c=>`<option value="${c.id}" ${c.id===it.cat?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
     <input type="date" class="ssel" data-dsel="date" data-k="${it.k}" value="${it.date||''}" aria-label="Date">
-    ${qs.length?`<select class="ssel" data-dsel="q" data-k="${it.k}" aria-label="Campaign"><option value="">No campaign</option>${qs.map(q=>`<option value="${q.id}" ${q.id===it.q?'selected':''}>${esc(q.title)}</option>`).join('')}</select>`:''}</div>
+    ${qs.length?`<select class="ssel" data-dsel="q" data-k="${it.k}" aria-label="Campaign"><option value="">+ Add to campaign</option>${qs.map(q=>`<option value="${q.id}" ${q.id===it.q?'selected':''}>${esc(q.title)}</option>`).join('')}</select>`:''}</div>
   </div>`;
 }
 function orgRowsFor(id){
@@ -2502,12 +2538,12 @@ function tagsAct(act,v,id){
   const C=U.council,R=C&&C.rit;
   switch(act){
     case 'rMode':{R.mode=v;R.steps=(v==='organise'?DSTEPS_ORG:DSTEPS_RAMBLE).slice();R.i=R.steps.indexOf('mode');ritNext();return true;}
-    case 'dTag':{const it=(R.items||[]).find(x=>x.k===id);if(it){tagToggle(it.tags,v);if(v==='nibble'&&it.tags.includes('nibble'))it.dur=15;ritDraw();}return true;}
+    case 'dTag':{const it=(R.items||[]).find(x=>x.k===id);if(it){tagToggle(it.tags,v);const on=it.tags.includes(v);if(v==='nibble'&&on)it.dur=15;tagLearn(it,v,on);ritDraw();}return true;}
     case 'dTask':{const it=(R.items||[]).find(x=>x.k===id);if(!it)return true;
       const dt=dumpTitle(it.orig),p=parseQuick(dt.title,pctx());const title=(p.title||dt.title).trim();
-      Object.assign(it,{thought:false,asTask:true,title:title[0].toUpperCase()+title.slice(1),fix:true,cat:p.cat||S.last||S.cats[0].id,date:p.date||today(),time:p.time||'',dur:p.dur||30,q:'',sid:''});
+      it.conv=true;Object.assign(it,{thought:false,asTask:true,title:title[0].toUpperCase()+title.slice(1),fix:true,cat:p.cat||S.last||S.cats[0].id,date:p.date||today(),time:p.time||'',dur:p.dur||30,q:'',sid:''});
       const g=tagGuess(it.orig);it.tags=g.ids;it.why=g.why;ritDraw();return true;}
-    case 'dDrop':{const it=(R.items||[]).find(x=>x.k===id);if(it){it.drop=true;R.items=R.items.filter(x=>x!==it);ritDraw();}return true;}
+    case 'dDrop':{const it=(R.items||[]).find(x=>x.k===id);if(it){it.drop=true;(R.dropped=R.dropped||[]).push({s:it.orig,g:it.g,drop:1});R.items=R.items.filter(x=>x!==it);ritDraw();}return true;}
     case 'oTog':{const t=S.tasks.find(x=>x.id===id);if(!t)return true;t.tags=t.tags||[];tagToggle(t.tags,v);if(!t.tags.length)delete t.tags;save();render(true);ritDraw();return true;}
     case 'oAdd':{const i=$('#oIn_'+v);if(i&&i.value.trim()){orgAdd(v,i.value);ritDraw();const x=$('#oIn_'+v);x&&x.focus();}return true;}
     case 'dLater':{
@@ -2532,7 +2568,9 @@ document.addEventListener('change',e=>{
   const R=U.council&&U.council.rit;if(!R||!e.target.dataset||!e.target.dataset.dsel)return;
   const it=(R.items||[]).find(x=>x.k===e.target.dataset.k);if(!it)return;
   const w=e.target.dataset.dsel;
-  if(w==='cat')it.cat=e.target.value;else if(w==='date')it.date=e.target.value||today();else if(w==='q')it.q=e.target.value;
+  if(w==='cat')it.cat=e.target.value;else if(w==='date')it.date=e.target.value||today();else if(w==='q'){it.q=e.target.value;const q=questOf(it.q);
+    if(q){const have=campWords(q).all;const add=wordsOf(it.title).filter(x=>x.length>=5&&!TFILL.has(x)&&!have.includes(x)).slice(0,2);
+      if(add.length){q.kw=(q.kw||[]).concat(add);q.kwOff=(q.kwOff||[]).filter(x=>!add.includes(x));save();}}}
   if(w==='q'||w==='date')ritDraw();
 });
 document.addEventListener('keydown',e=>{
@@ -2542,6 +2580,23 @@ document.addEventListener('keydown',e=>{
 function dayFirst(){
   try{const rows=dayList();for(const [g] of DGROUPS){const r=rows.find(x=>dayGroup(x)===g&&g!=='later');if(r)return r.title;}}catch(e){}
   return '';
+}
+
+/* ----- learning from corrections ----- */
+function tagLearn(it,tag,on){
+  const guessed=it.g&&(it.g.tags||[]).includes(tag);
+  S.tlearn=S.tlearn||{};S.tmute=S.tmute||{};
+  if(on&&!guessed){
+    const m=S.tlearn[tag]=S.tlearn[tag]||{};
+    wordsOf(it.orig).forEach(w=>{if(!TFILL.has(w))m[w]=(m[w]||0)+1;});
+  }
+  if(!on&&guessed&&it.why&&it.why[tag]&&!it.why[tag].l){
+    const m=S.tmute[tag]=S.tmute[tag]||{};const w=String(it.why[tag].w).toLowerCase();m[w]=(m[w]||0)+1;
+  }
+}
+function sortingLogText(){
+  const d=(S.dlog||[]).slice(-15);
+  return JSON.stringify({note:'The Realm sorting log. s=sentence, g=what the app guessed, f=what you ended up with.',learned:S.tlearn||{},muted:S.tmute||{},dumps:d});
 }
 
 /* ---------- the guided Council ritual (Day and Week) ---------- */
@@ -3361,6 +3416,10 @@ function extAct(act,v,id,el){
       const t={id:uid(),title:title[0].toUpperCase()+title.slice(1),cat:p.cat||S.last||S.cats[0].id,date:p.date||today(),time:p.time||'',dur:p.dur||p.guess||60,done:false,moves:0,createdAt:Date.now(),rep:'',q:''};
       S.tasks.push(t);learn(t.title,t.cat);save();logEv('added',t,{raw,catManual:false,suggested:p.cat?cat(p.cat).name:'',batch:false,viaCouncil:true});
       U.council.focus=($('#focusTxt')||{}).value||U.council.focus;U.council.dragonId=t.id;U.council.pickOpen=false;U.council.line=pickLine('dragonPicked',{id:t.id,task:t.title}).text;renderOverlay();render(true);break;}
+    case 'lview':S.settings.lview=v;save();renderMain();break;
+    case 'copyLog':{const tx=sortingLogText();U.menu=false;renderOverlay();
+      const done=()=>toast({face:6,text:'Sorting log copied. Paste it to Claude.'});
+      try{navigator.clipboard.writeText(tx).then(done,()=>{window.prompt&&0;toast({face:2,text:'Could not copy. Try again.'});});}catch(e){toast({face:2,text:'Could not copy. Try again.'});}break;}
     case 'sync':if(window.realmSync){realmSync.user()?realmSync.signOut():realmSync.signIn();}break;
     case 'councilK':openCouncil(v);break;
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;

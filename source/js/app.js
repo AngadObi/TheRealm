@@ -303,7 +303,7 @@ function newCatHTML(){
 
 /* ---------- views ---------- */
 function sortTasks(a,b){if(a.done!==b.done)return a.done?1:-1;const ta=a.time||'99:99',tb=b.time||'99:99';return ta<tb?-1:ta>tb?1:a.createdAt-b.createdAt;}
-function rowHTML(t,over){
+function rowHTML(t,over,showCat){
   const tier=tierOf(t),dragon=!!tier;
   let rem='';
   if(over)rem=`due ${diffDays(today(),t.date)} ${diffDays(today(),t.date)===1?'day':'days'} ago`;
@@ -312,8 +312,10 @@ function rowHTML(t,over){
   if(t.rep&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'repeats '+t.rep;
   if(t.steps&&t.steps.length){const sd=t.steps.filter(x=>x.done).length;rem=(rem?rem+' \u00b7 ':'')+sd+'/'+t.steps.length+' steps';}
   if(t.note&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'note';
+  if(showCat)rem=esc(cat(t.cat).name)+(rem?' \u00b7 '+rem:'');
+  const tg=!t.done&&TAGDEF.find(d=>hasTag(t,d.id));
   return `<div class="rw" data-id="${t.id}"><div class="bgl">${ico('chevr',18,'var(--glow)',2)} Tomorrow</div><div class="bgp">Drop ${ico('x',18,'var(--glow)',2)}</div>
-  <div class="row g ${t.done?'done':''} ${dragon?'dragon':''}" data-id="${t.id}">
+  <div class="row g ${t.done?'done':''} ${dragon?'dragon':''} ${tg?'tagged':''}" data-id="${t.id}" ${tg?`style="--tc:${tg.col}"`:''}>
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
     <div class="nm" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${rem?`<em>${rem}</em>`:''}</div>
     ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
@@ -326,9 +328,22 @@ function banner(id,name,count,bg,icon,shut){
 function listHTML(){
   const c=context();let h='';
   const pq=S.settings.pin&&questOf(S.settings.pin);
-  if(pq&&!pq.done){const ps=campStats(pq);h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${ps.pc}%${ps.left!==null?' \u00b7 '+(ps.left<0?-ps.left+'d late':ps.left+'d left'):''}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
+  if(pq&&!pq.done){const ps=campStats(pq);h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${rankOf(ps,pq)[0]}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
   const tn=(plan().notes||[]);
   if(tn.length)h+=`<button type="button" class="nrow" data-act="notesOpen">${ico('pen',18,'var(--brass-l)',1.7)}<span>Chamber note from ${z2(new Date(tn[tn.length-1].at).getHours())}:${z2(new Date(tn[tn.length-1].at).getMinutes())}</span>${ico('chevr',16,'var(--dim)',2)}</button>`;
+  const lv=S.settings.lview==='weight'?'weight':'area';
+  const sw=`<div class="lsw"><div class="seg" role="tablist"><button type="button" role="tab" aria-selected="${lv==='area'}" class="${lv==='area'?'on':''}" data-act="lview" data-v="area">By area</button><button type="button" role="tab" aria-selected="${lv==='weight'}" class="${lv==='weight'?'on':''}" data-act="lview" data-v="weight">By weight</button></div></div>`;
+  if(lv==='weight'){
+    const all=c.over.concat(c.tt);
+    const wg=t=>t.done?'done':hasTag(t,'shadow')?'shadow':hasTag(t,'sworn')?'sworn':(hasTag(t,'cobweb')||hasTag(t,'nibble'))?'sweep':'plain';
+    const G=[['shadow','Shadows','Face these first','moon','#B39BE0'],['sworn','Sworn Dates','Must be done by a date','flag','#F0803F'],['plain','The rest','','list','#B79A63'],['sweep','Cobwebs and Nibbles','One sweep','easy','#9DB6C8'],['done','Done','','check','#7C7A6E']];
+    let w=sw;
+    G.forEach(([g,nm,sub,ic,col])=>{const ts=all.filter(t=>wg(t)===g).sort(sortTasks);if(!ts.length)return;
+      w+=`<section class="cat"><div class="wbn" style="--tc:${col}">${ico(ic,20,col,1.7)}<b>${nm}</b>${sub?`<i>${sub}</i>`:''}</div>${ts.map(t=>rowHTML(t,t.date<c.td&&!t.done,true)).join('')}</section>`;});
+    if(w===sw)w+='<div class="empty">Nothing on the scroll for today.<br>Tap the red button to add something.</div>';
+    return h+w+(S.sample?'<p class="note">These are sample tasks so you can try things. Swipe a task right to move it to tomorrow, left to drop it, tap it to edit. Clear them in the menu.</p>':'');
+  }
+  h+=sw;
   if(c.over.length){
     h+=`<section class="cat ${S.shut.__over?'shut':''}">${banner('__over','Overdue',c.over.length,'#5A2B26','rest',S.shut.__over)}${c.over.sort(sortTasks).map(t=>rowHTML(t,true)).join('')}</section>`;
   }
@@ -395,6 +410,7 @@ ${bn('Quests','#4A4128','flag')}
   ${row('sun','The Day','plan today, now','councilK','', false,'day')}
   ${row('week','The Week','look ahead','councilK','',false,'week')}
   ${row('bolt','Emergency','overwhelmed? start here','councilK','',false,'emergency')}
+  ${row('pen','Sorting log','copy what the Council heard, to share with Claude','copyLog','',false,'')}
   ${row('pen','Chamber notes',(()=>{const n=Object.values(S.plans).reduce((a,p)=>a+((p.notes||[]).length),0);return n?n+(n===1?' note saved':' notes saved'):'written in the Emergency Council';})(),'notesOpen','',false,'')}
   <div style="height:12px"></div><button type="button" class="ban g sbtn" data-act="setToggle" style="background-color:#3D2E3F;border-radius:3px 3px 0 0;width:100%;border:0;text-align:left" aria-expanded="${!!U.setOpen}">${ico('gear',22,'var(--brass-l)',1.6)}<b>Settings</b><span style="margin-left:auto">${ico('chev',18,'var(--brass-l)',2)}</span></button>
   ${U.setOpen?`  ${row('sun','Theme',{dark:'dark',light:'light',system:'follows your phone'}[S.settings.theme||'dark'],null,'<span></span>')}

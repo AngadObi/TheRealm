@@ -22,31 +22,40 @@ const TAG_WORDS={
   sworn:['deadline','due ','must be done','has to be done','have to be done','coming over','is coming','are coming','arrives','arriving','visiting','guests','tonight','before they','last day','expires','no later than','by end of','end of day','cutoff','cut-off']
 };
 const SWORN_RE=/\b(?:by|before|until|till)\s+(?:the\s+)?(?:tomorrow|tonight|today|mon|tue|wed|thu|fri|sat|sun|monday|tuesday|wednesday|thursday|friday|saturday|sunday|next|end of|the \d|\d)/i;
+const TFILL=new Set(['really','also','today','tomorrow','would','like','just','still','need','needs','want','going','think','thing','things','some','something','very','much','more','than','been','being','make','take','done','doing','getting','anything','everything']);
 const reEsc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function tagGuess(sent){
   const s=String(sent).toLowerCase().replace(/[\u2019]/g,"'"),ids=[],why={};
   TAGDEF.forEach(d=>{
     for(const w of TAG_WORDS[d.id]){
       const tr=w.trim(),re=new RegExp('(^|[^a-z])'+reEsc(tr)+((w.endsWith(' ')||tr.length<5)?'($|[^a-z])':''));
-      if(re.test(s)){ids.push(d.id);why[d.id]=tr;break;}
+      if(re.test(s)&&!(((S.tmute||{})[d.id]||{})[tr.toLowerCase()]>=2)){ids.push(d.id);why[d.id]={w:tr};break;}
     }
   });
-  if(!ids.includes('sworn')&&SWORN_RE.test(sent)){ids.push('sworn');why.sworn=(SWORN_RE.exec(sent)||[''])[0].trim();}
+  const tl=S.tlearn||{};
+  TAGDEF.forEach(d=>{
+    if(ids.includes(d.id)||!tl[d.id])return;
+    for(const w of wordsOf(s)){if((tl[d.id][w]||0)>=2&&!TFILL.has(w)){ids.push(d.id);why[d.id]={w,l:true};break;}}
+  });
+  if(!ids.includes('sworn')&&SWORN_RE.test(sent)){ids.push('sworn');why.sworn={w:(SWORN_RE.exec(sent)||[''])[0].trim()};}
   return {ids,why};
 }
 
 /* ----- splitting a ramble into thoughts ----- */
-const TRIG=/\b(?:need to|needs to|have to|has to|got to|gotta|must|should|want to|wanna|going to|gonna|supposed to|ought to|remember to|don'?t forget to|forgot to)\s+/i;
-const ACTV=/^(?:call|email|e-mail|book|pay|buy|send|clean|scan|write|finish|submit|schedule|prepare|ask|talk|order|cancel|renew|fix|update|check|plan|set up|organi[sz]e|read|reply|text|ring|sort|tidy|wash|cook|pack|print|sign|upload|apply|review|draft|look for|find)\b/i;
+const TRIG=/\b(?:need to|needs to|have to|has to|got to|gotta|must|should|want to|wanna|going to|gonna|supposed to|ought to|remember to|don'?t forget to|forgot to|(?:would|'d)\s+(?:also\s+)?like to|plan to|planning to|hope to|hoping to|better)\s+/i;
+const SPLITV='call|email|e-mail|book|pay|buy|send|clean|scan|write|finish|submit|schedule|prepare|ask|talk|order|cancel|renew|fix|update|check|plan|set up|organi[sz]e|read|reply|text|ring|sort|tidy|wash|cook|pack|print|sign|upload|apply|review|draft|look for|find|take|give|return|pick up|drop off|go|clear|empty|water|feed|shower|visit|cut|iron|vacuum|fold|bring|research|meet|get|make|do';
+const ACTV=/^(?:take|give|return|pick up|drop off|go|clear|empty|water|feed|shower|visit|cut|iron|vacuum|fold|bring|research|meet|call|email|e-mail|book|pay|buy|send|clean|scan|write|finish|submit|schedule|prepare|ask|talk|order|cancel|renew|fix|update|check|plan|set up|organi[sz]e|read|reply|text|ring|sort|tidy|wash|cook|pack|print|sign|upload|apply|review|draft|look for|find)\b/i;
 function dumpClean(s){
   s=String(s).replace(/^[\s,;:\-–]+/,'');let prev;
   do{prev=s;s=s.replace(/^(?:and|also|so|oh|then|plus|but|okay|ok|well|first|lastly|finally|anyway|um|uh|honestly|basically|right now|now)\b[\s,]*/i,'');}while(s!==prev);
   return s.trim();
 }
 function dumpSplit(text){
+  const need="need|have|should|must|want|got|gotta|would|'d|plan|hope|better|going|gonna|wanna";
   const t=String(text).replace(/\r/g,'')
     .replace(/([.!?;])\s+/g,'$1\u0001')
-    .replace(/\s+(?:and|plus|then)\s+(?:also\s+)?(?=(?:i|we)\s+(?:also\s+|really\s+|still\s+|just\s+)*(?:need|have|should|must|want|got|gotta))/gi,'\u0001')
+    .replace(new RegExp("\\s+(?:and|plus|then)\\s+(?:also\\s+)?(?=(?:i|we)\\s+(?:also\\s+|really\\s+|still\\s+|just\\s+)*(?:"+need+"))","gi"),'\u0001')
+    .replace(new RegExp("(?:,\\s*(?:and\\s+|then\\s+|also\\s+)?|\\s+(?:and|then|plus)\\s+(?:also\\s+)?)(?=(?:"+SPLITV+")\\b)","gi"),'\u0001')
     .replace(/\n+/g,'\u0001');
   return t.split('\u0001').map(x=>x.trim().replace(/[.!?;]+$/,'')).filter(x=>x.length>2);
 }
@@ -106,7 +115,7 @@ function dumpParse(text){
     const g=tagGuess(sent),clean=dumpClean(sent);
     const isTask=TRIG.test(clean)||ACTV.test(clean);
     const k=uid();
-    if(!isTask){out.push({k,thought:true,asTask:false,orig:sent,title:clean[0].toUpperCase()+clean.slice(1),tags:[],why:{}});return;}
+    if(!isTask){out.push({k,thought:true,asTask:false,orig:sent,title:clean[0].toUpperCase()+clean.slice(1),tags:[],why:{},g:{thought:true,tags:[]}});return;}
     const dt=dumpTitle(sent);
     const p=parseQuick(dt.title,pctx());let p2=null;
     const title=(p.title||dt.title).trim();
@@ -117,6 +126,7 @@ function dumpParse(text){
     if(tags.includes('sworn')&&!tags.includes('shadow')){}
     const dup=dupMatch(title),q=dup?dup.q:campMatch(title);
     const it={k,thought:false,orig:sent,title:title[0].toUpperCase()+title.slice(1),fix:dt.fix,cat:cid,date,time:p.time||'',dur:tags.includes('nibble')?15:(p.dur||p.guess||30),tags,why:g.why,q:q&&q.id||(dup&&dup.q)||'',sid:dup?dup.id:'',dupTitle:dup?dup.title:''};
+    it.g={title:it.title,tags:tags.slice(),cat:cid,q:it.q};
     if(dup){(dup.tags||[]).forEach(x=>{if(!it.tags.includes(x))it.tags.push(x);});it.date=dup.date<today()?today():dup.date;it.cat=dup.cat;}
     out.push(it);
   });
@@ -156,6 +166,11 @@ function dayCommit(){
   });
   const txt=(R.text||'').trim();
   if(txt)dayNote(R,txt);
+  try{
+    const ent={at:Date.now(),text:txt,items:(R.items||[]).map(it=>({s:it.orig,g:it.g,f:it.thought&&!it.asTask?{kept:'note'}:{t:it.title,tags:it.tags,c:it.cat,q:it.q,d:it.date,conv:it.conv?1:0,dup:it.dupTitle||''}})).concat(R.dropped||[])};
+    if(txt){S.dlog=(S.dlog||[]).concat([ent]).slice(-30);}
+  }catch(e){}
+  U.council.dragonId=null;
   save();render(true);
 }
 function dayList(){
@@ -208,7 +223,7 @@ function dayStepHTML(s){
 function whyLine(it){
   const ks=Object.keys(it.why||{}).filter(k=>it.tags.includes(k));
   if(!ks.length)return '';
-  return `<p class="swhy">${ks.map(k=>`${tagDef(k).name}: you said “${esc(it.why[k])}”`).join(' · ')}</p>`;
+  return `<p class="swhy">${ks.map(k=>{const y=it.why[k];return `${tagDef(k).name}: ${y.l?'learned from':'you said'} “${esc(y.w)}”`;}).join(' · ')}</p>`;
 }
 function sortCardHTML(it){
   if(it.thought&&!it.asTask){
@@ -223,7 +238,7 @@ function sortCardHTML(it){
     <div class="tchips">${chips}</div>${whyLine(it)}
     <div class="smeta"><select class="ssel" data-dsel="cat" data-k="${it.k}" aria-label="Area">${S.cats.map(c=>`<option value="${c.id}" ${c.id===it.cat?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
     <input type="date" class="ssel" data-dsel="date" data-k="${it.k}" value="${it.date||''}" aria-label="Date">
-    ${qs.length?`<select class="ssel" data-dsel="q" data-k="${it.k}" aria-label="Campaign"><option value="">No campaign</option>${qs.map(q=>`<option value="${q.id}" ${q.id===it.q?'selected':''}>${esc(q.title)}</option>`).join('')}</select>`:''}</div>
+    ${qs.length?`<select class="ssel" data-dsel="q" data-k="${it.k}" aria-label="Campaign"><option value="">+ Add to campaign</option>${qs.map(q=>`<option value="${q.id}" ${q.id===it.q?'selected':''}>${esc(q.title)}</option>`).join('')}</select>`:''}</div>
   </div>`;
 }
 function orgRowsFor(id){
@@ -281,12 +296,12 @@ function tagsAct(act,v,id){
   const C=U.council,R=C&&C.rit;
   switch(act){
     case 'rMode':{R.mode=v;R.steps=(v==='organise'?DSTEPS_ORG:DSTEPS_RAMBLE).slice();R.i=R.steps.indexOf('mode');ritNext();return true;}
-    case 'dTag':{const it=(R.items||[]).find(x=>x.k===id);if(it){tagToggle(it.tags,v);if(v==='nibble'&&it.tags.includes('nibble'))it.dur=15;ritDraw();}return true;}
+    case 'dTag':{const it=(R.items||[]).find(x=>x.k===id);if(it){tagToggle(it.tags,v);const on=it.tags.includes(v);if(v==='nibble'&&on)it.dur=15;tagLearn(it,v,on);ritDraw();}return true;}
     case 'dTask':{const it=(R.items||[]).find(x=>x.k===id);if(!it)return true;
       const dt=dumpTitle(it.orig),p=parseQuick(dt.title,pctx());const title=(p.title||dt.title).trim();
-      Object.assign(it,{thought:false,asTask:true,title:title[0].toUpperCase()+title.slice(1),fix:true,cat:p.cat||S.last||S.cats[0].id,date:p.date||today(),time:p.time||'',dur:p.dur||30,q:'',sid:''});
+      it.conv=true;Object.assign(it,{thought:false,asTask:true,title:title[0].toUpperCase()+title.slice(1),fix:true,cat:p.cat||S.last||S.cats[0].id,date:p.date||today(),time:p.time||'',dur:p.dur||30,q:'',sid:''});
       const g=tagGuess(it.orig);it.tags=g.ids;it.why=g.why;ritDraw();return true;}
-    case 'dDrop':{const it=(R.items||[]).find(x=>x.k===id);if(it){it.drop=true;R.items=R.items.filter(x=>x!==it);ritDraw();}return true;}
+    case 'dDrop':{const it=(R.items||[]).find(x=>x.k===id);if(it){it.drop=true;(R.dropped=R.dropped||[]).push({s:it.orig,g:it.g,drop:1});R.items=R.items.filter(x=>x!==it);ritDraw();}return true;}
     case 'oTog':{const t=S.tasks.find(x=>x.id===id);if(!t)return true;t.tags=t.tags||[];tagToggle(t.tags,v);if(!t.tags.length)delete t.tags;save();render(true);ritDraw();return true;}
     case 'oAdd':{const i=$('#oIn_'+v);if(i&&i.value.trim()){orgAdd(v,i.value);ritDraw();const x=$('#oIn_'+v);x&&x.focus();}return true;}
     case 'dLater':{
@@ -311,7 +326,9 @@ document.addEventListener('change',e=>{
   const R=U.council&&U.council.rit;if(!R||!e.target.dataset||!e.target.dataset.dsel)return;
   const it=(R.items||[]).find(x=>x.k===e.target.dataset.k);if(!it)return;
   const w=e.target.dataset.dsel;
-  if(w==='cat')it.cat=e.target.value;else if(w==='date')it.date=e.target.value||today();else if(w==='q')it.q=e.target.value;
+  if(w==='cat')it.cat=e.target.value;else if(w==='date')it.date=e.target.value||today();else if(w==='q'){it.q=e.target.value;const q=questOf(it.q);
+    if(q){const have=campWords(q).all;const add=wordsOf(it.title).filter(x=>x.length>=5&&!TFILL.has(x)&&!have.includes(x)).slice(0,2);
+      if(add.length){q.kw=(q.kw||[]).concat(add);q.kwOff=(q.kwOff||[]).filter(x=>!add.includes(x));save();}}}
   if(w==='q'||w==='date')ritDraw();
 });
 document.addEventListener('keydown',e=>{
@@ -321,4 +338,21 @@ document.addEventListener('keydown',e=>{
 function dayFirst(){
   try{const rows=dayList();for(const [g] of DGROUPS){const r=rows.find(x=>dayGroup(x)===g&&g!=='later');if(r)return r.title;}}catch(e){}
   return '';
+}
+
+/* ----- learning from corrections ----- */
+function tagLearn(it,tag,on){
+  const guessed=it.g&&(it.g.tags||[]).includes(tag);
+  S.tlearn=S.tlearn||{};S.tmute=S.tmute||{};
+  if(on&&!guessed){
+    const m=S.tlearn[tag]=S.tlearn[tag]||{};
+    wordsOf(it.orig).forEach(w=>{if(!TFILL.has(w))m[w]=(m[w]||0)+1;});
+  }
+  if(!on&&guessed&&it.why&&it.why[tag]&&!it.why[tag].l){
+    const m=S.tmute[tag]=S.tmute[tag]||{};const w=String(it.why[tag].w).toLowerCase();m[w]=(m[w]||0)+1;
+  }
+}
+function sortingLogText(){
+  const d=(S.dlog||[]).slice(-15);
+  return JSON.stringify({note:'The Realm sorting log. s=sentence, g=what the app guessed, f=what you ended up with.',learned:S.tlearn||{},muted:S.tmute||{},dumps:d});
 }

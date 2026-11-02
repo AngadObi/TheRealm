@@ -676,3 +676,8 @@ body.cdon{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .kws{display:flex;flex-wrap:wrap;gap:8px}
 .kw{display:inline-flex;align-items:center;gap:4px;padding:2px 4px 2px 12px;border:1.5px solid var(--border);border-radius:16px;font:500 13px var(--mono);color:var(--bone)}
 .kw button{display:grid;place-items:center;width:28px;height:28px;background:none;border:0;color:var(--dim);cursor:pointer;min-height:0;min-width:0}
+.row.tagged{box-shadow:inset 4px 0 0 var(--tc)}
+.lsw{padding:2px 0 14px}.lsw .seg{width:100%}
+.wbn{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-bottom:2px solid var(--tc);background:var(--tile)}
+.wbn b{font:400 21px var(--fell);color:var(--bone)}
+.wbn i{margin-left:auto;font:italic 15px var(--fell);color:var(--dim);font-style:italic;min-height:0}
