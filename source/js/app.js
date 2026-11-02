@@ -217,7 +217,7 @@ function stepTick(i){const t=curTask();if(!t||!t.steps||!t.steps[i])return;const
   if(s.done&&!t.done&&t.steps.every(x=>x.done)){toast({face:3,text:'All steps done. Tick the task itself?'});}}
 function openAdd(id){U.toast=null;renderToast();
   const t=id?S.tasks.find(x=>x.id===id):null;
-  U.add={id:id||null,text:t?t.title:'',date:t?t.date:today(),time:t?t.time:'',cat:t?t.cat:(S.last||S.cats[0].id),dur:t?t.dur:30,rep:t?(t.rep||''):'',q:t?(t.q||''):'',col:t?(t.col||''):'',over:{date:!!t,time:!!t,cat:!!t,dur:!!t,rep:!!t},confirmDel:false,open:null};
+  U.add={id:id||null,text:t?t.title:'',date:t?t.date:today(),time:t?t.time:'',cat:t?t.cat:(S.last||S.cats[0].id),dur:t?t.dur:30,rep:t?(t.rep||''):'',q:t?(t.q||''):'',col:t?(t.col||''):'',tags:t&&t.tags?t.tags.slice():[],over:{date:!!t,time:!!t,cat:!!t,dur:!!t,rep:!!t},confirmDel:false,open:null};
   U.sheet='add';renderOverlay();
   if(!id)setTimeout(()=>{const i=$('#addInput');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},60);
 }
@@ -226,11 +226,12 @@ function metaHTML(){
   const dl=!a.date?'No date':a.date===td?'Today':a.date===tm?'Tomorrow':fmtHead(a.date);
   const dur=a.dur>=60&&a.dur%60===0?(a.dur/60)+' h':a.dur+' min';
   const pill=(id,inner)=>`<button type="button" class="chip ${U.add.open===id?'on':''}" data-act="pick" data-v="${id}">${inner}</button>`;
-  let h=`<div class="chips sm">${a.n>1?`<span class="cnt2">${a.n} tasks</span>`:''}${pill('date',esc(dl))}${pill('time',a.time||'No time')}${pill('cat',ico(iconOf(k),16,'var(--brass-l)',1.6)+esc(k.name))}${pill('dur',dur)}${a.rep?pill('rep','\u21bb '+(REPS.find(r=>r[0]===a.rep)||[0,''])[1]):pill('rep','Repeat')}${S.quests.some(q=>!q.done)||a.q?pill('quest',(questOf(a.q)?esc(questOf(a.q).title):'No quest')):''}${a.q&&questOf(a.q)?pill('col',esc((()=>{const qq=questOf(a.q),cs=colsOf(qq);const c=cs.find(x=>x.id===a.col);return c?c.name:cs.find(x=>x.id===(a.id?(S.tasks.find(t=>t.id===a.id)||{}).col:''))?.name||cs.find(x=>x.id===startCol(qq)).name;})())):''}</div>`;
+  let h=`<div class="chips sm">${a.n>1?`<span class="cnt2">${a.n} tasks</span>`:''}${pill('date',esc(dl))}${pill('time',a.time||'No time')}${pill('cat',ico(iconOf(k),16,'var(--brass-l)',1.6)+esc(k.name))}${pill('dur',dur)}${pill('tags',(a.tags&&a.tags.length)?esc(a.tags.map(x=>tagDef(x).name).join(' \u00b7 ')):'Tags')}${a.rep?pill('rep','\u21bb '+(REPS.find(r=>r[0]===a.rep)||[0,''])[1]):pill('rep','Repeat')}${S.quests.some(q=>!q.done)||a.q?pill('quest',(questOf(a.q)?esc(questOf(a.q).title):'No quest')):''}${a.q&&questOf(a.q)?pill('col',esc((()=>{const qq=questOf(a.q),cs=colsOf(qq);const c=cs.find(x=>x.id===a.col);return c?c.name:cs.find(x=>x.id===(a.id?(S.tasks.find(t=>t.id===a.id)||{}).col:''))?.name||cs.find(x=>x.id===startCol(qq)).name;})())):''}</div>`;
   const o=a.open;
   if(o==='date')h+=`<div class="chips sm sub"><button type="button" class="chip ${a.date===td?'on':''}" data-act="setDate" data-v="${td}">Today</button><button type="button" class="chip ${a.date===tm?'on':''}" data-act="setDate" data-v="${tm}">Tomorrow</button>${a.q?`<button type="button" class="chip ${!a.date?'on':''}" data-act="setDate" data-v="">No date</button>`:''}<input type="date" id="addDate" value="${a.date}" aria-label="Date"></div>`;
   else if(o==='time')h+=`<div class="chips sm sub"><input type="time" id="addTime" value="${a.time||''}" aria-label="Time"><button type="button" class="chip" data-act="clearTime">No time</button></div>`;
   else if(o==='cat')h+=`<div class="chips sm sub">${S.cats.map(c=>`<button type="button" class="chip ${a.cat===c.id?'on':''}" data-act="setCat" data-v="${c.id}">${ico(iconOf(c),16,'var(--brass-l)',1.6)}${esc(c.name)}</button>`).join('')}<button type="button" class="chip" data-act="newCat">${ico('plus',16)}New</button></div>`;
+  else if(o==='tags')h+=`<div class="chips sm sub">${TAGDEF.map(d=>`<button type="button" class="chip ${(a.tags||[]).includes(d.id)?'on':''}" style="--tc:${d.col}" data-act="setTag" data-v="${d.id}">${ico(d.icon,16,d.col,1.7)}${d.name}</button>`).join('')}</div>`;
   else if(o==='rep')h+=`<div class="chips sm sub">${REPS.map(([v,l])=>`<button type="button" class="chip ${a.rep===v?'on':''}" data-act="setRep" data-v="${v}">${l}</button>`).join('')}</div>`;
   else if(o==='quest')h+=`<div class="chips sm sub"><button type="button" class="chip ${!a.q?'on':''}" data-act="setQuest" data-v="">None</button>${S.quests.filter(q=>!q.done).map(q=>`<button type="button" class="chip ${a.q===q.id?'on':''}" data-act="setQuest" data-v="${q.id}">${ico(q.icon,16,'var(--brass-l)',1.6)}${esc(q.title)}</button>`).join('')}</div>`;
   else if(o==='col'&&questOf(a.q))h+=`<div class="chips sm sub">${colsOf(questOf(a.q)).map(c=>`<button type="button" class="chip ${(a.col||(S.tasks.find(t=>t.id===a.id)||{}).col||startCol(questOf(a.q)))===c.id?'on':''}" data-act="setCol" data-v="${c.id}">${esc(c.name)}</button>`).join('')}</div>`;
@@ -263,7 +264,7 @@ function submitAdd(){
   const a=U.add;const raw=($('#addInput').value||'').trim();if(!raw)return;
   if(a.id){
     const t=S.tasks.find(x=>x.id===a.id);if(!t)return;
-    const oc=t.cat;t.title=raw;t.date=a.date||(a.q?'':today());t.time=a.time||'';t.cat=a.cat;t.dur=a.dur;t.rep=a.rep||'';t.q=a.q||'';assignCol(t,a.col);learn(raw,a.cat);save();if(oc!==a.cat)logEv('recat',t,{from:cat(oc).name});U.sheet=null;render();return;
+    const oc=t.cat;t.title=raw;t.date=a.date||(a.q?'':today());t.time=a.time||'';t.cat=a.cat;t.dur=a.dur;t.rep=a.rep||'';t.q=a.q||'';if(a.tags&&a.tags.length)t.tags=a.tags.slice();else delete t.tags;assignCol(t,a.col);learn(raw,a.cat);save();if(oc!==a.cat)logEv('recat',t,{from:cat(oc).name});U.sheet=null;render();return;
   }
   const parts=raw.split(',').map(x=>x.trim()).filter(Boolean);
   const made=[];
@@ -275,7 +276,8 @@ function submitAdd(){
       date=p.date||(a.over.date?a.date:today());time=p.time||(a.over.time?a.time:'');
       dur=p.dur||(a.over.dur?a.dur:(p.guess||30));cid=a.over.cat?a.cat:(p.cat||a.cat||S.last);
     }
-    const t={id:uid(),title,cat:cid,date,time,dur,done:false,moves:0,createdAt:Date.now()+i,rep:(parts.length===1?a.rep:(p.rep||(a.over.rep?a.rep:'')))||'',q:a.q||''};
+    const t={id:uid(),title,cat:cid,date,time,dur,done:false,moves:0,createdAt:Date.now()+i,rep:(parts.length===1?a.rep:(p.rep||(a.over.rep?a.rep:'')))||'',q:a.q||'',tags:(a.tags||[]).slice()};
+    if(!t.tags.length)delete t.tags;
     S.tasks.push(t);made.push(t);if(t.q)assignCol(t,'');learn(title,cid);
     if(p.dragon){S.plans[date]=Object.assign({},S.plans[date]||{},{dragonId:t.id});t.dragonSet=true;}
     logEv('added',t,{raw:part,catManual:parts.length===1?!!a.over.cat:!!a.over.cat,suggested:p.cat?cat(p.cat).name:'',batch:parts.length>1});
@@ -314,7 +316,7 @@ function rowHTML(t,over){
   <div class="row g ${t.done?'done':''} ${dragon?'dragon':''}" data-id="${t.id}">
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
     <div class="nm" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${rem?`<em>${rem}</em>`:''}</div>
-    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
+    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
   </div></div>`;
 }
 function banner(id,name,count,bg,icon,shut){
@@ -496,6 +498,7 @@ document.addEventListener('click',e=>{
     case 'setDate':U.add.date=v;U.add.over.date=true;U.add.open=null;refreshMeta();break;
     case 'clearTime':U.add.time='';U.add.over.time=true;U.add.open=null;refreshMeta();break;
     case 'setCat':U.add.cat=v;U.add.over.cat=true;U.add.open=null;refreshMeta();break;
+    case 'setTag':{U.add.tags=U.add.tags||[];tagToggle(U.add.tags,v);refreshMeta();break;}
     case 'setDur':U.add.dur=+v;U.add.over.dur=true;U.add.open=null;refreshMeta();break;
     case 'submit':submitAdd();break;
     case 'delTask':if(U.add.confirmDel){const i=U.add.id;U.sheet=null;removeTask(i);render();}else{U.add.confirmDel=true;renderOverlay();}break;

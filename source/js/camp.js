@@ -105,6 +105,7 @@ function briefHTML(q){
   ${sec('Next up',dueHTML(q))}
   ${sec('The road',road)}
   ${ex.journal?sec('The journal',ex.journal):''}
+  <section class="bsec"><h4>Keywords</h4><div class="kws">${(()=>{const w=campWords(q);return w.all.map(x=>`<span class="kw">${esc(x)}<button type="button" data-act="kwDel" data-id="${q.id}" data-v="${esc(x)}" aria-label="Remove ${esc(x)}">${ico('x',12,'currentColor',2.4)}</button></span>`).join('');})()}</div><div class="arow" style="margin-top:12px"><input id="kwIn" class="inp" type="text" placeholder="Add words, separated by commas" autocomplete="off" aria-label="Add keywords"><button type="button" class="go" data-act="kwAdd" data-id="${q.id}" aria-label="Add">${ico('plus',22,'currentColor',2.6)}</button></div><p class="note" style="margin:10px 0 0;font:italic 16px var(--fell);color:var(--dim)">Tasks you mention in the Council that use these words land on this campaign's board.</p></section>
   <button type="button" class="lnk pinl" data-act="campPin" data-id="${q.id}">${S.settings.pin===q.id?'Unpin from home':'Pin to home'}</button></div>`;
 }
 function campHTML(){
