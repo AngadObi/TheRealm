@@ -1,7 +1,7 @@
-/* ---------- task tags: Shadows, Cobwebs, Nibbles, Sworn Dates ---------- */
+/* ---------- task tags: Gauntlets, Cobwebs, Nibbles, Sworn Dates ---------- */
 /* Names live here. Change a name and it changes everywhere. */
 const TAGDEF=[
-  {id:'shadow',name:'Shadow',plural:'Shadows',sub:'Weighs on me',icon:'moon',col:'#B39BE0'},
+  {id:'shadow',name:'Gauntlet',plural:'Gauntlets',sub:'Weighs on me',icon:'flame',col:'#B39BE0'},
   {id:'sworn',name:'Sworn Date',plural:'Sworn Dates',sub:'Must be done by a date',icon:'flag',col:'#F0803F'},
   {id:'cobweb',name:'Cobweb',plural:'Cobwebs',sub:'Putting it off',icon:'wheel',col:'#9DB6C8'},
   {id:'nibble',name:'Nibble',plural:'Nibbles',sub:'Small and irritating',icon:'easy',col:'#A9C46F'}
@@ -196,7 +196,7 @@ function dayGroup(r){
   if(!tg.includes('cobweb')&&!tg.includes('nibble'))return 'plain';
   return 'sweep';
 }
-const DGROUPS=[['shadow','Face these first','moon'],['sworn','Sworn dates','flag'],['plain','The rest of the day','list'],['sweep','One sweep: cobwebs and nibbles','easy'],['later','Moved to later','chev']];
+const DGROUPS=[['shadow','Face these first','flame'],['sworn','Sworn dates','flag'],['plain','The rest of the day','list'],['sweep','One sweep: cobwebs and nibbles','easy'],['later','Moved to later','chev']];
 
 /* ---- HTML ---- */
 function dayStepHTML(s){
@@ -204,7 +204,7 @@ function dayStepHTML(s){
   const sh=(ic,col,t,sub)=>`<div class="rh"><span class="tl">${ico(ic,22,col,1.7)}</span><h2>${t}</h2><p>${sub}</p></div>`;
   if(s==='mode'){
     return ritHero(1,'s')+sh('pen','var(--brass-l)','How shall we begin?',R.wline2||'Two ways in. Pick by how your head feels.')+
-    `<div class="dmodes"><button type="button" class="dmode g" data-act="rMode" data-v="ramble"><span class="tl">${ico('pen',26,'var(--glow)',1.6)}</span><b>Ramble</b><i>Tell me everything, in any order. I will sort it into shadows, cobwebs and the rest.</i></button>
+    `<div class="dmodes"><button type="button" class="dmode g" data-act="rMode" data-v="ramble"><span class="tl">${ico('pen',26,'var(--glow)',1.6)}</span><b>Ramble</b><i>Tell me everything, in any order. I will sort it into gauntlets, cobwebs and the rest.</i></button>
     <button type="button" class="dmode g" data-act="rMode" data-v="organise"><span class="tl">${ico('list',26,'var(--glow)',1.6)}</span><b>Organise</b><i>I know what I need. Let me place each thing myself.</i></button></div>`;
   }
   if(s==='input'&&R.mode==='organise')return orgHTML();

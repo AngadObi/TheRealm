@@ -336,7 +336,7 @@ function listHTML(){
   if(lv==='weight'){
     const all=c.over.concat(c.tt);
     const wg=t=>t.done?'done':hasTag(t,'shadow')?'shadow':hasTag(t,'sworn')?'sworn':(hasTag(t,'cobweb')||hasTag(t,'nibble'))?'sweep':'plain';
-    const G=[['shadow','Shadows','Face these first','moon','#B39BE0'],['sworn','Sworn Dates','Must be done by a date','flag','#F0803F'],['plain','The rest','','list','#B79A63'],['sweep','Cobwebs and Nibbles','One sweep','easy','#9DB6C8'],['done','Done','','check','#7C7A6E']];
+    const G=[['shadow','Gauntlets','Face these first','flame','#B39BE0'],['sworn','Sworn Dates','Must be done by a date','flag','#F0803F'],['plain','The rest','','list','#B79A63'],['sweep','Cobwebs and Nibbles','One sweep','easy','#9DB6C8'],['done','Done','','check','#7C7A6E']];
     let w=sw;
     G.forEach(([g,nm,sub,ic,col])=>{const ts=all.filter(t=>wg(t)===g).sort(sortTasks);if(!ts.length)return;
       w+=`<section class="cat"><div class="wbn" style="--tc:${col}">${ico(ic,20,col,1.7)}<b>${nm}</b>${sub?`<i>${sub}</i>`:''}</div>${ts.map(t=>rowHTML(t,t.date<c.td&&!t.done,true)).join('')}</section>`;});
