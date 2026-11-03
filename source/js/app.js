@@ -186,9 +186,19 @@ function postpone(id){
   const t=S.tasks.find(x=>x.id===id);if(!t)return;
   const prev={date:t.date,moves:t.moves};
   t.date=addDays(today(),1);t.moves=(t.moves||0)+1;save();logEv('postponed',t);
+  render();
+  if(askWhy(t,prev))return;
   const line=t.moves===7?say('promoted',{task:t.title}):say('postpone',{moves:t.moves,id:t.id,task:t.title});
   toast(line,()=>{t.date=prev.date;t.moves=prev.moves;save();U.bubble=null;render();});
-  render();
+}
+const WHYS=[['lazy','Lazy'],['blocked','Blocked'],['unimportant','Not important'],['other','Other']];
+function askWhy(t,prev){
+  if(t.moves!==3||t.why)return false;
+  U.why={id:t.id,prev};U.sheet='why';U.toast=null;renderToast();renderOverlay();return true;
+}
+function whySheetHTML(){
+  const t=U.why&&S.tasks.find(x=>x.id===U.why.id);if(!t)return '';
+  return `<div class="scrim" data-act="whySkip"></div><div class="sheet" role="dialog" aria-label="Why was it moved"><h2>Third time. Why?</h2><p class="note" style="margin:0 0 14px;border:0;background:none;padding:0;font:italic 18px var(--fell);color:var(--dim)">\u201c${esc(t.title)}\u201d. I am not judging. Much.</p><div class="chips sm">${WHYS.map(([k,l])=>`<button type="button" class="chip" data-act="whySet" data-v="${k}">${l}</button>`).join('')}</div><div class="btns"><button type="button" class="btn ghost" data-act="whySkip">Not now</button><button type="button" class="btn ghost" data-act="whyUndo">Undo the move</button></div></div>`;
 }
 function removeTask(id){
   const i=S.tasks.findIndex(x=>x.id===id);if(i<0)return;
@@ -307,7 +317,7 @@ function rowHTML(t,over,showCat){
   const tier0=tierOf(t),tier=(tier0==='dragon'&&t.tags&&t.tags.length)?null:tier0,dragon=!!tier;
   let rem='';
   if(over)rem=`due ${diffDays(today(),t.date)} ${diffDays(today(),t.date)===1?'day':'days'} ago`;
-  else if(t.moves>=2&&!t.done)rem=`moved ${t.moves} times`;
+  else if(t.moves>=2&&!t.done)rem=`moved ${t.moves} times`+(t.why?' \u00b7 '+(WHYS.find(w=>w[0]===t.why)||[0,t.why])[1].toLowerCase():'');
   if(!over&&!rem&&t.q&&questOf(t.q))rem='for '+esc(questOf(t.q).title);
   if(t.rep&&!t.done)rem=(rem?rem+' \u00b7 ':'')+'repeats '+t.rep;
   if(t.steps&&t.steps.length){const sd=t.steps.filter(x=>x.done).length;rem=(rem?rem+' \u00b7 ':'')+sd+'/'+t.steps.length+' steps';}

@@ -149,6 +149,7 @@ function extSheets(){
   if(U.sheet==='idea'&&U.is)return ideaSheetHTML();
   if(U.sheet==='roll'&&U.roll)return rollSheetHTML();
   if(U.sheet==='notes')return notesSheetHTML();
+  if(U.sheet==='why'&&U.why)return whySheetHTML();
   if(U.sheet==='ncats'&&U.camp)return ncatsSheetHTML();
   return '';
 }
@@ -198,6 +199,9 @@ function extAct(act,v,id,el){
       const t={id:uid(),title:title[0].toUpperCase()+title.slice(1),cat:p.cat||S.last||S.cats[0].id,date:p.date||today(),time:p.time||'',dur:p.dur||p.guess||60,done:false,moves:0,createdAt:Date.now(),rep:'',q:''};
       S.tasks.push(t);learn(t.title,t.cat);save();logEv('added',t,{raw,catManual:false,suggested:p.cat?cat(p.cat).name:'',batch:false,viaCouncil:true});
       U.council.focus=($('#focusTxt')||{}).value||U.council.focus;U.council.dragonId=t.id;U.council.pickOpen=false;U.council.line=pickLine('dragonPicked',{id:t.id,task:t.title}).text;renderOverlay();render(true);break;}
+    case 'whySet':{const t=U.why&&S.tasks.find(x=>x.id===U.why.id);if(t){t.why=v;save();}U.why=null;U.sheet=null;render();renderOverlay();break;}
+    case 'whySkip':U.why=null;U.sheet=null;renderOverlay();render();break;
+    case 'whyUndo':{const w=U.why,t=w&&S.tasks.find(x=>x.id===w.id);if(t&&w.prev){t.date=w.prev.date;t.moves=w.prev.moves;save();}U.why=null;U.sheet=null;render();renderOverlay();break;}
     case 'lview':S.settings.lview=v;save();renderMain();break;
     case 'copyLog':{const tx=sortingLogText();U.menu=false;renderOverlay();
       const done=()=>toast({face:6,text:'Sorting log copied. Paste it to Claude.'});

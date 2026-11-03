@@ -324,7 +324,7 @@ function cdEnd(cancel){
   if(!cancel&&t&&d.tgt&&d.tgt!==t.date){
     const prev={date:t.date,moves:t.moves},later=d.tgt>t.date;
     t.date=d.tgt;if(later){t.moves=(t.moves||0)+1;}save();if(later)logEv('postponed',t);
-    toast({face:5,text:'Moved to '+fmtHead(d.tgt)+'.'},()=>{t.date=prev.date;t.moves=prev.moves;save();U.bubble=null;render();});
+    if(!(later&&askWhy(t,prev)))toast({face:5,text:'Moved to '+fmtHead(d.tgt)+'.'},()=>{t.date=prev.date;t.moves=prev.moves;save();U.bubble=null;render();});
   }
   renderHead();renderMain();
 }
