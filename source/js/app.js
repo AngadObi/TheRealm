@@ -331,9 +331,9 @@ function rowHTML(t,over,showCat){
     ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${showCat?ap:tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
   </div></div>`;
 }
-function banner(id,name,count,bg,icon,shut){
+function banner(id,name,count,col,icon,shut){
   const plus=id==='__over'?'':`<button type="button" class="bplus" data-act="addIn" data-v="${id}" aria-label="Add a task to ${esc(name)}">${ico('plus',18,'var(--bone)',2.2)}</button>`;
-  return `${plus}<button type="button" class="ban g" style="background-color:${bg}" data-act="shut" data-v="${id}" aria-expanded="${!shut}">${ico(icon,22,'var(--brass-l)',1.6)}<b>${esc(name)}</b>${id==='__over'?`<span>${count}</span>`:''}<span class="chv">${ico('chev',18,'var(--bone)',1.8)}</span></button>`;
+  return `${plus}<button type="button" class="wbn wbb" style="--tc:${col}" data-act="shut" data-v="${id}" aria-expanded="${!shut}">${ico(icon,20,col,1.7)}<b>${esc(name)}</b>${id==='__over'?`<i>${count}</i>`:''}<span class="chv">${ico('chev',18,'var(--dim)',1.8)}</span></button>`;
 }
 function listHTML(){
   const c=context();let h='';
@@ -349,19 +349,19 @@ function listHTML(){
     const G=[['shadow','Gauntlets','Face these first','flame','#B39BE0'],['sworn','Sworn Dates','Must be done by a date','flag','#F0803F'],['plain','The rest','','list','#B79A63'],['sweep','Cobwebs and Nibbles','One sweep','easy','#9DB6C8'],['done','Done','','check','#7C7A6E']];
     let w=sw;
     G.forEach(([g,nm,sub,ic,col])=>{const ts=all.filter(t=>wg(t)===g).sort(sortTasks);if(!ts.length)return;
-      w+=`<section class="cat"><div class="wbn" style="--tc:${col}">${ico(ic,20,col,1.7)}<b>${nm}</b>${sub?`<i>${sub}</i>`:''}</div>${ts.map(t=>rowHTML(t,t.date<c.td&&!t.done,true)).join('')}</section>`;});
+      w+=`<section class="cat">${g==='done'?'':`<button type="button" class="bplus bw" data-act="addW" data-v="${g}" aria-label="Add to ${nm}">${ico('plus',18,'var(--bone)',2.2)}</button>`}<div class="wbn ${g==='done'?'':'hp'}" style="--tc:${col}">${ico(ic,20,col,1.7)}<b>${nm}</b>${sub?`<i>${sub}</i>`:''}</div>${ts.map(t=>rowHTML(t,t.date<c.td&&!t.done,true)).join('')}</section>`;});
     if(w===sw)w+='<div class="empty">Nothing on the scroll for today.<br>Tap the red button to add something.</div>';
     return h+w+(S.sample?'<p class="note">These are sample tasks so you can try things. Swipe a task right to move it to tomorrow, left to drop it, tap it to edit. Clear them in the menu.</p>':'');
   }
   h+=sw;
   if(c.over.length){
-    h+=`<section class="cat ${S.shut.__over?'shut':''}">${banner('__over','Overdue',c.over.length,'#5A2B26','rest',S.shut.__over)}${c.over.sort(sortTasks).map(t=>rowHTML(t,true)).join('')}</section>`;
+    h+=`<section class="cat ${S.shut.__over?'shut':''}">${banner('__over','Overdue',c.over.length,'#D9694F','rest',S.shut.__over)}${c.over.sort(sortTasks).map(t=>rowHTML(t,true)).join('')}</section>`;
   }
   const openIn=k=>c.tt.filter(t=>t.cat===k.id&&!t.done).length;
   const cats=S.cats.slice().sort((p,q)=>openIn(q)-openIn(p)||p.name.localeCompare(q.name));
   for(const k of cats){
     const ts=c.tt.filter(t=>t.cat===k.id).sort(sortTasks);if(!ts.length)continue;
-    h+=`<section class="cat ${S.shut[k.id]?'shut':''}">${banner(k.id,k.name,ts.length,PAL[k.pal%PAL.length][0],iconOf(k),S.shut[k.id])}${ts.map(t=>rowHTML(t,false)).join('')}</section>`;
+    h+=`<section class="cat ${S.shut[k.id]?'shut':''}">${banner(k.id,k.name,ts.length,PAL[k.pal%PAL.length][1],iconOf(k),S.shut[k.id])}${ts.map(t=>rowHTML(t,false)).join('')}</section>`;
   }
   if(!h)h='<div class="empty">Nothing on the scroll for today.<br>Tap the red button to add something.</div>';
   if(S.sample)h+='<p class="note">These are sample tasks so you can try things. Swipe a task right to move it to tomorrow, left to drop it, tap it to edit. Clear them in the menu.</p>';
@@ -516,6 +516,7 @@ document.addEventListener('click',e=>{
     case 'tick':tick(id);break;
     case 'edit':openAdd(id);break;
     case 'add':U.placing=null;openAdd(null);break;
+    case 'addW':U.placing=null;openAdd(null);U.add.tags=({shadow:['shadow'],sworn:['sworn'],sweep:['cobweb']})[v]||[];refreshMeta();break;
     case 'addIn':U.placing=null;openAdd(null);U.add.cat=v;U.add.over.cat=true;refreshMeta();break;
     case 'shut':S.shut[v]=!S.shut[v];save();renderMain();break;
     case 'view':U.view=v;U.placing=null;U.scrollRoad=v==='road';render();break;
