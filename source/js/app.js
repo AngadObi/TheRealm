@@ -236,7 +236,7 @@ function metaHTML(){
   const dl=!a.date?'No date':a.date===td?'Today':a.date===tm?'Tomorrow':fmtHead(a.date);
   const dur=a.dur>=60&&a.dur%60===0?(a.dur/60)+' h':a.dur+' min';
   const pill=(id,inner)=>`<button type="button" class="chip ${U.add.open===id?'on':''}" data-act="pick" data-v="${id}">${inner}</button>`;
-  let h=`<div class="chips sm">${a.n>1?`<span class="cnt2">${a.n} tasks</span>`:''}${pill('date',esc(dl))}${pill('time',a.time||'No time')}${pill('cat',ico(iconOf(k),16,'var(--brass-l)',1.6)+esc(k.name))}${pill('dur',dur)}${pill('tags',(a.tags&&a.tags.length)?esc(a.tags.map(x=>tagDef(x).name).join(' \u00b7 ')):'Tags')}${a.rep?pill('rep','\u21bb '+(REPS.find(r=>r[0]===a.rep)||[0,''])[1]):pill('rep','Repeat')}${S.quests.some(q=>!q.done)||a.q?pill('quest',(questOf(a.q)?esc(questOf(a.q).title):'No quest')):''}${a.q&&questOf(a.q)?pill('col',esc((()=>{const qq=questOf(a.q),cs=colsOf(qq);const c=cs.find(x=>x.id===a.col);return c?c.name:cs.find(x=>x.id===(a.id?(S.tasks.find(t=>t.id===a.id)||{}).col:''))?.name||cs.find(x=>x.id===startCol(qq)).name;})())):''}</div>`;
+  let h=`<div class="chips sm">${a.n>1?`<span class="cnt2">${a.n} tasks</span>`:''}${pill('date',esc(dl))}${pill('time',a.time||'No time')}${pill('cat',ico(iconOf(k),16,'var(--brass-l)',1.6)+esc(k.name))}${pill('dur',dur)}${pill('tags',(a.tags&&a.tags.length)?esc(a.tags.map(x=>tagDef(x).name).join(' \u00b7 ')):'Tags')}${a.rep?pill('rep','\u21bb '+(REPS.find(r=>r[0]===a.rep)||[0,''])[1]):pill('rep','Repeat')}${S.quests.some(q=>!q.done)||a.q?pill('quest',(questOf(a.q)?esc(questOf(a.q).title):'No quest')):''}${a.q&&questOf(a.q)?pill('col',esc((()=>{const qq=questOf(a.q),tpp=addTp(a),cs=colsOf(tpp);const c=cs.find(x=>x.id===a.col);return c?c.name:cs.find(x=>x.id===(a.id?(S.tasks.find(t=>t.id===a.id)||{}).col:''))?.name||cs.find(x=>x.id===startCol(tpp)).name;})())):''}</div>`;
   const o=a.open;
   if(o==='date')h+=`<div class="chips sm sub"><button type="button" class="chip ${a.date===td?'on':''}" data-act="setDate" data-v="${td}">Today</button><button type="button" class="chip ${a.date===tm?'on':''}" data-act="setDate" data-v="${tm}">Tomorrow</button>${a.q?`<button type="button" class="chip ${!a.date?'on':''}" data-act="setDate" data-v="">No date</button>`:''}<input type="date" id="addDate" value="${a.date}" aria-label="Date"></div>`;
   else if(o==='time')h+=`<div class="chips sm sub"><input type="time" id="addTime" value="${a.time||''}" aria-label="Time"><button type="button" class="chip" data-act="clearTime">No time</button></div>`;
@@ -244,7 +244,7 @@ function metaHTML(){
   else if(o==='tags')h+=`<div class="chips sm sub">${TAGDEF.map(d=>`<button type="button" class="chip ${(a.tags||[]).includes(d.id)?'on':''}" style="--tc:${d.col}" data-act="setTag" data-v="${d.id}">${ico(d.icon,16,d.col,1.7)}${d.name}</button>`).join('')}</div>`;
   else if(o==='rep')h+=`<div class="chips sm sub">${REPS.map(([v,l])=>`<button type="button" class="chip ${a.rep===v?'on':''}" data-act="setRep" data-v="${v}">${l}</button>`).join('')}</div>`;
   else if(o==='quest')h+=`<div class="chips sm sub"><button type="button" class="chip ${!a.q?'on':''}" data-act="setQuest" data-v="">None</button>${S.quests.filter(q=>!q.done).map(q=>`<button type="button" class="chip ${a.q===q.id?'on':''}" data-act="setQuest" data-v="${q.id}">${ico(q.icon,16,'var(--brass-l)',1.6)}${esc(q.title)}</button>`).join('')}</div>`;
-  else if(o==='col'&&questOf(a.q))h+=`<div class="chips sm sub">${colsOf(questOf(a.q)).map(c=>`<button type="button" class="chip ${(a.col||(S.tasks.find(t=>t.id===a.id)||{}).col||startCol(questOf(a.q)))===c.id?'on':''}" data-act="setCol" data-v="${c.id}">${esc(c.name)}</button>`).join('')}</div>`;
+  else if(o==='col'&&questOf(a.q))h+=`<div class="chips sm sub">${colsOf(addTp(a)).map(c=>`<button type="button" class="chip ${(a.col||(S.tasks.find(t=>t.id===a.id)||{}).col||startCol(addTp(a)))===c.id?'on':''}" data-act="setCol" data-v="${c.id}">${esc(c.name)}</button>`).join('')}</div>`;
   else if(o==='dur')h+=`<div class="chips sm sub">${[[15,'15 min'],[30,'30 min'],[45,'45 min'],[60,'1 h'],[90,'90 min'],[120,'2 h']].map(([v,l])=>`<button type="button" class="chip ${a.dur===v?'on':''}" data-act="setDur" data-v="${v}">${l}</button>`).join('')}</div>`;
   return h;
 }
@@ -338,7 +338,7 @@ function banner(id,name,count,col,icon,shut){
 function listHTML(){
   const c=context();let h='';
   const pq=S.settings.pin&&questOf(S.settings.pin);
-  if(pq&&!pq.done){const ps=campStats(pq);h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${rankOf(ps,pq)[0]}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
+  if(pq&&!pq.done){h+=`<button type="button" class="nrow prow" data-act="openQuest" data-id="${pq.id}">${ico(pq.icon,18,'var(--brass-l)',1.7)}<span>${esc(pq.title)}</span><small>${pq.due?esc(shortDue(pq.due)):'Campaign'}</small>${ico('chevr',16,'var(--dim)',2)}</button>`;}
   const tn=(plan().notes||[]);
   if(tn.length)h+=`<button type="button" class="nrow" data-act="notesOpen">${ico('pen',18,'var(--brass-l)',1.7)}<span>Chamber note from ${z2(new Date(tn[tn.length-1].at).getHours())}:${z2(new Date(tn[tn.length-1].at).getMinutes())}</span>${ico('chevr',16,'var(--dim)',2)}</button>`;
   const lv=S.settings.lview==='area'?'area':'weight';
@@ -479,18 +479,19 @@ function renderOverlay(){
   let h='';
   if(U.menu)h+=menuHTML();
   if(U.camp)h+=campHTML();
+  if(U.pg)h+=pgHTML();
   if(U.council)h+=councilHTML();
   h+=extSheets();
   if(U.sheet==='add')h+=addSheetHTML();
   if(U.sheet==='newcat')h+=newCatHTML();
   if(U.sheet==='tray')h+=trayHTML();
-  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const kcs={};host.querySelectorAll('.kcol').forEach(k=>{kcs[k.dataset.col]=k.querySelector('.kcards').scrollTop;});const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;const keepW=host.querySelector('.nwrap,.brief');const kws=keepW?keepW.scrollTop:0;
+  const host=$('#overlay');const keepB=host.querySelector('.kboard');const kbs=keepB?keepB.scrollLeft:0;const kcs={};host.querySelectorAll('.kcol').forEach(k=>{kcs[k.dataset.col]=k.querySelector('.kcards').scrollTop;});const keepF=host.querySelector('.full');const ks=keepF?keepF.scrollTop:0;const keepW=host.querySelector('.nwrap,.brief,.tview');const kws=keepW?keepW.scrollTop:0;const klv=keepW?keepW.dataset.lv:null;
   const sig=el=>el.className+'|'+(el.getAttribute('aria-label')||'');
   const prev=new Set([...host.children].map(sig));
   host.innerHTML=h;
   [...host.children].forEach(el=>{if(prev.has(sig(el)))el.style.animation='none';});
   const f=host.querySelector('.full');if(f)f.scrollTop=ks;
-  const nw=host.querySelector('.nwrap,.brief');if(nw&&kws)nw.scrollTop=kws;
+  const nw=host.querySelector('.nwrap,.brief,.tview');if(nw&&kws&&nw.dataset.lv===klv)nw.scrollTop=kws;
   const nb=host.querySelector('.kboard');if(nb)nb.scrollLeft=kbs;host.querySelectorAll('.kcol').forEach(k=>{if(kcs[k.dataset.col])k.querySelector('.kcards').scrollTop=kcs[k.dataset.col];});
   if(typeof navSync==='function')navSync();
 }

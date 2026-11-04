@@ -97,7 +97,7 @@ function ritPersist(){
   const f=$('#focusTxt');if(f)C.focus=f.value;
   if(R.i>0||C.focus)ritSave(false);
 }
-function ritFinish(){const R=U.council&&U.council.rit,qid=R&&R.kind==='found'?R.qid:null;U.council=null;LC.key='';if(qid)U.camp={id:qid,tab:'brief'};render();renderHead();}
+function ritFinish(){const R=U.council&&U.council.rit,qid=R&&R.kind==='found'?R.qid:null;U.council=null;LC.key='';if(qid)U.camp={id:qid,tab:'topics'};render();renderHead();}
 function ritDots(){const R=U.council.rit;return R.steps.map((s,i)=>`<i class="${i===R.i?'on':i<R.i?'dn':''}"></i>`).join('');}
 function ritAgainBtn(kind){return (kind==='day'||kind==='week')?`<button type="button" class="rskip" data-act="ritAgain" data-v="${kind}">Hold the ceremony again</button>`:'';}
 function ritHero(face,cls){return `<div class="rk ${cls||''}"><img src="${kn(face)}" alt="Sir Reg"></div>`;}

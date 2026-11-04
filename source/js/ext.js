@@ -52,14 +52,12 @@ function questStats(q){
   return {n:ts.length,done,next,top};
 }
 function questCard(q){
-  const st=questStats(q),cs=colsOf(q);
-  const cnt=cs.map(c=>[c.name,cardsOf(q,c.id).length]).filter(x=>x[1]);
+  const tops=tpsOf(q).filter(x=>!x.loose);
   let dl='';if(q.due&&!q.done){const n=diffDays(q.due,today());dl=n<0?`<b class="od">${-n}d overdue</b>`:n<=7?`<b class="soon">${n===0?'today':n+'d left'}</b>`:'';}
   return `<button type="button" class="qcard g ${q.done?'fin':''}" data-act="openQuest" data-id="${q.id}">
-    <div class="qh"><span class="qtile">${ico(q.icon,24,'var(--brass-l)',1.5)}</span><span class="qt">${esc(q.title)}</span>${st.top?`<span class="tag" style="margin:0">${TAGS[st.top]}</span>`:''}<span class="qd">${q.done?'DONE':shortDue(q.due)}</span></div>
-    <div class="qbar"><i style="width:${st.n?Math.round(st.done/st.n*100):0}%"></i></div>
-    <div class="qcnt">${cnt.length?cnt.map(x=>`<span><i>${x[1]}</i> ${esc(x[0])}</span>`).join(''):'<span>No cards yet</span>'}${dl}</div>
-    <div class="qf"><span>${st.done} OF ${st.n} CARDS</span>${st.next?`<em>Next: ${esc(st.next.title)}</em>`:`<em>${st.n?'Nothing left. Suspicious.':'Open it to add the first card.'}</em>`}</div></button>`;
+    <div class="qh"><span class="qtile">${ico(q.icon,24,'var(--brass-l)',1.5)}</span><span class="qt">${esc(q.title)}</span><span class="qd">${q.done?'DONE':shortDue(q.due)}</span></div>
+    ${q.desc?`<p class="qdesc">${esc(q.desc)}</p>`:''}
+    <div class="qcnt">${tops.length?tops.slice(0,6).map(x=>`<span>${esc(x.name)}</span>`).join(''):(tpTasks(q,looseOf(q)).length?'<span>Loose ends</span>':'<span>No topics yet</span>')}${dl}</div></button>`;
 }
 function mainHTML(){
   if(!S.quests.length)return '<div class="empty">No campaigns yet.<br>Tap the red button to start one.</div>';
@@ -117,16 +115,12 @@ function questSheetHTML(){
   let opts='';
   if(q.open==='due')opts=`<div class="chips sm sub"><input type="date" id="qDue" value="${q.due||''}" aria-label="Due date"><button type="button" class="chip" data-act="qNoDate">No date</button></div>`;
   else if(q.open==='icon')opts=`<div class="chips sm sub" style="gap:6px">${CATICONS.map(([k,l])=>`<button type="button" class="chip ${q.icon===k?'on':''}" style="width:46px;padding:0;justify-content:center" data-act="qIcon" data-v="${k}" aria-label="${l}">${ico(k,22,'var(--brass-l)',1.5)}</button>`).join('')}</div>`;
-  let tasks='';
-  if(edit){
-    const ts=S.tasks.filter(t=>t.q===q.id).sort((a,b)=>a.done!==b.done?(a.done?1:-1):a.date<b.date?-1:1);
-    tasks=`<div class="qts">${ts.map(t=>`<div class="qt2 ${t.done?'done':''}"><button type="button" class="cb" data-act="qTick" data-id="${t.id}" aria-label="Toggle ${esc(t.title)}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button><span data-act="qEditTask" data-id="${t.id}">${esc(t.title)}</span><em>${shortDue(t.date)}</em></div>`).join('')||'<p class="note" style="margin:6px 0">No tasks yet.</p>'}</div>
-    <div class="btns" style="margin-top:10px"><button type="button" class="btn ghost" data-act="qAddTask">Add a task</button><button type="button" class="btn ghost" data-act="qDone">${q.done?'Reopen':'Complete'}</button></div>`;
-  }
-  return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${edit?'Edit quest':'New quest'}">
-    <div class="arow"><input id="qTitle" class="inp" type="text" value="${esc(q.title)}" placeholder="Name the campaign" autocomplete="off" aria-label="Quest name"><button type="button" class="go" data-act="qSave" aria-label="Save quest">${ico(edit?'check':'plus',22,'currentColor',2.6)}</button></div>
-    <div class="chips sm">${pill('due',esc(dl))}${pill('icon',ico(q.icon,16,'var(--brass-l)',1.6)+'Emblem')}</div>${opts}${edit?`<div class="btns" style="margin-top:10px"><button type="button" class="btn ghost" data-act="qDone">${q.done?'Reopen':'Complete'}</button></div>`:''}
-    ${edit?`<button type="button" class="lnk" data-act="qDel">${q.confirmDel?'Tap again to drop this campaign and its undated cards':'Drop this quest'}</button>`:''}</div>`;
+  const pinned=edit&&S.settings.pin===q.id;
+  return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="${edit?'Edit campaign':'New campaign'}">
+    <div class="arow"><input id="qTitle" class="inp" type="text" value="${esc(q.title)}" placeholder="Name the campaign" autocomplete="off" aria-label="Campaign name"><button type="button" class="go" data-act="qSave" aria-label="Save campaign">${ico(edit?'check':'plus',22,'currentColor',2.6)}</button></div>
+    <textarea id="qDesc" class="tb" rows="3" placeholder="A line or two about what this is" aria-label="Description">${esc(q.desc||'')}</textarea>
+    <div class="chips sm">${pill('due',esc(dl))}${pill('icon',ico(q.icon,16,'var(--brass-l)',1.6)+'Emblem')}${edit?`<button type="button" class="chip ${pinned?'on':''}" data-act="qPin">${pinned?'Pinned to home':'Pin to home'}</button>`:''}</div>${opts}${edit?`<div class="btns" style="margin-top:10px"><button type="button" class="btn ghost" data-act="qDone">${q.done?'Reopen':'Mark complete'}</button></div>`:''}
+    ${edit?`<button type="button" class="lnk" data-act="qDel">${q.confirmDel?'Tap again to drop this campaign and its undated cards':'Drop this campaign'}</button>`:''}</div>`;
 }
 function ideaSheetHTML(){
   const i=U.is,edit=!!i.id;
@@ -146,6 +140,7 @@ function rollSheetHTML(){
 function extSheets(){
   if(U.sheet==='quest'&&U.qs)return questSheetHTML();
   if(U.sheet==='cols'&&U.camp)return colsSheetHTML();
+  if(U.sheet==='topic'&&U.tp)return topicSheetHTML();
   if(U.sheet==='idea'&&U.is)return ideaSheetHTML();
   if(U.sheet==='roll'&&U.roll)return rollSheetHTML();
   if(U.sheet==='notes')return notesSheetHTML();
@@ -210,21 +205,22 @@ function extAct(act,v,id,el){
     case 'councilK':openCouncil(v);break;
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;
     /* quests */
-    case 'addQuest':openFound();break;
-    case 'openQuest':{const q=questOf(id);if(!q)break;U.camp={id:q.id,tab:'brief'};renderOverlay();break;}
+    case 'addQuest':pgOpen();break;
+    case 'openQuest':{const q=questOf(id);if(!q)break;U.camp={id:q.id,tab:'topics'};renderOverlay();break;}
     case 'qOpen':{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.open=U.qs.open===v?null:v;renderOverlay();break;}
     case 'qNoDate':U.qs.due='';U.qs.open=null;renderOverlay();break;
     case 'qIcon':U.qs.icon=v;U.qs.open=null;renderOverlay();break;
     case 'qSave':{
       const q=U.qs;q.title=(($('#qTitle')||{}).value||'').trim();if(!q.title)break;
-      if(q.id){const o=questOf(q.id);if(o){o.title=q.title;o.icon=q.icon;o.due=q.due;}}
+      if(q.id){const o=questOf(q.id);if(o){o.title=q.title;o.icon=q.icon;o.due=q.due;const d=(($('#qDesc')||{}).value||q.desc||'').trim();if(d)o.desc=d;else delete o.desc;}}
       else{const nq={id:uid(),title:q.title,icon:q.icon,due:q.due,created:Date.now(),cols:DEFCOLS()};S.quests.push(nq);U.camp={id:nq.id,tab:'brief'};}
       save();U.sheet=null;U.qs=null;say('added');render();break;}
     case 'qTick':{tick(id);U.qs&&U.qs.id&&(U.sheet='quest');renderOverlay();break;}
     case 'qEditTask':U.sheet=null;openAdd(id);break;
     case 'qAddTask':{const qid=U.qs.id;U.sheet=null;openAdd(null);U.add.q=qid;refreshMeta();break;}
-    case 'qDone':{const o=questOf(U.qs.id);if(o){if(o.done){o.done=false;save();U.sheet=null;render();}else{U.sheet=null;U.qs=null;renderOverlay();openVictory(o.id);}}break;}
-    case 'qDel':if(U.qs.confirmDel){const qid=U.qs.id;S.tasks=S.tasks.filter(t=>!(t.q===qid&&!t.date));S.tasks.forEach(t=>{if(t.q===qid){t.q='';delete t.col;delete t.ord;}});S.quests=S.quests.filter(x=>x.id!==qid);save();U.sheet=null;U.camp=null;render();}else{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.confirmDel=true;renderOverlay();}break;
+    case 'qDone':{const o=questOf(U.qs.id);if(o){o.done=!o.done;save();U.sheet=null;U.qs=null;U.camp=null;render();toast({face:6,text:o.done?'Campaign marked complete. Well fought.':'Campaign reopened.'});}break;}
+    case 'qPin':{const o=questOf(U.qs.id);if(o){S.settings.pin=S.settings.pin===o.id?'':o.id;save();U.qs.title=($('#qTitle')||{}).value||U.qs.title;renderMain();renderOverlay();}break;}
+    case 'qDel':if(U.qs.confirmDel){const qid=U.qs.id;S.tasks=S.tasks.filter(t=>!(t.q===qid&&!t.date));S.tasks.forEach(t=>{if(t.q===qid){t.q='';delete t.col;delete t.ord;delete t.topic;}});S.quests=S.quests.filter(x=>x.id!==qid);save();U.sheet=null;U.camp=null;render();}else{U.qs.title=($('#qTitle')||{}).value||U.qs.title;U.qs.confirmDel=true;renderOverlay();}break;
     /* ideas */
     case 'addIdea':U.is={id:null,text:'',hall:v||S.halls[0].id,confirmDel:false};U.sheet='idea';renderOverlay();setTimeout(()=>{const x=$('#iTitle');x&&x.focus();},60);break;
     case 'openIdea':{if(Date.now()<suppressI)break;const i=S.ideas.find(x=>x.id===id);if(!i)break;U.is={id:i.id,text:i.title,hall:i.hall,confirmDel:false};U.sheet='idea';renderOverlay();break;}
@@ -464,7 +460,7 @@ function pickLine(key,vars){
 
 /* ---------- phone back gesture: close the top layer, or go back to Today, before leaving the app ---------- */
 var navCur=0,navBusy=false,navTarget=0;
-function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+((U.sheet||U.council||U.menu)?1:0)+(ritCanBack()?1:0)+((U.camp&&U.camp.note)?1:0);}
+function navWant(){return (U.view!=='list'?1:0)+(U.camp?1:0)+(U.pg?1:0)+((U.sheet||U.council||U.menu)?1:0)+(ritCanBack()?1:0)+((U.camp&&U.camp.note)?1:0)+((U.camp&&U.camp.topic)?1:0)+((U.camp&&U.camp.card)?1:0);}
 function navSync(){
   if(navBusy)return;
   const d=navWant();
@@ -479,7 +475,10 @@ addEventListener('popstate',()=>{
   if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}
   else if(ritCanBack()&&!U.sheet&&!U.menu){ritBack();}
   else if(U.sheet||U.council||U.menu){ritPersist();U.sheet=null;U.council=null;U.menu=false;renderOverlay();}
+  else if(U.pg){if(U.pg.step){U.pg.step=0;renderOverlay();}else{U.pg=null;renderOverlay();}}
   else if(U.camp&&U.camp.note){nBack();}
+  else if(U.camp&&U.camp.card){U.camp.card=null;U.camp.cdel=false;renderOverlay();}
+  else if(U.camp&&U.camp.topic){U.camp.topic=null;U.camp.addIn=null;renderOverlay();}
   else if(U.camp){U.camp=null;renderOverlay();renderMain();}
   else if(U.view!=='list'){goto('list');}
   navSync();
