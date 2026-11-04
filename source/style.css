@@ -761,3 +761,4 @@ body.cdon{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .full.camp .tview .stg .kcards{flex:none;overflow:visible;gap:10px}
 .full.camp .tview .stg .wbn{margin:0}
 .pgth .stx{background:none;border:0;width:36px;height:36px}
+.kinrow{display:flex;gap:8px;margin-top:6px}.kinrow .kin{flex:1;margin-top:0;min-width:0}.kgo{width:50px;border-radius:6px}

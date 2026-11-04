@@ -772,6 +772,7 @@ body.cdon{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .full.camp .tview .stg .kcards{flex:none;overflow:visible;gap:10px}
 .full.camp .tview .stg .wbn{margin:0}
 .pgth .stx{background:none;border:0;width:36px;height:36px}
+.kinrow{display:flex;gap:8px;margin-top:6px}.kinrow .kin{flex:1;margin-top:0;min-width:0}.kgo{width:50px;border-radius:6px}
 
 /* ===== Laptop layout. Only applies to wide windows; phones and the installed app never see it. ===== */
 .sidenav,.rbt{display:none}
@@ -2164,7 +2165,7 @@ function topicBody(q,tp){
   const total=tpTasks(q,tp).length;
   const secs=cs.map(c=>{
     const cards=cardsOf(q,c.id,tp),shut=(c.id in C.shut)?C.shut[c.id]:!!c.done,col=c.done?'#7C7A6E':acc;
-    return `<section class="kcol stg ${shut?'shut':''} ${c.done?'dn':''}" data-col="${c.id}" style="--tc:${col}"><button type="button" class="bplus" data-act="stgAdd" data-v="${c.id}" aria-label="Add a card to ${esc(c.name)}">${ico('plus',18,'var(--bone)',2.2)}</button><button type="button" class="wbn wbb" style="--tc:${col}" data-act="stgShut" data-v="${c.id}" aria-expanded="${!shut}">${ico(c.done?'check':'flag',20,col,1.7)}<b>${esc(c.name)}</b><span class="chv">${ico('chev',18,'var(--dim)',1.8)}</span></button><div class="kcards">${cards.map(cardHTML).join('')}</div>${C.addIn===c.id?`<input class="kin" data-col="${c.id}" placeholder="New card, then Enter" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" aria-label="Add a card to ${esc(c.name)}">`:''}</section>`;
+    return `<section class="kcol stg ${shut?'shut':''} ${c.done?'dn':''}" data-col="${c.id}" style="--tc:${col}"><button type="button" class="bplus" data-act="stgAdd" data-v="${c.id}" aria-label="Add a card to ${esc(c.name)}">${ico('plus',18,'var(--bone)',2.2)}</button><button type="button" class="wbn wbb" style="--tc:${col}" data-act="stgShut" data-v="${c.id}" aria-expanded="${!shut}">${ico(c.done?'check':'flag',20,col,1.7)}<b>${esc(c.name)}</b><span class="chv">${ico('chev',18,'var(--dim)',1.8)}</span></button><div class="kcards">${cards.map(cardHTML).join('')}</div>${C.addIn===c.id?`<div class="kinrow"><input class="kin" data-col="${c.id}" placeholder="New card" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" aria-label="Add a card to ${esc(c.name)}"><button type="button" class="go kgo" data-act="kGo" data-v="${c.id}" aria-label="Add card">${ico('plus',22,'currentColor',2.6)}</button></div>`:''}</section>`;
   }).join('');
   return `<div class="tview" data-lv="t:${tp.id}">${tp.desc?`<p class="pdesc" style="margin-top:0">${esc(tp.desc)}</p>`:''}${total?'':`<div class="sirl"><img src="${kn(5)}" alt=""><p>${esc(pline('topic0',tp.id))}</p></div>`}${secs}</div>`;
 }
@@ -2208,7 +2209,7 @@ function colsSheetHTML(){
   const q=questOf(U.camp.id),tp=q&&topicOf(q,U.camp.topic);if(!tp)return '';const cs=colsOf(tp);
   return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Stages"><h2>Stages</h2>
   ${cs.map((c,i)=>`<div class="st"><input class="stin cin" data-i="${i}" value="${esc(c.name)}" aria-label="Stage name" autocomplete="off"><button type="button" class="stx" style="${c.done?'color:var(--glow)':''}" data-act="colDone" data-i="${i}" aria-label="${c.done?'Counts as done':'Does not count as done'}" aria-pressed="${!!c.done}">${ico('check',16,c.done?'var(--glow)':'var(--dim)',2.2)}</button><button type="button" class="stx" data-act="colUp" data-i="${i}" aria-label="Move up" ${i?'':'disabled style="opacity:.15"'}>↑</button><button type="button" class="stx" data-act="colDn" data-i="${i}" aria-label="Move down" ${i<cs.length-1?'':'disabled style="opacity:.15"'}>↓</button><button type="button" class="stx" data-act="colDel" data-i="${i}" aria-label="Remove stage" ${cs.length<2?'disabled style="opacity:.15"':''}>×</button></div>`).join('')}
-  <div class="st add"><span class="stp">+</span><input id="colNew" class="stin" placeholder="New stage" autocomplete="off" aria-label="New stage"></div>
+  <div class="st add"><span class="stp">+</span><input id="colNew" class="stin" placeholder="New stage name" enterkeyhint="done" autocomplete="off" aria-label="New stage"><button type="button" class="stx" style="color:var(--glow)" data-act="colAdd" aria-label="Add stage">${ico('check',18,'var(--glow)',2.4)}</button></div>
   <p class="note" style="margin:10px 0 0;border:0;background:none;padding:0">The tick marks a stage that counts as done. Removing a stage moves its cards to the first one.</p>
   <h3 style="margin:14px 0 6px;font:500 12px var(--mono);letter-spacing:.12em;color:var(--dim)">OR START FROM A TEMPLATE</h3>
   <div class="chips sm" style="margin-top:0"><button type="button" class="chip" data-act="colTpl" data-v="board">Standard board</button><button type="button" class="chip" data-act="colTpl" data-v="research">Research</button></div></div>`;
@@ -2314,6 +2315,8 @@ document.addEventListener('click',e=>{
     case 'cardStage':if(t&&q){const ttp=tpOfTask(t,q),was=!!t.done,toDone=!!colsOf(ttp).find(c=>c.id===v).done;t.col=v;t.ord=endOrd(q,v,t,ttp);if(was!==toDone)tick(t.id);else{save();renderOverlay();renderMain();}}break;
     case 'cardTopic':if(t&&q){const nt=topicOf(q,id);if(!nt)break;t.topic=nt.id;t.col=t.done?doneCol(nt):startCol(nt);t.ord=endOrd(q,t.col,t,nt);save();renderOverlay();renderMain();}break;
     case 'labAdd':cardLabel();break;
+    case 'kGo':{const x=document.querySelector('.kin[data-col="'+v+'"]');if(x)kAdd(v,x.value);break;}
+    case 'colAdd':addCol();break;
     case 'labDel':if(t){(t.lab||[]).splice(i,1);if(!t.lab.length)delete t.lab;save();renderOverlay();}break;
     case 'cdNoDate':if(t){t.date='';t.time='';save();renderOverlay();renderMain();}break;
     case 'cardDel':if(t){if(!C.cdel){C.cdel=true;renderOverlay();break;}const idx=S.tasks.indexOf(t);S.tasks.splice(idx,1);C.card=null;C.cdel=false;save();render();toast({face:6,text:'Card dropped.'},()=>{S.tasks.splice(Math.min(idx,S.tasks.length),0,t);save();render();});}break;
