@@ -140,7 +140,7 @@ function campHTML(){
     head=`<div class="chd">${back}<div class="ctt"><b>${esc(t.title.length>26?t.title.slice(0,25)+'…':t.title)}</b><i>${esc(ttp.name.toUpperCase())}</i></div><span class="cbk" style="visibility:hidden"></span></div>`;
     body=cardBody(q,ttp,t);
   }else if(tp){
-    head=`<div class="chd">${back}<div class="ctt"><b>${esc(tp.name)}</b><i>${esc(q.title.toUpperCase())}</i></div><button type="button" class="cbk" data-act="colsOpen" aria-label="Stages">${ico('gear',20,'var(--brass-l)',1.6)}</button><button type="button" class="cbk ed" data-act="topicEdit" aria-label="Edit topic">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>`;
+    head=`<div class="chd">${back}<div class="ctt"><b>${esc(tp.name)}</b><i>${esc(q.title.toUpperCase())}</i></div><button type="button" class="chipb" data-act="colsOpen" aria-label="Edit stages">Stages</button><button type="button" class="cbk ed" data-act="topicEdit" aria-label="Edit topic">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>`;
     body=topicBody(q,tp);
   }else{
     const due=q.done?'COMPLETE':q.due?'DUE '+shortDue(q.due):'NO DEADLINE';
@@ -168,6 +168,7 @@ function topicSheetHTML(){
   <div class="arow"><input id="tpName" class="inp" type="text" value="${esc(p.name)}" placeholder="Topic name, e.g. Networking" autocomplete="off" aria-label="Topic name"><button type="button" class="go" data-act="tpSave" aria-label="Save topic">${ico(edit?'check':'plus',22,'currentColor',2.6)}</button></div>
   <input id="tpDesc" class="inp" style="margin-top:10px" type="text" value="${esc(p.desc||'')}" placeholder="One line about it (optional)" autocomplete="off" aria-label="One line about the topic">
   ${edit?'':`<h3 style="margin:14px 0 6px;font:500 12px var(--mono);letter-spacing:.12em;color:var(--dim)">STAGES</h3><div class="tpls">${Object.keys(TPLS).map(k=>`<button type="button" class="tpl ${p.tpl===k?'on':''}" data-act="tpTpl" data-v="${k}"><b>${TPLS[k].name}</b><i>${TPLS[k].sub}</i></button>`).join('')}</div>`}
+  ${edit?`<button type="button" class="btn ghost" style="width:100%;margin-top:14px" data-act="colsOpen">Edit stages</button>`:''}
   ${edit&&!p.loose?`<button type="button" class="lnk" data-act="tpDel">${p.confirmDel?'Tap again to drop this topic. Its cards move to Loose ends':'Drop this topic'}</button>`:''}</div>`;
 }
 

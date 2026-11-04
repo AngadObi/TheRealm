@@ -773,6 +773,7 @@ body.cdon{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .full.camp .tview .stg .wbn{margin:0}
 .pgth .stx{background:none;border:0;width:36px;height:36px}
 .kinrow{display:flex;gap:8px;margin-top:6px}.kinrow .kin{flex:1;margin-top:0;min-width:0}.kgo{width:50px;border-radius:6px}
+.chipb{flex:none;height:34px;padding:0 14px;border:1.5px solid var(--brass);border-radius:17px;background:var(--tile);color:var(--bone);font:500 13px var(--sans);margin-right:2px}
 
 /* ===== Laptop layout. Only applies to wide windows; phones and the installed app never see it. ===== */
 .sidenav,.rbt{display:none}
@@ -2193,7 +2194,7 @@ function campHTML(){
     head=`<div class="chd">${back}<div class="ctt"><b>${esc(t.title.length>26?t.title.slice(0,25)+'…':t.title)}</b><i>${esc(ttp.name.toUpperCase())}</i></div><span class="cbk" style="visibility:hidden"></span></div>`;
     body=cardBody(q,ttp,t);
   }else if(tp){
-    head=`<div class="chd">${back}<div class="ctt"><b>${esc(tp.name)}</b><i>${esc(q.title.toUpperCase())}</i></div><button type="button" class="cbk" data-act="colsOpen" aria-label="Stages">${ico('gear',20,'var(--brass-l)',1.6)}</button><button type="button" class="cbk ed" data-act="topicEdit" aria-label="Edit topic">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>`;
+    head=`<div class="chd">${back}<div class="ctt"><b>${esc(tp.name)}</b><i>${esc(q.title.toUpperCase())}</i></div><button type="button" class="chipb" data-act="colsOpen" aria-label="Edit stages">Stages</button><button type="button" class="cbk ed" data-act="topicEdit" aria-label="Edit topic">${ico('pen',20,'var(--brass-l)',1.7)}</button></div>`;
     body=topicBody(q,tp);
   }else{
     const due=q.done?'COMPLETE':q.due?'DUE '+shortDue(q.due):'NO DEADLINE';
@@ -2221,6 +2222,7 @@ function topicSheetHTML(){
   <div class="arow"><input id="tpName" class="inp" type="text" value="${esc(p.name)}" placeholder="Topic name, e.g. Networking" autocomplete="off" aria-label="Topic name"><button type="button" class="go" data-act="tpSave" aria-label="Save topic">${ico(edit?'check':'plus',22,'currentColor',2.6)}</button></div>
   <input id="tpDesc" class="inp" style="margin-top:10px" type="text" value="${esc(p.desc||'')}" placeholder="One line about it (optional)" autocomplete="off" aria-label="One line about the topic">
   ${edit?'':`<h3 style="margin:14px 0 6px;font:500 12px var(--mono);letter-spacing:.12em;color:var(--dim)">STAGES</h3><div class="tpls">${Object.keys(TPLS).map(k=>`<button type="button" class="tpl ${p.tpl===k?'on':''}" data-act="tpTpl" data-v="${k}"><b>${TPLS[k].name}</b><i>${TPLS[k].sub}</i></button>`).join('')}</div>`}
+  ${edit?`<button type="button" class="btn ghost" style="width:100%;margin-top:14px" data-act="colsOpen">Edit stages</button>`:''}
   ${edit&&!p.loose?`<button type="button" class="lnk" data-act="tpDel">${p.confirmDel?'Tap again to drop this topic. Its cards move to Loose ends':'Drop this topic'}</button>`:''}</div>`;
 }
 
