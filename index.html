@@ -773,6 +773,55 @@ body.cdon{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .full.camp .tview .stg .wbn{margin:0}
 .pgth .stx{background:none;border:0;width:36px;height:36px}
 
+/* ===== Laptop layout. Only applies to wide windows; phones and the installed app never see it. ===== */
+.sidenav,.rbt{display:none}
+@media (min-width:900px){
+:root{--sbw:300px;--gut:max(48px,calc((100vw - var(--sbw) - 880px)/2))}
+.app{max-width:none;height:100vh;height:100dvh}
+.app::before{content:'';position:absolute;left:0;top:0;bottom:0;width:var(--sbw);background-color:var(--tile);border-right:1.5px solid var(--border);z-index:0}
+.head{position:static;height:0;background:none}
+.head .shelf,.head .top{display:none}
+.head .bust{left:80px;right:auto;top:28px;width:140px;height:140px}
+.bub{left:24px;top:180px;width:252px;max-height:none}
+.bub:after{right:auto;left:50%;top:-7px;margin-left:-7px}
+.ttl{left:calc(var(--sbw) + 48px);top:30px;font-size:44px}
+.cnt{left:calc(var(--sbw) + 50px);top:88px}
+.scroll{left:var(--sbw);top:128px;padding:6px var(--gut) 120px;scrollbar-width:thin}
+.scroll::-webkit-scrollbar{display:block;width:8px}
+.scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.sidenav{display:flex;flex-direction:column;gap:2px;position:absolute;left:0;top:340px;bottom:0;width:var(--sbw);padding:0 14px 16px;overflow-y:auto;z-index:6;scrollbar-width:none}
+.sn{display:flex;align-items:center;gap:12px;width:100%;height:44px;flex:none;padding:0 14px;border:0;border-radius:6px;background:none;color:var(--dim);font:400 19px var(--fell);text-align:left;cursor:pointer}
+.sn span{flex:1}
+.sn:hover{background:var(--card);color:var(--bone)}
+.sn.on{background:var(--pill-on,#2A1409);color:var(--pill-on-t,var(--glow));box-shadow:inset 0 0 0 1.5px var(--ember)}
+.sn kbd{font:500 11px var(--mono);color:var(--dim);border:1px solid var(--border);border-radius:4px;padding:2px 6px}
+.snsep{height:1px;flex:none;background:var(--border);margin:10px 8px}
+.dock{left:var(--sbw);height:0;background:none}
+.dock .pill{display:none}
+.fab{right:44px;bottom:40px}
+.tray{left:auto;right:116px;bottom:44px}
+.full{left:var(--sbw);padding-left:var(--gut);padding-right:var(--gut)}
+.full.camp{padding-left:var(--gut);padding-right:var(--gut)}
+.rit .rtop,.rit .rbody,.rit .rfoot{width:100%;max-width:560px;margin-left:auto;margin-right:auto}
+.sheet{top:0;bottom:0;left:0;right:0;margin:auto;height:fit-content;width:min(600px,92%);max-height:88%;border:1.5px solid var(--brass);border-radius:10px}
+.toast{left:calc(var(--sbw) + 28px);right:auto;width:440px;bottom:32px}
+button,[data-act]{cursor:pointer}
+:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+.row:hover{background-color:var(--card)}
+.tgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.full.camp:has(.tview[data-lv^="t:"]){padding-left:40px;padding-right:40px}
+.full.camp .tview[data-lv^="t:"]{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:18px}
+.full.camp .tview[data-lv^="t:"]>.pdesc,.full.camp .tview[data-lv^="t:"]>.sirl{flex:0 0 100%;margin-top:0}
+.full.camp .tview[data-lv^="t:"] .stg{flex:1 1 250px;min-width:250px;max-width:380px;align-self:flex-start;margin-bottom:0}
+.cdt .cdnote{min-height:220px}
+}
+@media (min-width:900px) and (hover:hover){
+.row .rbt{display:flex;gap:4px;margin-left:8px;opacity:0;transition:opacity .12s}
+.row:hover .rbt,.row:focus-within .rbt{opacity:1}
+.rbt button{width:34px;height:34px;padding:0;display:grid;place-items:center;border:1px solid var(--border);border-radius:4px;background:var(--page);color:var(--dim)}
+.rbt button:hover{color:var(--glow);border-color:var(--brass)}
+}
+
 </style>
 <div class="app" id="app"></div>
 <script src="firebase-config.js"></script>
@@ -1681,7 +1730,7 @@ function rowHTML(t,over,showCat){
   <div class="row g ${t.done?'done':''} ${dragon?'dragon':''} ${tg?'tagged':''}" data-id="${t.id}" ${tg?`style="--tc:${tg.col}"`:''}>
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
     <div class="nm" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${rem?`<em>${rem}</em>`:''}</div>
-    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${showCat?ap:tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
+    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${showCat?ap:tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}${t.done?'':`<span class="rbt"><button type="button" data-act="rowLater" data-id="${t.id}" aria-label="Move to tomorrow" title="Tomorrow">${ico('chevr',16,'currentColor',2)}</button><button type="button" data-act="rowDrop" data-id="${t.id}" aria-label="Drop" title="Drop">${ico('x',16,'currentColor',2)}</button></span>`}
   </div></div>`;
 }
 function banner(id,name,count,col,icon,shut){
@@ -1818,7 +1867,7 @@ function trayHTML(){
 }
 
 /* ---------- render ---------- */
-let _hh='';function renderHead(){const h=headHTML();if(h===_hh)return;_hh=h;$('#head').innerHTML=h;}
+let _hh='';function renderHead(){if(typeof renderSide==='function')renderSide();const h=headHTML();if(h===_hh)return;_hh=h;$('#head').innerHTML=h;}
 let _mh='';function renderMain(){
   const m=$('#main');const keep=m.scrollTop;
   const mh=U.view==='list'?listHTML():U.view==='road'?roadHTML():extMainHTML();
@@ -1828,6 +1877,7 @@ let _mh='';function renderMain(){
 }
 let _dh='';function renderDock(){const h=dockHTML();if(h===_dh)return;_dh=h;$('#dockhost').innerHTML=h;}
 function renderOverlay(){
+  if(typeof renderSide==='function')renderSide();
   if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&ritDraw()){[...$('#overlay').children].forEach(x=>{if(!x.classList.contains('rit')&&!x.classList.contains('camp'))x.remove();});if(typeof navSync==='function')navSync();return;}
   let h='';
   if(U.menu)h+=menuHTML();
@@ -1933,7 +1983,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='Enter'&&e.target.classList.contains('stin')){e.preventDefault();e.target.blur();}
   else if(e.key==='Enter'&&e.target.id==='addInput'){e.preventDefault();submitAdd();}
   else if(e.key==='Enter'&&e.target.id==='ncName'){e.preventDefault();const b=document.querySelector('[data-act=ncSave]');b&&b.click();}
-  else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.camp){U.camp=null;renderOverlay();renderMain();}else if(U.council){ritPersist();U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
+  else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.pg){U.pg=null;renderOverlay();}else if(U.camp){const C=U.camp;if(C.note){nBack();}else if(C.card){C.card=null;C.cdel=false;renderOverlay();}else if(C.topic){C.topic=null;C.addIn=null;renderOverlay();}else{U.camp=null;renderOverlay();renderMain();}}else if(U.council){ritPersist();U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
   else if(extKey(e)){e.preventDefault();}
 });
 
@@ -3455,6 +3505,17 @@ document.addEventListener('keydown',e=>{
   else if(e.target.id==='nTitle'){e.preventDefault();const x=$('#nBody');x&&x.focus();}
 });
 
+/* ---------- laptop layout: sidebar nav (shown by desktop.css on wide screens only) ---------- */
+const SIDE=[['list','Today','list','T'],['road','Road','road','R'],['cal','Calendar','week',''],['main','Campaigns','flag','Q'],['side','Side Quests','path','S'],['dragons','The Dragons','flame','D']];
+let _sh='';
+function renderSide(){
+  const el=$('#sidenav');if(!el)return;
+  const on=U.camp||U.council||U.pg||U.menu?'':U.view;
+  const h=SIDE.map(([v,n,ic,k])=>`<button type="button" class="sn ${on===v?'on':''}" data-act="goto" data-v="${v}">${ico(ic,20,'currentColor',1.7)}<span>${n}</span>${k?`<kbd>${k}</kbd>`:''}</button>`).join('')
+   +`<div class="snsep"></div><button type="button" class="sn ${U.council?'on':''}" data-act="council">${ico('crown',20,'currentColor',1.7)}<span>The Council</span><kbd>C</kbd></button><button type="button" class="sn ${U.menu?'on':''}" data-act="menu">${ico('menu',20,'currentColor',1.8)}<span>Menu</span><kbd>M</kbd></button>`;
+  if(h===_sh)return;_sh=h;el.innerHTML=h;
+}
+
 /* ---------- extensions: quests, side quests, dragons, councils, sync, shortcuts ---------- */
 Object.assign(ICONS,{
   dice:'<path d="M12 2.5l8.5 5v9l-8.5 5-8.5-5v-9z"/><path d="M12 7.5l4.2 7.5H7.8z"/><path d="M12 2.5v5M3.5 7.5L7.8 15M20.5 7.5L16.2 15M7.8 15l-4.3 1.5M16.2 15l4.3 1.5M12 21.5V15"/>',
@@ -3654,6 +3715,8 @@ function extAct(act,v,id,el){
     case 'whySet':{const t=U.why&&S.tasks.find(x=>x.id===U.why.id);if(t){t.why=v;save();}U.why=null;U.sheet=null;render();renderOverlay();break;}
     case 'whySkip':U.why=null;U.sheet=null;renderOverlay();render();break;
     case 'whyUndo':{const w=U.why,t=w&&S.tasks.find(x=>x.id===w.id);if(t&&w.prev){t.date=w.prev.date;t.moves=w.prev.moves;save();}U.why=null;U.sheet=null;render();renderOverlay();break;}
+    case 'rowLater':postpone(id);break;
+    case 'rowDrop':removeTask(id);render();break;
     case 'lview':S.settings.lview=v;save();renderMain();break;
     case 'copyLog':{const tx=sortingLogText();U.menu=false;renderOverlay();
       const done=()=>toast({face:6,text:'Sorting log copied. Paste it to Claude.'});
@@ -3942,7 +4005,7 @@ addEventListener('popstate',()=>{
 });
 
 /* ---------- boot ---------- */
-$('#app').insertAdjacentHTML('afterbegin','<header class="head" id="head"></header><main class="scroll" id="main"></main><div id="dockhost"></div><div id="overlay"></div><div id="toast"></div>');
+$('#app').insertAdjacentHTML('afterbegin','<header class="head" id="head"></header><nav class="sidenav" id="sidenav" aria-label="Main"></nav><main class="scroll" id="main"></main><div id="dockhost"></div><div id="overlay"></div><div id="toast"></div>');
 try{const k='sirreg.opens.'+today(),n=(+localStorage.getItem(k)||0)+1;localStorage.setItem(k,n);U.opens=n;}catch(x){U.opens=1;}
 render();
 })();

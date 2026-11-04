@@ -328,7 +328,7 @@ function rowHTML(t,over,showCat){
   <div class="row g ${t.done?'done':''} ${dragon?'dragon':''} ${tg?'tagged':''}" data-id="${t.id}" ${tg?`style="--tc:${tg.col}"`:''}>
     <button type="button" class="cb" data-act="tick" data-id="${t.id}" aria-label="${t.done?'Mark not done':'Mark done'}: ${esc(t.title)}" aria-pressed="${t.done}"><i class="${t.done?'on':''}">${t.done?ico('check',14,'currentColor',3.2):''}</i></button>
     <div class="nm" data-act="edit" data-id="${t.id}"><b>${esc(t.title)}</b>${rem?`<em>${rem}</em>`:''}</div>
-    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${showCat?ap:tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}
+    ${dragon?`<span class="tag">${TAGS[tier]}</span>`:''}${showCat?ap:tagPills(t)}${t.time&&!t.done?`<span class="tm" data-act="edit" data-id="${t.id}">${t.time}</span>`:''}${t.done?'':`<span class="rbt"><button type="button" data-act="rowLater" data-id="${t.id}" aria-label="Move to tomorrow" title="Tomorrow">${ico('chevr',16,'currentColor',2)}</button><button type="button" data-act="rowDrop" data-id="${t.id}" aria-label="Drop" title="Drop">${ico('x',16,'currentColor',2)}</button></span>`}
   </div></div>`;
 }
 function banner(id,name,count,col,icon,shut){
@@ -465,7 +465,7 @@ function trayHTML(){
 }
 
 /* ---------- render ---------- */
-let _hh='';function renderHead(){const h=headHTML();if(h===_hh)return;_hh=h;$('#head').innerHTML=h;}
+let _hh='';function renderHead(){if(typeof renderSide==='function')renderSide();const h=headHTML();if(h===_hh)return;_hh=h;$('#head').innerHTML=h;}
 let _mh='';function renderMain(){
   const m=$('#main');const keep=m.scrollTop;
   const mh=U.view==='list'?listHTML():U.view==='road'?roadHTML():extMainHTML();
@@ -475,6 +475,7 @@ let _mh='';function renderMain(){
 }
 let _dh='';function renderDock(){const h=dockHTML();if(h===_dh)return;_dh=h;$('#dockhost').innerHTML=h;}
 function renderOverlay(){
+  if(typeof renderSide==='function')renderSide();
   if(U.council&&U.council.rit&&!U.sheet&&!U.menu&&ritDraw()){[...$('#overlay').children].forEach(x=>{if(!x.classList.contains('rit')&&!x.classList.contains('camp'))x.remove();});if(typeof navSync==='function')navSync();return;}
   let h='';
   if(U.menu)h+=menuHTML();
@@ -580,7 +581,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='Enter'&&e.target.classList.contains('stin')){e.preventDefault();e.target.blur();}
   else if(e.key==='Enter'&&e.target.id==='addInput'){e.preventDefault();submitAdd();}
   else if(e.key==='Enter'&&e.target.id==='ncName'){e.preventDefault();const b=document.querySelector('[data-act=ncSave]');b&&b.click();}
-  else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.camp){U.camp=null;renderOverlay();renderMain();}else if(U.council){ritPersist();U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
+  else if(e.key==='Escape'){if(U.sheet==='newcat'){U.sheet='add';renderOverlay();}else if(U.sheet){U.sheet=null;renderOverlay();}else if(U.pg){U.pg=null;renderOverlay();}else if(U.camp){const C=U.camp;if(C.note){nBack();}else if(C.card){C.card=null;C.cdel=false;renderOverlay();}else if(C.topic){C.topic=null;C.addIn=null;renderOverlay();}else{U.camp=null;renderOverlay();renderMain();}}else if(U.council){ritPersist();U.council=null;renderOverlay();}else if(U.menu){U.menu=false;renderOverlay();}}
   else if(extKey(e)){e.preventDefault();}
 });
 

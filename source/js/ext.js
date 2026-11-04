@@ -197,6 +197,8 @@ function extAct(act,v,id,el){
     case 'whySet':{const t=U.why&&S.tasks.find(x=>x.id===U.why.id);if(t){t.why=v;save();}U.why=null;U.sheet=null;render();renderOverlay();break;}
     case 'whySkip':U.why=null;U.sheet=null;renderOverlay();render();break;
     case 'whyUndo':{const w=U.why,t=w&&S.tasks.find(x=>x.id===w.id);if(t&&w.prev){t.date=w.prev.date;t.moves=w.prev.moves;save();}U.why=null;U.sheet=null;render();renderOverlay();break;}
+    case 'rowLater':postpone(id);break;
+    case 'rowDrop':removeTask(id);render();break;
     case 'lview':S.settings.lview=v;save();renderMain();break;
     case 'copyLog':{const tx=sortingLogText();U.menu=false;renderOverlay();
       const done=()=>toast({face:6,text:'Sorting log copied. Paste it to Claude.'});
@@ -485,7 +487,7 @@ addEventListener('popstate',()=>{
 });
 
 /* ---------- boot ---------- */
-$('#app').insertAdjacentHTML('afterbegin','<header class="head" id="head"></header><main class="scroll" id="main"></main><div id="dockhost"></div><div id="overlay"></div><div id="toast"></div>');
+$('#app').insertAdjacentHTML('afterbegin','<header class="head" id="head"></header><nav class="sidenav" id="sidenav" aria-label="Main"></nav><main class="scroll" id="main"></main><div id="dockhost"></div><div id="overlay"></div><div id="toast"></div>');
 try{const k='sirreg.opens.'+today(),n=(+localStorage.getItem(k)||0)+1;localStorage.setItem(k,n);U.opens=n;}catch(x){U.opens=1;}
 render();
 })();
