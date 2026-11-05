@@ -1477,7 +1477,7 @@ async function flush(){
 function logEv(ev,t,extra){
   if(!t||t.s)return;
   const k=S.cats.find(c=>c.id===t.cat);
-  S.logq.push(Object.assign({id:uid(),ev,title:t.title,cat:k?k.name:'',date:t.date,time:t.time||'',dur:t.dur||0,moves:t.moves||0,at:new Date().toISOString()},extra||{}));
+  S.logq.push(Object.assign({id:uid(),ev,title:t.title,cat:k?k.name:'',date:t.date,time:t.time||'',dur:t.dur||0,moves:t.moves||0,tags:t.tags||[],at:new Date().toISOString()},extra||{}));
   if(S.logq.length>1000)S.logq.splice(0,S.logq.length-1000);
   save();flush();
 }
@@ -3546,7 +3546,7 @@ async function cloudBk(json,why){
     const at=new Date().toISOString(),id='b'+Date.now();
     await DB.doc('backups/'+id).set({at,why,json});
     const all=await DB.collection('backups').get();const ids=[];all.forEach(d=>ids.push(d.id));ids.sort().reverse();
-    for(const x of ids.slice(14))await DB.doc('backups/'+x).delete();
+    for(const x of ids.slice(24))await DB.doc('backups/'+x).delete();
   }catch(e){}
 }
 function merge(loc,rem){
@@ -3565,7 +3565,7 @@ async function doPush(snap,why,backup){
   const ref=DB.doc('state/main');
   const copy=Object.assign({},S);delete copy.logq;const st=Object.assign({},S.settings);delete st.theme;copy.settings=st;
   const js=JSON.stringify(copy),lj=cj(S),prevJson=snap&&snap.exists?snap.data().json:null;
-  if(prevJson&&backup){let pr=null;try{pr=JSON.parse(prevJson);}catch(e){}if(pr&&hasUser(pr))await cloudBk(prevJson,why);}
+  if(prevJson&&backup){let pr=null;try{pr=JSON.parse(prevJson);}catch(e){}if(pr&&hasUser(pr)){let last=0;try{last=+localStorage.getItem('sirreg.bkat')||0;}catch(e){}if(why!=='edit'||Date.now()-last>2*36e5){await cloudBk(prevJson,why);try{localStorage.setItem('sirreg.bkat',String(Date.now()));}catch(e){}}}}
   const doc={rev:S.rev,json:js,at:new Date().toISOString()};
   if(ref.firestore&&ref.firestore.runTransaction){
     await ref.firestore.runTransaction(async tx=>{const s=await tx.get(ref);const cur=s.exists?s.data().json:null;if(cur!==prevJson)throw new Error('moved');tx.set(ref,doc);});
@@ -3684,7 +3684,7 @@ function replayLog(evs){
   evs.forEach(e=>{
     if(!e.title)return;const k=key(e);let t=open.get(k);
     if(e.ev==='added'){
-      t={title:e.title,catName:e.cat||'',date:e.date||'',time:e.time||'',dur:e.dur||30,moves:e.moves||0,at:Date.parse(e.at)||Date.now(),board:!!(e.viaBoard||e.viaLog),done:false};
+      t={title:e.title,catName:e.cat||'',date:e.date||'',time:e.time||'',dur:e.dur||30,moves:e.moves||0,at:Date.parse(e.at)||Date.now(),board:!!(e.viaBoard||e.viaLog),done:false,tags:e.tags||[]};
       arr.push(t);open.set(k,t);
     }else if(e.ev==='done'){
       if(!t){t={title:e.title,catName:e.cat||'',date:e.date||'',time:e.time||'',dur:e.dur||30,moves:e.moves||0,at:Date.parse(e.at)||Date.now(),board:false,done:false};arr.push(t);}
@@ -3721,7 +3721,7 @@ function rbGo(){
   let rq=null;
   R.list.forEach(t=>{
     const n={id:uid(),title:t.title,cat:catId(t.catName),date:t.date,time:t.time,dur:t.dur,done:t.done,moves:t.moves,createdAt:t.at,rep:'',q:''};
-    if(t.done)n.doneAt=t.doneAt;
+    if(t.done)n.doneAt=t.doneAt;if(t.tags&&t.tags.length)n.tags=t.tags.slice();
     if(!t.date&&t.board&&!t.done){
       if(!rq){rq=S.quests.find(q=>q.title==='Recovered');if(!rq){rq={id:uid(),title:'Recovered',icon:'flag',due:'',created:Date.now(),desc:'Tasks brought back from the log. Details were not logged.',topics:[{id:'loose',qid:'',name:'Loose ends',desc:'',loose:true,tpl:'own',cols:[{id:'loose',name:'Unsorted'},{id:'done',name:'Done',done:true}]}]};rq.topics[0].qid=rq.id;S.quests.push(rq);}}
       n.q=rq.id;n.topic='loose';n.col='loose';n.ord=Date.now()+S.tasks.length;
