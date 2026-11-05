@@ -1831,6 +1831,9 @@ ${bn('Quests','#4A4128','flag')}
   <div class="themes">${['dark','light','system'].map(v=>`<button type="button" class="chip ${(S.settings.theme||'dark')===v?'on':''}" data-act="theme" data-v="${v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}</div>
   ${row('eye','Sir Reg speaks',S.settings.mute?'muted':'on, dry as ever','mute',`<span class="tag ${S.settings.mute?'dim':''}" style="margin:0">${S.settings.mute?'OFF':'ON'}</span>`)}
   ${row('tech','Sync across devices',(window.realmSync?realmSync.status():(DB?'on, through this link':'off')),'sync',window.realmSync&&realmSync.user()?'<span class="tag" style="margin:0">ON</span>':'')}
+  ${syncHold?row('tech','Sync is paused','two versions found, tap to choose','syncFix'):''}
+  ${row('admin','Backups','restore an earlier state','bkOpen')}
+  ${row('tech','Rebuild from history','bring tasks back from the cloud log','rbOpen')}
   ${row('admin','Copy data as JSON','your backup, as text','export')}
   ${row('tech','Reset to sample tasks',U.confirm==='reset'?'tap again to confirm':'start over with the examples','reset')}
   ${row('rest','Clear everything',U.confirm==='clear'?'tap again to confirm':'delete all tasks','clear')}`:''}
@@ -3521,6 +3524,215 @@ function renderSide(){
   if(h===_sh)return;_sh=h;el.innerHTML=h;
 }
 
+/* ---------- sync v2: content based, never silently overwrites a device ---------- */
+var BKEY='sirreg.bk',BASEK='sirreg.syncbase';
+var syncHold=false,syncBusy=false,syncT=0,syncRe=false;
+function stab(o){if(o===null||typeof o!=='object')return JSON.stringify(o);if(Array.isArray(o))return '['+o.map(stab).join(',')+']';return '{'+Object.keys(o).filter(k=>o[k]!==undefined).sort().map(k=>JSON.stringify(k)+':'+stab(o[k])).join(',')+'}';}
+function cj(o){const c=Object.assign({},o);delete c.logq;delete c.rev;delete c.sample;c.quests=c.quests||[];c.ideas=c.ideas||[];c.cplans=c.cplans||{};delete c.halls;const st=Object.assign({},c.settings||{});delete st.theme;c.settings=st;return stab(c);}
+function hasUser(o){return !!(o&&((o.tasks||[]).some(t=>!t.s)||(o.quests||[]).some(q=>!q.s)||(o.ideas||[]).some(i=>!i.s)||Object.keys(o.cplans||{}).length));}
+function validState(o){return !!(o&&o.v===1&&o.cats&&o.tasks);}
+function getBase(){try{return localStorage.getItem(BASEK);}catch(e){return null;}}
+function setBase(s){try{localStorage.setItem(BASEK,s);}catch(e){}}
+function plain(o){const c=Object.assign({},o);delete c.logq;return JSON.stringify(c);}
+function localBk(why,o){
+  o=o||S;if(!hasUser(o))return;
+  let a=[];try{a=JSON.parse(localStorage.getItem(BKEY)||'[]');}catch(e){}
+  a.unshift({at:new Date().toISOString(),why,json:plain(o)});a=a.slice(0,6);
+  for(let n=a.length;n>0;n--){try{localStorage.setItem(BKEY,JSON.stringify(a.slice(0,n)));return;}catch(e){}}
+}
+function localBks(){try{return JSON.parse(localStorage.getItem(BKEY)||'[]');}catch(e){return [];}}
+async function cloudBk(json,why){
+  try{
+    const at=new Date().toISOString(),id='b'+Date.now();
+    await DB.doc('backups/'+id).set({at,why,json});
+    const all=await DB.collection('backups').get();const ids=[];all.forEach(d=>ids.push(d.id));ids.sort().reverse();
+    for(const x of ids.slice(14))await DB.doc('backups/'+x).delete();
+  }catch(e){}
+}
+function merge(loc,rem){
+  const o=JSON.parse(plain(loc));
+  ['tasks','quests','ideas','cats'].forEach(k=>{o[k]=o[k]||[];const have=new Set(o[k].map(x=>x.id));(rem[k]||[]).forEach(x=>{if(!have.has(x.id)&&!x.s)o[k].push(x);});});
+  o.logq=loc.logq;return o;
+}
+function adoptState(o,keepRev){
+  const keep={logq:S.logq,theme:S.settings&&S.settings.theme};
+  S=o;S.logq=keep.logq||[];S.settings=S.settings||{};S.settings.theme=keep.theme;
+  S.quests=S.quests||[];S.ideas=S.ideas||[];S.halls=S.halls||defaultHalls();S.cplans=S.cplans||{};S.rev=o.rev||Date.now();
+  save(true);setBase(cj(S));applyTheme();LC.key='';
+  if(!U.sheet&&!U.council&&!U.menu&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)))render();else{renderHead();renderMain();renderDock();renderOverlay();}
+}
+async function doPush(snap,why,backup){
+  const ref=DB.doc('state/main');
+  const copy=Object.assign({},S);delete copy.logq;const st=Object.assign({},S.settings);delete st.theme;copy.settings=st;
+  const js=JSON.stringify(copy),lj=cj(S),prevJson=snap&&snap.exists?snap.data().json:null;
+  if(prevJson&&backup){let pr=null;try{pr=JSON.parse(prevJson);}catch(e){}if(pr&&hasUser(pr))await cloudBk(prevJson,why);}
+  const doc={rev:S.rev,json:js,at:new Date().toISOString()};
+  if(ref.firestore&&ref.firestore.runTransaction){
+    await ref.firestore.runTransaction(async tx=>{const s=await tx.get(ref);const cur=s.exists?s.data().json:null;if(cur!==prevJson)throw new Error('moved');tx.set(ref,doc);});
+  }else await ref.set(doc);
+  setBase(lj);
+}
+async function reconcile(why,force){
+  if(!DB)return;
+  if(syncBusy){syncRe=true;return;}
+  if(syncHold&&!force)return;
+  syncBusy=true;
+  try{
+    let snap;try{snap=await DB.doc('state/main').get({source:'server'});}catch(e){return;}
+    let rem=null;
+    if(snap.exists){try{rem=JSON.parse(snap.data().json);}catch(e){}if(!validState(rem))rem=null;}
+    const lj=cj(S),base=getBase();
+    if(!rem){
+      if(snap.exists)return;           /* unreadable cloud copy: never touch it */
+      if(!hasUser(S))return;           /* nothing worth uploading */
+      await doPush(snap,'first',false);return;
+    }
+    const rj=cj(rem);
+    if(rj===lj){setBase(lj);return;}
+    if(force){await doPush(snap,why||'forced',true);return;}
+    if(base===null){
+      if(!hasUser(S)){localBk('before first sync');adoptState(rem);return;}
+      if(!hasUser(rem)){await doPush(snap,'first',true);return;}
+      askConflict(rem,snap);return;
+    }
+    const lc=lj!==base,rc=rj!==base;
+    if(!lc){localBk('before taking cloud copy');adoptState(rem);return;}
+    if(!rc){if(!hasUser(S)&&S.sample)return;await doPush(snap,'edit',true);return;}
+    askConflict(rem,snap);
+  }catch(e){}
+  finally{syncBusy=false;if(syncRe){syncRe=false;syncSoon(600);}}
+}
+function syncSoon(ms){clearTimeout(syncT);syncT=setTimeout(()=>reconcile('edit'),ms||1500);}
+function pushSoon(){syncSoon(1500);}
+function askConflict(rem,snap){
+  syncHold=true;U.sc={rem,at:snap&&snap.data?snap.data().at:''};U.sheet='syncconf';renderOverlay();
+}
+function syncInit(){
+  if(!DB)return;
+  try{
+    DB.doc('state/main').onSnapshot({includeMetadataChanges:true},snap=>{
+      if(snap.metadata&&(snap.metadata.fromCache||snap.metadata.hasPendingWrites))return;
+      syncSoon(800);
+    },()=>{});
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncSoon(500);});
+    syncSoon(300);
+  }catch(e){}
+}
+function cnt(o){const t=(o.tasks||[]).filter(x=>!x.s),q=(o.quests||[]).filter(x=>!x.s);return `${t.filter(x=>!x.done).length} open tasks, ${t.filter(x=>x.done).length} done, ${q.length} campaigns, ${(o.ideas||[]).filter(x=>!x.s).length} ideas`;}
+function fmtAt(a){try{return new Date(a).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
+function syncSheetHTML(){
+  const c=U.sc;if(!c)return '';
+  return `<div class="scrim"></div><div class="sheet" role="dialog" aria-label="Two versions found"><h2>Two versions found</h2>
+  <p class="note" style="margin:0 0 10px">This device and the cloud have both changed. Nothing has been overwritten and sync is paused until you choose. Whatever you do not keep is saved as a backup.</p>
+  <p class="note" style="margin:0 0 6px"><b>This device:</b> ${esc(cnt(S))}</p>
+  <p class="note" style="margin:0 0 12px"><b>Cloud${c.at?' ('+esc(fmtAt(c.at))+')':''}:</b> ${esc(cnt(c.rem))}</p>
+  <div class="btns" style="flex-direction:column;gap:8px">
+  <button type="button" class="btn" data-act="scMerge">Combine both (recommended)</button>
+  <button type="button" class="btn ghost" data-act="scLocal">Keep this device</button>
+  <button type="button" class="btn ghost" data-act="scCloud">Use the cloud version</button>
+  <button type="button" class="btn ghost" data-act="scLater">Decide later</button></div></div>`;
+}
+async function scChoose(kind){
+  const c=U.sc;if(!c)return;
+  try{
+    if(kind==='cloud'){localBk('before choosing cloud');adoptState(c.rem);}
+    else{
+      localBk('before '+kind);
+      if(kind==='merge'){const m=merge(S,c.rem);const keep=S.logq;S=m;S.logq=keep;S.settings=S.settings||{};S.quests=S.quests||[];S.ideas=S.ideas||[];S.halls=S.halls||defaultHalls();S.cplans=S.cplans||{};save();}
+    }
+    syncHold=false;U.sc=null;U.sheet=null;renderOverlay();
+    if(kind!=='cloud')await reconcile(kind,true);
+    render();
+  }catch(e){syncHold=false;}
+}
+/* ---------- backups sheet ---------- */
+async function bkOpen(){
+  U.sheet='backups';U.bk={loc:localBks(),cloud:null,sure:null};renderOverlay();
+  if(DB){try{const all=await DB.collection('backups').get();const a=[];all.forEach(d=>{const x=d.data();a.push({id:d.id,at:x.at,why:x.why,json:x.json});});a.sort((p,q)=>q.id<p.id?-1:1);U.bk.cloud=a;}catch(e){U.bk.cloud=[];}}else U.bk.cloud=[];
+  if(U.sheet==='backups')renderOverlay();
+}
+function bkRow(b,k){let n='';try{n=cnt(JSON.parse(b.json));}catch(e){n='unreadable';}
+  const on=U.bk.sure===k;
+  return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line,#444)"><div style="flex:1;min-width:0;font-size:13px"><b>${esc(fmtAt(b.at))}</b> <span style="color:var(--dim)">${esc(b.why||'')}</span><br><span style="color:var(--dim)">${esc(n)}</span></div><button type="button" class="btn ${on?'':'ghost'}" style="min-width:0;padding:6px 12px" data-act="bkRestore" data-v="${k}">${on?'Tap again':'Restore'}</button></div>`;}
+function bkSheetHTML(){
+  const B=U.bk;if(!B)return '';
+  const loc=B.loc.map((b,i)=>bkRow(b,'l'+i)).join('')||'<p class="note" style="margin:0">None yet.</p>';
+  const cl=B.cloud===null?'<p class="note" style="margin:0">Loading...</p>':(B.cloud.map((b,i)=>bkRow(b,'c'+i)).join('')||'<p class="note" style="margin:0">None yet.</p>');
+  return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Backups"><h2>Backups</h2>
+  <p class="note" style="margin:0 0 8px">Restoring replaces what is on this device and in the cloud. The current state is backed up first.</p>
+  <h3 style="margin:10px 0 2px;font-size:14px">On this device</h3>${loc}<h3 style="margin:12px 0 2px;font-size:14px">In the cloud</h3>${cl}
+  <div class="btns"><button type="button" class="btn ghost" data-act="closeSheet">Close</button></div></div>`;
+}
+async function bkRestore(k){
+  const B=U.bk;if(!B)return;
+  if(B.sure!==k){B.sure=k;renderOverlay();return;}
+  const b=(k[0]==='l'?B.loc:B.cloud||[])[+k.slice(1)];if(!b)return;
+  try{
+    const o=JSON.parse(b.json);if(!validState(o))return;
+    localBk('before restore');o.rev=Date.now();adoptState(o);
+    U.sheet=null;U.bk=null;renderOverlay();render();
+    if(DB)await reconcile('restore',true);
+    toast({face:6,text:'Restored.'});
+  }catch(e){toast({face:2,text:'Could not restore that one.'});}
+}
+/* ---------- rebuild tasks from the cloud log ---------- */
+function replayLog(evs){
+  const norm=s=>String(s||'').trim().toLowerCase();
+  evs=evs.slice().sort((a,b)=>String(a.at).localeCompare(String(b.at)));
+  const arr=[],open=new Map(),cut=Date.now()-30*864e5;
+  const key=e=>norm(e.title)+'|'+norm(e.cat);
+  evs.forEach(e=>{
+    if(!e.title)return;const k=key(e);let t=open.get(k);
+    if(e.ev==='added'){
+      t={title:e.title,catName:e.cat||'',date:e.date||'',time:e.time||'',dur:e.dur||30,moves:e.moves||0,at:Date.parse(e.at)||Date.now(),board:!!(e.viaBoard||e.viaLog),done:false};
+      arr.push(t);open.set(k,t);
+    }else if(e.ev==='done'){
+      if(!t){t={title:e.title,catName:e.cat||'',date:e.date||'',time:e.time||'',dur:e.dur||30,moves:e.moves||0,at:Date.parse(e.at)||Date.now(),board:false,done:false};arr.push(t);}
+      t.done=true;t.doneAt=Date.parse(e.at)||Date.now();open.delete(k);
+    }else if(e.ev==='dropped'){if(t){arr.splice(arr.indexOf(t),1);open.delete(k);}}
+    else if(e.ev==='postponed'){if(t){if(e.date)t.date=e.date;t.moves=e.moves||t.moves;}}
+  });
+  return arr.filter(t=>!t.done||t.doneAt>cut);
+}
+async function rbOpen(){
+  if(!DB){toast({face:2,text:'Sign in with sync first.'});return;}
+  U.menu=false;U.sheet='rebuild';U.rb={st:'load'};renderOverlay();
+  try{
+    const all=await DB.collection('log').get();const evs=[];all.forEach(d=>evs.push(d.data()));
+    const list=replayLog(evs);
+    const mine=S.tasks.filter(x=>!x.s);
+    const fresh=list.filter(t=>!mine.some(x=>x.title===t.title&&(x.date||'')===t.date&&!!x.done===t.done));
+    U.rb={st:'ready',evs:evs.length,list:fresh,open:fresh.filter(t=>!t.done).length,done:fresh.filter(t=>t.done).length};
+  }catch(e){U.rb={st:'err'};}
+  if(U.sheet==='rebuild')renderOverlay();
+}
+function rbSheetHTML(){
+  const R=U.rb;if(!R)return '';
+  let b;
+  if(R.st==='load')b='<p class="note" style="margin:0">Reading the log...</p>';
+  else if(R.st==='err')b='<p class="note" style="margin:0">Could not read the log. Check you are signed in and online.</p>';
+  else b=`<p class="note" style="margin:0 0 8px">Found ${R.evs} logged events. This can bring back <b>${R.open}</b> open tasks and <b>${R.done}</b> recently done ones, with title, area, date and time. Campaigns, topics, notes, ideas and repeat settings were not logged, so they cannot come back this way. Tasks that only lived on a campaign board go into a campaign called Recovered.</p><p class="note" style="margin:0">Your current state is backed up first, and nothing already here is removed.</p>`;
+  return `<div class="scrim" data-act="closeSheet"></div><div class="sheet" role="dialog" aria-label="Rebuild from history"><h2>Rebuild from history</h2>${b}<div class="btns">${R.st==='ready'&&R.list.length?'<button type="button" class="btn" data-act="rbGo">Bring them back</button>':''}<button type="button" class="btn ghost" data-act="closeSheet">Close</button></div></div>`;
+}
+function rbGo(){
+  const R=U.rb;if(!R||R.st!=='ready')return;
+  localBk('before rebuild');
+  const catId=name=>{let c=S.cats.find(x=>x.name.toLowerCase()===String(name).toLowerCase());if(!c){c={id:'c'+uid(),name:name||'Recovered',icon:'admin',pal:S.cats.length%8};S.cats.push(c);}return c.id;};
+  let rq=null;
+  R.list.forEach(t=>{
+    const n={id:uid(),title:t.title,cat:catId(t.catName),date:t.date,time:t.time,dur:t.dur,done:t.done,moves:t.moves,createdAt:t.at,rep:'',q:''};
+    if(t.done)n.doneAt=t.doneAt;
+    if(!t.date&&t.board&&!t.done){
+      if(!rq){rq=S.quests.find(q=>q.title==='Recovered');if(!rq){rq={id:uid(),title:'Recovered',icon:'flag',due:'',created:Date.now(),desc:'Tasks brought back from the log. Details were not logged.',topics:[{id:'loose',qid:'',name:'Loose ends',desc:'',loose:true,tpl:'own',cols:[{id:'loose',name:'Unsorted'},{id:'done',name:'Done',done:true}]}]};rq.topics[0].qid=rq.id;S.quests.push(rq);}}
+      n.q=rq.id;n.topic='loose';n.col='loose';n.ord=Date.now()+S.tasks.length;
+    }
+    S.tasks.push(n);
+  });
+  S.sample=false;S.tasks=S.tasks.filter(t=>!t.s);S.quests=S.quests.filter(q=>!q.s);
+  save();U.sheet=null;U.rb=null;LC.key='';render();renderOverlay();
+  toast({face:6,text:'Tasks are back. Campaigns and notes could not be rebuilt.'});
+}
+
 /* ---------- extensions: quests, side quests, dragons, councils, sync, shortcuts ---------- */
 Object.assign(ICONS,{
   dice:'<path d="M12 2.5l8.5 5v9l-8.5 5-8.5-5v-9z"/><path d="M12 7.5l4.2 7.5H7.8z"/><path d="M12 2.5v5M3.5 7.5L7.8 15M20.5 7.5L16.2 15M7.8 15l-4.3 1.5M16.2 15l4.3 1.5M12 21.5V15"/>',
@@ -3661,6 +3873,9 @@ function rollSheetHTML(){
     <div class="btns" style="margin-top:14px"><button type="button" class="btn ghost" data-act="rollAgain">Roll again</button><button type="button" class="btn" data-act="rollToday">Do it today</button></div></div>`;
 }
 function extSheets(){
+  if(U.sheet==='syncconf'&&U.sc)return syncSheetHTML();
+  if(U.sheet==='backups'&&U.bk)return bkSheetHTML();
+  if(U.sheet==='rebuild'&&U.rb)return rbSheetHTML();
   if(U.sheet==='quest'&&U.qs)return questSheetHTML();
   if(U.sheet==='cols'&&U.camp)return colsSheetHTML();
   if(U.sheet==='topic'&&U.tp)return topicSheetHTML();
@@ -3726,6 +3941,15 @@ function extAct(act,v,id,el){
     case 'copyLog':{const tx=sortingLogText();U.menu=false;renderOverlay();
       const done=()=>toast({face:6,text:'Sorting log copied. Paste it to Claude.'});
       try{navigator.clipboard.writeText(tx).then(done,()=>{window.prompt&&0;toast({face:2,text:'Could not copy. Try again.'});});}catch(e){toast({face:2,text:'Could not copy. Try again.'});}break;}
+    case 'scMerge':scChoose('merge');break;
+    case 'scLocal':scChoose('local');break;
+    case 'scCloud':scChoose('cloud');break;
+    case 'scLater':U.sheet=null;renderOverlay();break;
+    case 'bkOpen':U.menu=false;bkOpen();break;
+    case 'bkRestore':bkRestore(v);break;
+    case 'rbOpen':rbOpen();break;
+    case 'rbGo':rbGo();break;
+    case 'syncFix':if(syncHold&&U.sc){U.menu=false;U.sheet='syncconf';renderOverlay();}else{syncSoon(100);}break;
     case 'sync':if(window.realmSync){realmSync.user()?realmSync.signOut():realmSync.signIn();}break;
     case 'councilK':openCouncil(v);break;
     case 'dragonCall':openCouncil({dragon:'day',elder:'week',wyrm:'month',ancient:'year'}[v]);break;
@@ -3863,40 +4087,6 @@ function extCouncilHTML(){
   ${sections('flame','var(--glow)','Slay the '+dragonName,'The one you dread most '+scope,TAGS[tier])}${dr}${picker}${dt?'':newDragonHTML()}
   <div class="btns" style="margin-top:22px"><button type="button" class="btn" data-act="saveCouncilK">Save Plan</button></div>${ritAgainBtn(kind)}</div>`;
 }
-
-/* ---------- sync across devices through the artifact database ---------- */
-var pushT=0,lastJson='';
-function pushSoon(){clearTimeout(pushT);pushT=setTimeout(push,1500);}
-async function push(){
-  if(!DB)return;
-  try{
-    const copy=Object.assign({},S);delete copy.logq;const st=Object.assign({},S.settings);delete st.theme;copy.settings=st;
-    const js=JSON.stringify(copy);lastJson=js;await DB.doc('state/main').set({rev:S.rev,json:js,at:new Date().toISOString()});
-  }catch(e){}
-}
-function syncInit(){
-  if(!DB)return;
-  try{
-    DB.doc('state/main').onSnapshot(snap=>{
-      if(snap.metadata&&snap.metadata.hasPendingWrites)return;
-      if(!snap.exists){if(S.rev>0)push();return;}
-      const d=snap.data();if(!d||!d.json||d.json===lastJson)return;lastJson=d.json;
-      if(d.rev>S.rev){
-        try{
-          const o=JSON.parse(d.json);
-          if(o&&o.v===1&&o.cats&&o.tasks){
-            const keep={logq:S.logq,theme:S.settings.theme};
-            S=o;S.logq=keep.logq;S.settings=S.settings||{};S.settings.theme=keep.theme;S.rev=d.rev;
-            S.quests=S.quests||[];S.ideas=S.ideas||[];S.halls=S.halls||defaultHalls();S.cplans=S.cplans||{};
-            save(true);applyTheme();LC.key='';
-            if(!U.sheet&&!U.council&&!U.menu&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)))render();else{renderHead();renderMain();renderDock();}
-          }
-        }catch(e){}
-      }else if(d.rev<S.rev){pushSoon();}
-    },()=>{});
-  }catch(e){}
-}
-
 
 /* ---------- the one-liner library: lines fire only when their use-when condition is true ---------- */
 const pick0=window.pickLine;
